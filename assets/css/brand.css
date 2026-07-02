@@ -51,6 +51,18 @@ h1, h2, h3, .serif {
 }
 .atv-wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
 
+/* Links are distinguished by colour/weight, not underlines. */
+a { color: inherit; text-decoration: none; }
+/* Keep a visible focus ring for keyboard users (accessibility). */
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--action);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 /* ---- Buttons ------------------------------------------------------------- */
 .atv-btn {
   display: inline-block; background: var(--action); color: #fff;
@@ -82,8 +94,14 @@ h1, h2, h3, .serif {
   display: flex; align-items: center; justify-content: space-between;
   min-height: 74px; gap: 20px; flex-wrap: wrap;
 }
-.brand-logo { display: inline-flex; align-items: center; }
-.brand-logo img { height: 38px; width: auto; display: block; }
+/* Header lockup: brand icon + serif wordmark. */
+.brand-lockup { display: inline-flex; align-items: center; gap: 12px; }
+.brand-lockup__icon { height: 40px; width: auto; display: block; }
+.brand-lockup__word {
+  font-family: var(--font-heading); font-weight: 600; font-size: 26px;
+  line-height: 1; letter-spacing: .4px; color: #fff; white-space: nowrap;
+}
+.brand-lockup__word .mark { color: var(--sand); }
 .main-nav { display: flex; gap: 24px; list-style: none; font-size: 14px; color: #d7dde3; margin: 0; padding: 0; }
 .main-nav a { color: #d7dde3; }
 .main-nav a:hover { color: #fff; }
@@ -123,7 +141,7 @@ h1, h2, h3, .serif {
 }
 .atv-search .atv-btn { height: 44px; }
 .atv-assist { margin-top: 14px; font-size: 13.5px; color: var(--action); }
-.atv-assist a { font-weight: 600; text-decoration: underline; color: var(--action); }
+.atv-assist a { font-weight: 600; color: var(--action); }
 
 /* ---- Sections ------------------------------------------------------------ */
 .atv-sec { padding: 54px 0; }
@@ -204,13 +222,40 @@ h1, h2, h3, .serif {
 .atv-band p { color: #c7d0d8; font-size: 14px; margin-top: 6px; max-width: 560px; }
 
 /* ---- Footer -------------------------------------------------------------- */
-.site-footer { background: var(--navy); color: #9fb0be; padding: 40px 0; }
-.site-footer .atv-wrap { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
-.site-footer .brand-logo img { height: 34px; }
+.site-footer { background: var(--navy); color: #9fb0be; padding: 52px 0 28px; }
+.site-footer__top {
+  display: grid; grid-template-columns: 1.4fr repeat(4, 1fr); gap: 32px;
+  padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.site-footer__brand .brand-stacked { display: inline-block; }
+.site-footer__brand .brand-stacked img { height: 84px; width: auto; display: block; }
+.site-footer__brand p { font-size: 13px; color: #9fb0be; margin-top: 14px; max-width: 260px; }
+.footer-col h4 {
+  font-family: var(--font-body); font-size: 13px; font-weight: 600; letter-spacing: .4px;
+  text-transform: uppercase; color: #c7d0d8; margin-bottom: 12px;
+}
+.footer-col ul { list-style: none; margin: 0; padding: 0; }
+.footer-col li { margin-bottom: 9px; }
+.footer-col a { font-size: 14px; color: #9fb0be; }
+.footer-col a:hover { color: #fff; }
+.site-footer__bottom {
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 16px; padding-top: 22px;
+}
+.site-footer__bottom .copy { font-size: 13px; color: #8195a5; }
 .site-footer .soc { display: flex; gap: 14px; color: #c7d0d8; align-items: center; }
 .site-footer .soc a { color: #c7d0d8; display: inline-flex; }
 .site-footer .soc a:hover { color: #fff; }
 .site-footer .soc svg { width: 20px; height: 20px; }
+
+@media (max-width: 900px) {
+  .site-footer__top { grid-template-columns: 1fr 1fr; gap: 28px; }
+  .site-footer__brand { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .site-footer__top { grid-template-columns: 1fr; }
+  .site-footer__bottom { flex-direction: column; align-items: flex-start; }
+}
 
 /* ---- Responsive (mirrors the preview breakpoints) ------------------------ */
 @media (max-width: 900px) {

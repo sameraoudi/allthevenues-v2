@@ -1,9 +1,11 @@
 <?php declare(strict_types=1); ?>
 <header class="site-header">
   <div class="atv-wrap">
-    <a class="brand-logo" href="<?= e(base_url('/')) ?>" aria-label="All The Venues — home">
-      <img src="<?= e(base_url('assets/brand/web_exports/horizontal_light/horizontal_light_512w.png')) ?>"
-           alt="All The Venues" width="512" height="120">
+    <a class="brand-lockup" href="<?= e(base_url('/')) ?>" aria-label="All The Venues — home">
+      <img class="brand-lockup__icon"
+           src="<?= e(base_url('assets/brand/web_exports/icon_light/icon_light_512x512.png')) ?>"
+           alt="" width="512" height="512" aria-hidden="true">
+      <span class="brand-lockup__word">All The <span class="mark">Venues</span></span>
     </a>
 
     <button class="nav-toggle" type="button" aria-label="Toggle menu"
