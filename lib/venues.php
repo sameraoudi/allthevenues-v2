@@ -89,11 +89,27 @@ function venue_normalise_filters(array $in): array
 {
     $out = [];
 
-    foreach (['event_type', 'venue_type', 'emirate'] as $k) {
+    // Single-value slug filters.
+    foreach (['event_type', 'venue_type'] as $k) {
         $v = trim((string)($in[$k] ?? ''));
         if ($v !== '' && preg_match('/^[a-z0-9-]{1,191}$/', $v)) {
             $out[$k] = $v;
         }
+    }
+
+    // Location: multi-select emirate (checkboxes). Accept array (emirate[])
+    // or a comma-separated string (from chip/pagination links).
+    $em = $in['emirate'] ?? [];
+    $emList = is_array($em) ? $em : explode(',', (string)$em);
+    $valid = [];
+    foreach ($emList as $s) {
+        $s = trim((string)$s);
+        if ($s !== '' && preg_match('/^[a-z0-9-]{1,191}$/', $s) && !in_array($s, $valid, true)) {
+            $valid[] = $s;
+        }
+    }
+    if ($valid) {
+        $out['emirate'] = $valid;
     }
 
     $guest = trim((string)($in['guest_count'] ?? ''));
@@ -130,8 +146,15 @@ function venue_filter_sql(array $f): array
         $params[':venue_type'] = $f['venue_type'];
     }
     if (isset($f['emirate'])) {
-        $sql .= ' AND v.emirate_id = (SELECT id FROM emirates WHERE slug = :emirate)';
-        $params[':emirate'] = $f['emirate'];
+        // Multi-select: v.emirate_id IN (subquery over the chosen slugs).
+        $slugs = (array)$f['emirate'];
+        $ph = [];
+        foreach ($slugs as $i => $s) {
+            $key = ':emirate' . $i;
+            $ph[] = $key;
+            $params[$key] = $s;
+        }
+        $sql .= ' AND v.emirate_id IN (SELECT id FROM emirates WHERE slug IN (' . implode(',', $ph) . '))';
     }
     if (isset($f['event_type'])) {
         $sql .= ' AND EXISTS (SELECT 1 FROM venue_event_types vet
@@ -160,12 +183,58 @@ function venue_filter_sql(array $f): array
  * Listing query (published only) + count, with pagination
  * =========================================================================== */
 
+/** Sort options for the listing (value => label). Whitelisted ORDER BY. */
+function venue_sort_options(): array
+{
+    return [
+        'recommended' => 'Recommended',
+        'name'        => 'Name (A–Z)',
+        'capacity'    => 'Capacity (high to low)',
+    ];
+}
+
+/**
+ * Build the GET param map for the current filters (+ optional sort/page),
+ * for chip / pagination / sort links. http_build_query escapes it; callers
+ * still e() the whole attribute. Emirate stays an array (emirate[]).
+ */
+function venue_filter_params(array $filters, string $sort = 'recommended', int $page = 1): array
+{
+    $p = [];
+    foreach (['event_type', 'venue_type', 'guest_count', 'budget', 'indoor_outdoor'] as $k) {
+        if (isset($filters[$k])) {
+            $p[$k] = $filters[$k];
+        }
+    }
+    if (isset($filters['emirate'])) {
+        $p['emirate'] = array_values((array)$filters['emirate']);
+    }
+    if ($sort !== '' && $sort !== 'recommended') {
+        $p['sort'] = $sort;
+    }
+    if ($page > 1) {
+        $p['page'] = $page;
+    }
+    return $p;
+}
+
+/** Map a sort key to a safe ORDER BY clause (never interpolates user input). */
+function venue_sort_sql(string $sort): string
+{
+    switch ($sort) {
+        case 'name':     return 'v.name ASC';
+        case 'capacity': return 'v.capacity_max IS NULL, v.capacity_max DESC, v.name ASC';
+        default:         return 'v.is_featured DESC, v.name ASC';   // recommended
+    }
+}
+
 /**
  * @return array{rows: array, total: int}
  */
-function venue_list(PDO $pdo, array $filters, int $page, int $perPage): array
+function venue_list(PDO $pdo, array $filters, int $page, int $perPage, string $sort = 'recommended'): array
 {
     [$where, $params] = venue_filter_sql($filters);
+    $orderBy = venue_sort_sql($sort);
 
     // Total (for pagination + result count).
     $countSql = 'SELECT COUNT(*) FROM venues v WHERE v.status = :status' . $where;
@@ -191,7 +260,7 @@ function venue_list(PDO $pdo, array $filters, int $page, int $perPage): array
             LEFT JOIN emirates    e  ON e.id  = v.emirate_id
             LEFT JOIN partners    p  ON p.id  = v.partner_id
             WHERE v.status = :status" . $where . "
-            ORDER BY v.is_featured DESC, v.name ASC
+            ORDER BY " . $orderBy . "
             LIMIT :limit OFFSET :offset";
 
     $stmt = $pdo->prepare($sql);

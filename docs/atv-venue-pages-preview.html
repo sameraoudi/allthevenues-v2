@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All The Venues — venue pages preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+:root{--navy:#0E1B2A;--blue:#6C93B7;--action:#426F94;--action-hover:#315B7C;--pearl:#F7F4EF;--sand:#C8B8A0;--ink:#0E1B2A;--muted:#5b6b7a;--line:#e4ded4;--card:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--pearl);color:var(--ink);line-height:1.6}
+h1,h2,h3,h4,.serif{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+a{color:inherit;text-decoration:none}
+.btn{display:inline-block;background:var(--action);color:#fff;padding:11px 20px;border-radius:8px;font-weight:600;font-size:14px;border:none;cursor:pointer}
+.btn:hover{background:var(--action-hover)}
+.btn-out{background:#fff;border:1px solid var(--line);color:var(--navy)}
+.chip{font-size:12px;color:var(--navy);background:#eef1f4;border:1px solid var(--line);padding:3px 10px;border-radius:20px;display:inline-flex;gap:5px;align-items:center}
+.badge{background:var(--sand);color:#5a4a30;font-size:11px;font-weight:600;letter-spacing:.5px;padding:4px 10px;border-radius:6px}
+.crumb{font-size:13px;color:var(--muted);padding:16px 0}
+.crumb b{color:var(--navy);font-weight:500}
+.screenlabel{background:var(--navy);color:var(--sand);font-family:'Cormorant Garamond',serif;font-size:20px;padding:12px 24px;margin-top:40px}
+
+/* header */
+.nav{background:var(--navy);color:#fff}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:66px}
+.logo{font-family:'Cormorant Garamond',serif;font-size:22px}.logo .m{color:var(--sand)}
+.nav .r{display:flex;gap:14px;align-items:center;font-size:14px;color:#d7dde3}
+
+/* listing */
+.listhead{display:flex;justify-content:space-between;align-items:flex-end;margin:6px 0 20px}
+.listhead h1{font-size:34px}.listhead .cnt{font-size:14px;color:var(--muted)}
+.sortbox{font-size:13px;color:var(--muted);border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 12px}
+.layout{display:grid;grid-template-columns:270px 1fr;gap:26px;padding-bottom:50px}
+.filters{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}
+.filters .fh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.filters .fh b{font-family:'Cormorant Garamond',serif;font-size:19px}
+.filters .fh a{font-size:12px;color:var(--action)}
+.fgroup{border-top:1px solid var(--line);padding:12px 0}
+.fgroup label.t{display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer}
+.fopt{font-size:13px;color:var(--muted);padding:6px 0 0;display:flex;gap:8px;align-items:center}
+.fopt input{accent-color:var(--action)}
+.sel{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:13px;color:var(--muted);background:#fbfaf7;margin-top:8px;display:flex;justify-content:space-between}
+.applybtn{width:100%;margin-top:14px}
+
+.rcard{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;display:grid;grid-template-columns:230px 1fr;box-shadow:0 8px 22px rgba(14,27,42,.07);margin-bottom:18px}
+.rcard .img{background:var(--navy) center/cover no-repeat;position:relative;min-height:180px}
+.rcard .badge{position:absolute;top:12px;left:12px}
+.rcard .body{padding:16px 18px;position:relative}
+.rcard .heart{position:absolute;top:14px;right:16px;color:var(--muted)}
+.rcard h3{font-size:23px}
+.rcard .addr{font-size:13px;color:var(--muted);margin-bottom:10px}
+.rcard .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.rcard .desc{font-size:13.5px;color:#40525f;margin-bottom:12px;max-width:560px}
+.rcard .foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:11px}
+.rcard .spend{font-size:12px;color:var(--muted)}.rcard .foot .link{font-size:13px;color:var(--action);font-weight:600}
+.pager{display:flex;gap:6px;justify-content:center;padding:8px 0}
+.pager span{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted);background:#fff}
+.pager span.on{background:var(--action);color:#fff;border-color:var(--action)}
+
+/* detail */
+.dtop{display:flex;justify-content:space-between;align-items:center;padding:6px 0 14px}
+.gallery{display:grid;grid-template-columns:2fr 1fr;gap:10px;height:380px}
+.gallery .main{background:var(--navy) center/cover no-repeat;border-radius:14px;position:relative}
+.gallery .main .badge{position:absolute;top:14px;left:14px}
+.gallery .col{display:grid;grid-template-rows:1fr 1fr;gap:10px}
+.gallery .col .t{background:var(--navy) center/cover no-repeat;border-radius:14px;position:relative}
+.gallery .more{position:absolute;inset:0;background:rgba(14,27,42,.55);color:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500}
+.dhead{display:flex;justify-content:space-between;align-items:flex-start;margin:22px 0 4px}
+.dhead h1{font-size:38px}.dhead .addr{font-size:14px;color:var(--muted)}
+.dhead .acts{display:flex;gap:10px}
+.tabs{display:flex;gap:26px;border-bottom:1px solid var(--line);margin:20px 0 24px;font-size:14px;position:sticky;top:0;background:var(--pearl);z-index:5;padding-top:12px}
+.ebtn{font-size:13px;color:#fff;background:var(--action);padding:5px 13px;border-radius:6px;font-weight:600}
+.fchips{display:flex;gap:8px;flex-wrap:wrap;margin:-6px 0 18px;align-items:center}
+.fchips .fl{font-size:12px;color:var(--muted);margin-right:2px}
+.fchips span.f{background:#fff;border:1px solid var(--line);color:var(--navy);font-size:12.5px;padding:5px 11px;border-radius:20px;display:inline-flex;gap:8px;align-items:center}
+.fchips span.f i{color:var(--muted);cursor:pointer;font-size:11px}
+.highlights{display:grid;grid-template-columns:1fr 1fr;gap:9px 18px;margin:4px 0 22px}
+.highlights div{font-size:13.5px;color:var(--navy);display:flex;gap:9px;align-items:center}
+.highlights i{color:var(--action);width:16px}
+.tabs a{padding:0 0 12px;color:var(--muted)}
+.tabs a.on{color:var(--navy);font-weight:600;border-bottom:2px solid var(--action)}
+.dbody{display:grid;grid-template-columns:1fr 320px;gap:30px;padding-bottom:40px}
+.dbody h2{font-size:26px;margin-bottom:10px}
+.dbody p{font-size:14.5px;color:#40525f;margin-bottom:16px}
+.facils{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+.facils div{font-size:13.5px;color:var(--navy);display:flex;gap:9px;align-items:center}
+.facils i{color:var(--blue);width:18px}
+.keypanel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;height:fit-content}
+.keypanel h4{font-size:20px;margin-bottom:12px}
+.krow{display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-top:1px solid var(--line)}
+.krow .k{color:var(--muted)}.krow .v{color:var(--navy);font-weight:500;text-align:right}
+.enqbar{background:var(--navy);color:#fff;border-radius:12px;padding:16px 18px;margin-top:16px}
+.enqbar p{font-size:13px;color:#c7d0d8;margin-bottom:10px}
+.enqbar .btn{background:var(--sand);color:var(--navy);width:100%;text-align:center}
+.simsec{padding:6px 0 54px}
+.simsec h2{font-size:30px}
+.simgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:16px}
+.simcard{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 8px 22px rgba(14,27,42,.06)}
+.simcard .im{height:152px;background:var(--navy) center/cover no-repeat}
+.simcard .bd{padding:13px 16px}
+.simcard h3{font-size:20px}
+.simcard .a{font-size:12.5px;color:var(--muted);margin:2px 0 10px}
+.simcard .lk{font-size:12.5px;color:var(--action);font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="nav"><div class="wrap"><div class="logo">All The <span class="m">Venues</span></div>
+<div class="r"><span>Venues</span><span>Event Types</span><span>Locations</span><span><i class="fa-regular fa-heart"></i> Shortlist</span><button class="btn" style="padding:8px 14px">Enquire Now</button></div></div></div>
+
+<div class="screenlabel">1 · Venues — browse / search results</div>
+<div class="wrap">
+  <div class="crumb">Home › <b>Venues</b></div>
+  <div class="listhead"><div><h1>Venues in Dubai</h1><div class="cnt">91 venues match your search</div></div>
+    <div class="sortbox">Sort by: Recommended <i class="fa-solid fa-chevron-down"></i></div></div>
+  <div class="fchips"><span class="fl">Active filters:</span><span class="f">Dubai <i class="fa-solid fa-xmark"></i></span><span class="f">Indoor <i class="fa-solid fa-xmark"></i></span><span class="f">Hotel Ballroom <i class="fa-solid fa-xmark"></i></span><span class="f">Up to 600 guests <i class="fa-solid fa-xmark"></i></span><span class="fl" style="cursor:pointer;color:var(--action)">Clear all</span></div>
+  <div class="layout">
+    <aside class="filters">
+      <div class="fh"><b>Refine your search</b><a>Reset all</a></div>
+      <div class="fgroup"><label class="t">Location <i class="fa-solid fa-chevron-up"></i></label>
+        <div class="fopt"><input type="checkbox" checked> Dubai</div>
+        <div class="fopt"><input type="checkbox"> Abu Dhabi</div>
+        <div class="fopt"><input type="checkbox"> Sharjah</div>
+        <div class="fopt"><input type="checkbox"> Ras Al Khaimah</div></div>
+      <div class="fgroup"><label class="t">Venue Type</label><div class="sel">All types <i class="fa-solid fa-chevron-down"></i></div></div>
+      <div class="fgroup"><label class="t">Event Type</label><div class="sel">All event types <i class="fa-solid fa-chevron-down"></i></div></div>
+      <div class="fgroup"><label class="t">Guest Count</label><div class="sel">Any number <i class="fa-solid fa-chevron-down"></i></div></div>
+      <div class="fgroup"><label class="t">Budget</label><div class="sel">Any budget <i class="fa-solid fa-chevron-down"></i></div></div>
+      <div class="fgroup"><label class="t">Indoor / Outdoor</label><div class="sel">Any <i class="fa-solid fa-chevron-down"></i></div></div>
+      <div class="fgroup"><label class="t">Facilities</label>
+        <div class="fopt"><input type="checkbox"> Air Conditioning</div>
+        <div class="fopt"><input type="checkbox"> Catering In-house</div>
+        <div class="fopt"><input type="checkbox"> Parking</div></div>
+      <button class="btn applybtn">Apply Filters</button>
+    </aside>
+    <div>
+      <div class="rcard"><div class="img" style="background-image:url('https://staging.allthevenues.com/uploads/venues/images/1486027548_Armani-Ballroom.JPG')"><span class="badge">Featured</span></div>
+        <div class="body"><span class="heart"><i class="fa-regular fa-heart"></i></span><h3>The Grand Ballroom</h3><div class="addr">Downtown Dubai</div>
+          <div class="chips"><span class="chip"><i class="fa-solid fa-user-group"></i> 600</span><span class="chip">Indoor</span><span class="chip">Hotel Ballroom</span></div>
+          <div class="desc">An elegant pillar-less ballroom with high ceilings, premium design, and exceptional service.</div>
+          <div class="foot"><span class="spend">Minimum spend from AED 180,000</span><span style="display:flex;gap:12px;align-items:center"><span class="link">View details</span><span class="ebtn">Enquire</span></span></div></div></div>
+      <div class="rcard"><div class="img" style="background-image:url('https://staging.allthevenues.com/uploads/venues/images/1485941894_Zabeel-BeachWedding-Main.jpg')"></div>
+        <div class="body"><span class="heart"><i class="fa-regular fa-heart"></i></span><h3>Jumeirah Beach Garden</h3><div class="addr">Jumeirah Beach Hotel</div>
+          <div class="chips"><span class="chip"><i class="fa-solid fa-user-group"></i> 300</span><span class="chip">Outdoor</span><span class="chip">Garden</span></div>
+          <div class="desc">Beachfront garden with direct beach views — perfect for weddings and private events.</div>
+          <div class="foot"><span class="spend">Minimum spend available</span><span style="display:flex;gap:12px;align-items:center"><span class="link">View details</span><span class="ebtn">Enquire</span></span></div></div></div>
+      <div class="rcard"><div class="img" style="background-image:url('https://staging.allthevenues.com/uploads/venues/images/1486015164_fourseasons-dana-main.jpeg')"></div>
+        <div class="body"><span class="heart"><i class="fa-regular fa-heart"></i></span><h3>Four Seasons — Dana</h3><div class="addr">Jumeirah, Dubai</div>
+          <div class="chips"><span class="chip"><i class="fa-solid fa-user-group"></i> 450</span><span class="chip">Indoor</span><span class="chip">Resort</span></div>
+          <div class="desc">A luxurious resort with versatile indoor and outdoor event spaces.</div>
+          <div class="foot"><span class="spend">Price on request</span><span style="display:flex;gap:12px;align-items:center"><span class="link">View details</span><span class="ebtn">Enquire</span></span></div></div></div>
+      <div class="pager"><span>‹</span><span class="on">1</span><span>2</span><span>3</span><span>…</span><span>8</span><span>›</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="screenlabel">2 · Single venue</div>
+<div class="wrap">
+  <div class="dtop"><div class="crumb" style="padding:0">Home › Venues › <b>The Grand Ballroom</b></div>
+    <div style="display:flex;gap:10px"><button class="btn btn-out"><i class="fa-regular fa-heart"></i> Shortlist</button><button class="btn">Enquire Now</button></div></div>
+  <div class="gallery">
+    <div class="main" style="background-image:url('https://staging.allthevenues.com/uploads/venues/images/1486027548_Armani-Ballroom.JPG')"><span class="badge">Featured</span></div>
+    <div class="col"><div class="t" style="background-image:url('https://staging.allthevenues.com/uploads/venues/images/1486026632_oneandonly-main.JPG')"></div>
+      <div class="t" style="background-image:url('https://staging.allthevenues.com/uploads/venues/images/1486015164_fourseasons-dana-main.jpeg')"><div class="more">+28 more</div></div></div>
+  </div>
+  <div class="dhead"><div><h1>The Grand Ballroom</h1><div class="addr">Address Dubai Mall, Downtown Dubai</div></div></div>
+  <div class="tabs"><a class="on">Overview</a><a>Layouts &amp; Capacity</a><a>Facilities</a><a>Packages</a><a>Location</a></div>
+  <div class="dbody">
+    <div>
+      <h2>About this venue</h2>
+      <p>A spectacular pillar-less ballroom with breathtaking contemporary interiors and exceptional service. Ideal for large weddings, gala dinners, conferences, and corporate events.</p>
+      <h2>What makes it special</h2>
+      <div class="highlights">
+        <div><i class="fa-solid fa-check"></i> Pillar-less ballroom</div><div><i class="fa-solid fa-check"></i> Skyline views</div>
+        <div><i class="fa-solid fa-check"></i> Large pre-function area</div><div><i class="fa-solid fa-check"></i> Hotel accommodation</div>
+        <div><i class="fa-solid fa-check"></i> In-house catering</div><div><i class="fa-solid fa-check"></i> Outdoor reception lawn</div>
+      </div>
+      <h2 style="margin-top:8px">Facilities</h2>
+      <div class="facils">
+        <div><i class="fa-solid fa-snowflake"></i> Air Conditioning</div><div><i class="fa-solid fa-utensils"></i> In-House Catering</div>
+        <div><i class="fa-solid fa-bed"></i> Accommodation</div><div><i class="fa-solid fa-wifi"></i> Wi-Fi</div>
+        <div><i class="fa-solid fa-square-parking"></i> Parking</div><div><i class="fa-solid fa-champagne-glasses"></i> Valet Parking</div>
+      </div>
+    </div>
+    <div>
+      <div class="keypanel"><h4>Key Information</h4>
+        <div class="krow"><span class="k">Venue Type</span><span class="v">Hotel Ballroom</span></div>
+        <div class="krow"><span class="k">Best For</span><span class="v">Weddings, Galas, Conferences</span></div>
+        <div class="krow"><span class="k">Guest Count</span><span class="v">Up to 600</span></div>
+        <div class="krow"><span class="k">Indoor Space</span><span class="v">900 sqm</span></div>
+        <div class="krow"><span class="k">Location</span><span class="v">Downtown Dubai</span></div>
+        <div class="krow"><span class="k">Suitability</span><span class="v">Hotel</span></div>
+      </div>
+      <div class="enqbar"><h4 style="color:#fff;font-size:19px;margin-bottom:6px">Interested in this venue?</h4><p>Share your event details once, and we'll help connect you with the right contact.</p><button class="btn">Enquire about this venue</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap"><div class="simsec">
+  <h2>Similar venues</h2><div class="sub2">You might also consider</div>
+  <div class="simgrid">
+    <div class="simcard"><div class="im" style="background-image:url('https://staging.allthevenues.com/uploads/venues/images/1485941894_Zabeel-BeachWedding-Main.jpg')"></div><div class="bd"><h3>Jumeirah Beach Garden</h3><div class="a">Jumeirah · Garden · up to 300</div><span class="lk">View details →</span></div></div>
+    <div class="simcard"><div class="im" style="background-image:url('https://staging.allthevenues.com/uploads/venues/images/1486015164_fourseasons-dana-main.jpeg')"></div><div class="bd"><h3>Four Seasons — Dana</h3><div class="a">Jumeirah · Resort · up to 450</div><span class="lk">View details →</span></div></div>
+    <div class="simcard"><div class="im" style="background-image:url('https://staging.allthevenues.com/uploads/venues/images/1486026632_oneandonly-main.JPG')"></div><div class="bd"><h3>One&amp;Only Royal Mirage</h3><div class="a">Dubai · Resort · up to 500</div><span class="lk">View details →</span></div></div>
+  </div>
+</div></div>
+
+<p style="max-width:1160px;margin:0 auto;padding:8px 24px 40px;font-size:12px;color:var(--muted)">Preview — brand palette + real staging photos. Providers browse/detail reuse these same patterns (partner cards + a provider header with a grid of their venues). Icons are Font Awesome placeholders; production uses the self-hosted set.</p>
+
+</body>
+</html>

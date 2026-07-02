@@ -3,16 +3,73 @@
 (function () {
   'use strict';
 
-  // Mobile nav toggle.
+  // Delegated click handlers.
   document.addEventListener('click', function (ev) {
-    var btn = ev.target.closest('[data-nav-toggle]');
-    if (!btn) return;
-    var id = btn.getAttribute('aria-controls') || 'mainNav';
-    var nav = document.getElementById(id);
-    if (!nav) return;
-    var open = nav.classList.toggle('open');
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    // Mobile nav toggle.
+    var navBtn = ev.target.closest('[data-nav-toggle]');
+    if (navBtn) {
+      var id = navBtn.getAttribute('aria-controls') || 'mainNav';
+      var nav = document.getElementById(id);
+      if (nav) {
+        var open = nav.classList.toggle('open');
+        navBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+      return;
+    }
+
+    // Listing: mobile filters toggle.
+    var fBtn = ev.target.closest('[data-filters-toggle]');
+    if (fBtn) {
+      var fs = document.getElementById('venuesFilters');
+      if (fs) {
+        var fopen = fs.classList.toggle('is-open');
+        fBtn.setAttribute('aria-expanded', fopen ? 'true' : 'false');
+      }
+      return;
+    }
+
+    // Detail: gallery thumbnail → swap main image.
+    var thumb = ev.target.closest('[data-full]');
+    if (thumb) {
+      var main = document.getElementById('vdMain');
+      var full = thumb.getAttribute('data-full');
+      if (main && full) { main.setAttribute('src', full); }
+      return;
+    }
+
+    // Detail: sticky tabs — show the matching panel.
+    var tab = ev.target.closest('[data-tab]');
+    if (tab) {
+      ev.preventDefault();
+      var key = tab.getAttribute('data-tab');
+      var wrap = tab.closest('.atv-wrap') || document;
+      var tabs = wrap.querySelectorAll('[data-tab]');
+      for (var i = 0; i < tabs.length; i++) {
+        tabs[i].classList.toggle('is-active', tabs[i] === tab);
+      }
+      var panels = wrap.querySelectorAll('[data-tab-panel]');
+      for (var j = 0; j < panels.length; j++) {
+        panels[j].classList.toggle('is-active', panels[j].getAttribute('data-tab-panel') === key);
+      }
+      return;
+    }
   });
+
+  // Listing: auto-submit the sort form on change (progressive enhancement;
+  // a visible Sort button remains for no-JS).
+  document.addEventListener('change', function (ev) {
+    var sel = ev.target.closest('[data-autosubmit]');
+    if (sel && sel.form) { sel.form.submit(); }
+  });
+
+  // Detail: enable JS tab mode (hide inactive panels) only when tabs exist.
+  (function () {
+    var tabsNav = document.querySelector('[data-tabs]');
+    if (tabsNav) {
+      var body = tabsNav.parentNode;
+      if (body) body.classList.add('tabs-js');
+    }
+  })();
 
   // Enquiry form stepper (progressive enhancement).
   //

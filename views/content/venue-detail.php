@@ -2,210 +2,201 @@
 declare(strict_types=1);
 
 /**
- * Venue detail content view. Expects in scope:
+ * Venue detail content view (Coastal UAE visual pass). Expects:
  *   array $venue, array $images, array $layouts, array $similar.
  *
- * IMPORTANT — output rules:
- *   - Rich-text fields (description, packages, special_offer, av_support,
- *     food_beverage, restrictions, atv_review) were sanitized at import
- *     (U1b) to a safe tag allowlist. They are rendered AS HTML (no e()).
- *   - Everything else (name, location, numbers, tags, dates) is escaped
- *     with e().
- *   - map_embed is intentionally NOT rendered (raw iframe; deferred to the
- *     maps + CSP unit).
+ * Rich-text fields (description, facilities, food_beverage, av_support,
+ * packages, special_offer, restrictions, atv_review) were sanitized at
+ * import (U1b) and are rendered AS HTML. Everything else is e()-escaped.
+ * map_embed is intentionally NOT rendered (deferred to the maps + CSP unit).
  */
-
 /** @var array $venue @var array $images @var array $layouts @var array $similar */
+require_once __DIR__ . '/../../lib/icons.php';
 
 $name       = (string)($venue['name'] ?? 'Venue');
-$location   = trim(implode(', ', array_filter([
-    trim((string)($venue['area'] ?? '')),
-    trim((string)($venue['emirate_name'] ?? '')),
-])));
-$tags       = tags_from($venue['best_for'] ?? null);
+$area       = trim((string)($venue['area'] ?? ''));
+$emirate    = trim((string)($venue['emirate_name'] ?? ''));
+$address    = trim((string)($venue['address'] ?? ''));
+$locShort   = trim(implode(', ', array_filter([$area, $emirate])));
+$headAddr   = $address !== '' ? $address : $locShort;
 $enquireUrl = base_url('enquire') . query_string(['venue' => (int)$venue['id']]);
 $ioLabels   = venue_indoor_outdoor_options();
+$ioLabel    = !empty($venue['indoor_outdoor']) ? ($ioLabels[$venue['indoor_outdoor']] ?? $venue['indoor_outdoor']) : '';
+$bestForTags = tags_from($venue['best_for'] ?? null, 6);
 
-// Rich-text (already-sanitized) sections to render as HTML.
-$richSections = [
-    'Description'          => $venue['description']   ?? '',
-    'Facilities'           => $venue['facilities']    ?? '',
-    'Food & beverage'      => $venue['food_beverage'] ?? '',
-    'AV & technical'       => $venue['av_support']    ?? '',
-    'Packages'             => $venue['packages']      ?? '',
-    'Special offer'        => $venue['special_offer'] ?? '',
-    'Notes & restrictions' => $venue['restrictions']  ?? '',
-];
+// Rich-text section helper (sanitized HTML → rendered raw).
+$section = static function (string $title, ?string $html): void {
+    if (trim((string)$html) === '') return;
+    echo '<h3 class="vd-sub">' . e($title) . '</h3>'
+       . '<div class="venue-richtext">' . $html /* pre-sanitized */ . '</div>';
+};
 
-$capMax = ($venue['capacity_max'] ?? null) !== null ? (int)$venue['capacity_max'] : null;
-$capMin = ($venue['capacity_min'] ?? null) !== null ? (int)$venue['capacity_min'] : null;
-$minSpend = ($venue['minimum_spend'] ?? null);
-$updated = !empty($venue['updated_at']) ? date('j M Y', strtotime((string)$venue['updated_at'])) : null;
+// Which tabs have content.
+$hasFacilities = trim((string)($venue['facilities'] ?? '')) !== ''
+    || trim((string)($venue['food_beverage'] ?? '')) !== ''
+    || trim((string)($venue['av_support'] ?? '')) !== '';
+$hasPackages = trim((string)($venue['packages'] ?? '')) !== ''
+    || trim((string)($venue['special_offer'] ?? '')) !== ''
+    || trim((string)($venue['restrictions'] ?? '')) !== '';
+$hasLocation = ($address !== '' || $locShort !== '');
+
+$tabs = ['overview' => 'Overview'];
+if ($layouts)       $tabs['layouts']    = 'Layouts & Capacity';
+if ($hasFacilities) $tabs['facilities'] = 'Facilities';
+if ($hasPackages)   $tabs['packages']   = 'Packages';
+if ($hasLocation)   $tabs['location']   = 'Location';
+
+// Gallery images (primary first already).
+$mainImg = venue_img_src($images[0]['file_path'] ?? null);
+$mainAlt = (string)($images[0]['alt_text'] ?? $name);
+$thumbs  = array_slice($images, 1, 2);
+$more    = max(0, count($images) - 3);
 ?>
-<nav aria-label="breadcrumb" class="bg-light border-bottom">
-  <div class="container py-2">
-    <ol class="breadcrumb mb-0 small">
-      <li class="breadcrumb-item"><a href="<?= e(base_url('/')) ?>">Home</a></li>
-      <li class="breadcrumb-item"><a href="<?= e(base_url('venues')) ?>">Venues</a></li>
-      <li class="breadcrumb-item active" aria-current="page"><?= e($name) ?></li>
-    </ol>
+<div class="atv-wrap">
+  <div class="vd-top">
+    <div class="venues-crumb">
+      <a href="<?= e(base_url('/')) ?>">Home</a> &rsaquo;
+      <a href="<?= e(base_url('venues')) ?>">Venues</a> &rsaquo; <b><?= e($name) ?></b>
+    </div>
+    <div class="vd-top__acts">
+      <button type="button" class="atv-btn atv-btn--sm atv-btn--ghost" aria-label="Add to shortlist"><?= icon('heart') ?> Shortlist</button>
+      <a class="atv-btn atv-btn--sm" href="<?= e($enquireUrl) ?>">Enquire now</a>
+    </div>
   </div>
-</nav>
 
-<div class="container py-4">
-  <div class="row g-4">
-    <div class="col-lg-8">
-
-      <!-- Hero gallery -->
-      <?php if (count($images) > 1): ?>
-        <div id="venueGallery" class="carousel slide mb-4 shadow-sm rounded overflow-hidden" data-bs-ride="false">
-          <div class="carousel-indicators">
-            <?php foreach ($images as $i => $img): ?>
-              <button type="button" data-bs-target="#venueGallery" data-bs-slide-to="<?= e((string)$i) ?>"
-                      class="<?= $i === 0 ? 'active' : '' ?>" aria-label="Slide <?= e((string)($i + 1)) ?>"></button>
-            <?php endforeach; ?>
-          </div>
-          <div class="carousel-inner ratio ratio-16x9 bg-light">
-            <?php foreach ($images as $i => $img): ?>
-              <div class="carousel-item <?= $i === 0 ? 'active' : '' ?>">
-                <img src="<?= e(venue_img_src($img['file_path'] ?? null)) ?>"
-                     alt="<?= e($img['alt_text'] ?? $name) ?>" class="d-block w-100 object-fit-cover">
-              </div>
-            <?php endforeach; ?>
-          </div>
-          <button class="carousel-control-prev" type="button" data-bs-target="#venueGallery" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Previous</span>
+  <!-- Gallery -->
+  <div class="vd-gallery" data-gallery>
+    <div class="vd-gallery__main">
+      <img id="vdMain" src="<?= e($mainImg) ?>" alt="<?= e($mainAlt) ?>">
+      <?php if (!empty($venue['is_featured'])): ?><span class="atv-badge vd-gallery__badge">Featured</span><?php endif; ?>
+    </div>
+    <?php if ($thumbs): ?>
+      <div class="vd-gallery__col">
+        <?php foreach ($thumbs as $i => $t): $src = venue_img_src($t['file_path'] ?? null); ?>
+          <button type="button" class="vd-gallery__thumb" data-full="<?= e($src) ?>" aria-label="View image">
+            <img src="<?= e($src) ?>" alt="<?= e($t['alt_text'] ?? $name) ?>">
+            <?php if ($i === array_key_last($thumbs) && $more > 0): ?><span class="vd-gallery__more">+<?= e((string)$more) ?> more</span><?php endif; ?>
           </button>
-          <button class="carousel-control-next" type="button" data-bs-target="#venueGallery" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Next</span>
-          </button>
-        </div>
-      <?php else: ?>
-        <div class="ratio ratio-16x9 bg-light mb-4 shadow-sm rounded overflow-hidden">
-          <img src="<?= e(venue_img_src($images[0]['file_path'] ?? null)) ?>"
-               alt="<?= e($images[0]['alt_text'] ?? $name) ?>" class="object-fit-cover">
-        </div>
-      <?php endif; ?>
-
-      <!-- Title block -->
-      <div class="mb-3">
-        <div class="d-flex flex-wrap gap-2 mb-2">
-          <?php if (!empty($venue['venue_type_name'])): ?>
-            <span class="badge rounded-pill text-bg-primary"><?= e($venue['venue_type_name']) ?></span>
-          <?php endif; ?>
-          <?php if (!empty($venue['indoor_outdoor'])): ?>
-            <span class="badge rounded-pill text-bg-light border"><?= e($ioLabels[$venue['indoor_outdoor']] ?? $venue['indoor_outdoor']) ?></span>
-          <?php endif; ?>
-          <?php if (!empty($venue['is_featured'])): ?>
-            <span class="badge rounded-pill text-bg-warning">Featured</span>
-          <?php endif; ?>
-          <?php if (!empty($venue['is_verified'])): ?>
-            <span class="badge rounded-pill text-bg-success">Verified</span>
-          <?php endif; ?>
-        </div>
-        <h1 class="h2 mb-1"><?= e($name) ?></h1>
-        <?php if ($location !== ''): ?>
-          <p class="text-muted mb-1">📍 <?= e($location) ?></p>
-        <?php endif; ?>
-        <?php if (!empty($venue['partner_name'])): ?>
-          <p class="text-muted small mb-0">By <?= e($venue['partner_name']) ?></p>
-        <?php endif; ?>
+        <?php endforeach; ?>
       </div>
+    <?php endif; ?>
+  </div>
 
-      <?php if ($tags): ?>
-        <div class="d-flex flex-wrap gap-1 mb-4">
-          <span class="small text-muted me-1">Best for:</span>
-          <?php foreach ($tags as $t): ?>
-            <span class="badge text-bg-secondary fw-normal"><?= e($t) ?></span>
-          <?php endforeach; ?>
-        </div>
+  <!-- Title -->
+  <div class="vd-head">
+    <div>
+      <h1><?= e($name) ?></h1>
+      <?php if ($headAddr !== ''): ?><div class="vd-head__addr"><?= icon('building') ?> <?= e($headAddr) ?></div><?php endif; ?>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <nav class="vd-tabs" data-tabs aria-label="Venue sections">
+    <?php $first = true; foreach ($tabs as $key => $label): ?>
+      <a class="vd-tab<?= $first ? ' is-active' : '' ?>" href="#tab-<?= e($key) ?>" data-tab="<?= e($key) ?>"><?= e($label) ?></a>
+      <?php $first = false; endforeach; ?>
+  </nav>
+
+  <div class="vd-body">
+    <div class="vd-content">
+      <!-- Overview -->
+      <section class="vd-panel is-active" data-tab-panel="overview" id="tab-overview">
+        <?php if (trim((string)$venue['description']) !== ''): ?>
+          <h2>About this venue</h2>
+          <div class="venue-richtext"><?= $venue['description'] /* sanitized */ ?></div>
+        <?php endif; ?>
+        <?php if ($bestForTags): ?>
+          <h2>What makes it special</h2>
+          <div class="vd-highlights">
+            <?php foreach ($bestForTags as $t): ?>
+              <div><?= icon('check-circle') ?> <?= e($t) ?></div>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+        <?php if (trim((string)($venue['atv_review'] ?? '')) !== ''): ?>
+          <h2>Our take</h2>
+          <div class="venue-richtext"><?= $venue['atv_review'] /* sanitized */ ?></div>
+        <?php endif; ?>
+      </section>
+
+      <!-- Layouts & Capacity -->
+      <?php if ($layouts): ?>
+        <section class="vd-panel" data-tab-panel="layouts" id="tab-layouts">
+          <h2>Layouts &amp; capacity</h2>
+          <table class="vd-layouts">
+            <thead><tr><th>Layout</th><th class="ta-r">Capacity</th></tr></thead>
+            <tbody>
+              <?php foreach ($layouts as $l): ?>
+                <tr><td><?= e($l['layout_type']) ?></td><td class="ta-r"><?= e(number_format((int)$l['capacity'])) ?></td></tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </section>
       <?php endif; ?>
 
-      <!-- Rich-text sections (sanitized HTML, rendered raw) -->
-      <?php foreach ($richSections as $title => $html): ?>
-        <?php if (trim((string)$html) !== ''): ?>
-          <section class="mb-4">
-            <h2 class="h5 border-bottom pb-2 mb-3"><?= e($title) ?></h2>
-            <div class="venue-richtext"><?= $html /* pre-sanitized at import — do NOT escape */ ?></div>
-          </section>
-        <?php endif; ?>
-      <?php endforeach; ?>
+      <!-- Facilities -->
+      <?php if ($hasFacilities): ?>
+        <section class="vd-panel" data-tab-panel="facilities" id="tab-facilities">
+          <h2>Facilities</h2>
+          <?php $section('Facilities', $venue['facilities'] ?? ''); ?>
+          <?php $section('Food &amp; beverage', $venue['food_beverage'] ?? ''); ?>
+          <?php $section('AV &amp; technical', $venue['av_support'] ?? ''); ?>
+        </section>
+      <?php endif; ?>
 
-      <!-- Layout capacity table -->
-      <?php if ($layouts): ?>
-        <section class="mb-4">
-          <h2 class="h5 border-bottom pb-2 mb-3">Layout capacity</h2>
-          <div class="table-responsive">
-            <table class="table table-sm table-striped align-middle mb-0">
-              <thead>
-                <tr><th scope="col">Layout</th><th scope="col" class="text-end">Capacity</th></tr>
-              </thead>
-              <tbody>
-                <?php foreach ($layouts as $l): ?>
-                  <tr>
-                    <td><?= e($l['layout_type']) ?></td>
-                    <td class="text-end"><?= e(number_format((int)$l['capacity'])) ?></td>
-                  </tr>
-                <?php endforeach; ?>
-              </tbody>
-            </table>
-          </div>
+      <!-- Packages -->
+      <?php if ($hasPackages): ?>
+        <section class="vd-panel" data-tab-panel="packages" id="tab-packages">
+          <h2>Packages</h2>
+          <?php $section('Packages', $venue['packages'] ?? ''); ?>
+          <?php $section('Special offer', $venue['special_offer'] ?? ''); ?>
+          <?php $section('Notes &amp; restrictions', $venue['restrictions'] ?? ''); ?>
+        </section>
+      <?php endif; ?>
+
+      <!-- Location -->
+      <?php if ($hasLocation): ?>
+        <section class="vd-panel" data-tab-panel="location" id="tab-location">
+          <h2>Location</h2>
+          <?php if ($address !== ''): ?><p class="vd-loc"><?= e($address) ?></p><?php endif; ?>
+          <?php if ($locShort !== ''): ?><p class="vd-loc text-muted"><?= e($locShort) ?></p><?php endif; ?>
         </section>
       <?php endif; ?>
     </div>
 
-    <!-- Sidebar: quick facts + enquiry CTA -->
-    <div class="col-lg-4">
-      <div class="card shadow-sm mb-4 sticky-lg-top detail-sticky">
-        <div class="card-body">
-          <h2 class="h5 card-title">Quick facts</h2>
-          <ul class="list-unstyled small mb-3">
-            <?php if ($capMax !== null): ?>
-              <li class="d-flex justify-content-between border-bottom py-2">
-                <span class="text-muted">Max capacity</span><span class="fw-semibold"><?= e(number_format($capMax)) ?> guests</span>
-              </li>
-            <?php endif; ?>
-            <?php if ($capMin !== null): ?>
-              <li class="d-flex justify-content-between border-bottom py-2">
-                <span class="text-muted">Min guests</span><span class="fw-semibold"><?= e(number_format($capMin)) ?></span>
-              </li>
-            <?php endif; ?>
-            <?php if (!empty($venue['pricing_level'])): ?>
-              <li class="d-flex justify-content-between border-bottom py-2">
-                <span class="text-muted">Pricing</span><span class="fw-semibold"><?= e($venue['pricing_level']) ?></span>
-              </li>
-            <?php endif; ?>
-            <?php if ($minSpend !== null && (float)$minSpend > 0): ?>
-              <li class="d-flex justify-content-between border-bottom py-2">
-                <span class="text-muted">Minimum spend</span><span class="fw-semibold">AED <?= e(number_format((float)$minSpend)) ?></span>
-              </li>
-            <?php endif; ?>
-            <?php if (!empty($venue['venue_type_name'])): ?>
-              <li class="d-flex justify-content-between border-bottom py-2">
-                <span class="text-muted">Type</span><span class="fw-semibold"><?= e($venue['venue_type_name']) ?></span>
-              </li>
-            <?php endif; ?>
-            <?php if ($location !== ''): ?>
-              <li class="d-flex justify-content-between py-2">
-                <span class="text-muted">Location</span><span class="fw-semibold text-end"><?= e($location) ?></span>
-              </li>
-            <?php endif; ?>
-          </ul>
-          <div class="d-grid">
-            <a href="<?= e($enquireUrl) ?>" class="btn btn-primary btn-lg">Enquire about this venue</a>
-          </div>
-          <?php if ($updated !== null): ?>
-            <p class="text-muted small text-center mt-3 mb-0">Last updated <?= e($updated) ?></p>
-          <?php endif; ?>
-        </div>
+    <!-- Key info + enquire -->
+    <aside class="vd-side">
+      <div class="vd-keypanel">
+        <h4>Key information</h4>
+        <?php
+          $krow = static function (string $k, ?string $v): void {
+              if (trim((string)$v) === '') return;
+              echo '<div class="vd-krow"><span class="k">' . e($k) . '</span><span class="v">' . e($v) . '</span></div>';
+          };
+          $krow('Venue type', $venue['venue_type_name'] ?? '');
+          $krow('Best for', $bestForTags ? implode(', ', $bestForTags) : '');
+          $krow('Guest count', ($venue['capacity_max'] ?? null) !== null ? 'Up to ' . number_format((int)$venue['capacity_max']) : '');
+          $krow('Minimum guests', ($venue['capacity_min'] ?? null) ? number_format((int)$venue['capacity_min']) : '');
+          $krow('Indoor / outdoor', $ioLabel);
+          $krow('Location', $locShort);
+          $krow('Pricing', $venue['pricing_level'] ?? '');
+          $krow('Minimum spend', ($venue['minimum_spend'] ?? null) && (float)$venue['minimum_spend'] > 0 ? 'AED ' . number_format((float)$venue['minimum_spend']) : '');
+          $krow('Managed by', $venue['partner_name'] ?? '');
+        ?>
       </div>
-    </div>
+      <div class="vd-enqbar">
+        <h4>Interested in this venue?</h4>
+        <p>Share your event details once, and we'll help connect you with the right contact.</p>
+        <a class="atv-btn atv-btn--sand" href="<?= e($enquireUrl) ?>">Enquire about this venue</a>
+      </div>
+    </aside>
   </div>
 
   <!-- Similar venues -->
   <?php if ($similar): ?>
-    <section class="mt-4 pt-2">
-      <h2 class="h4 mb-3">Similar venues</h2>
+    <section class="vd-similar">
+      <h2>Similar venues</h2>
+      <div class="atv-sub2">You might also consider</div>
       <div class="atv-cards">
         <?php foreach ($similar as $venue): /* reuse card; $venue reassigned intentionally */ ?>
           <?php require __DIR__ . '/../partials/venue-card.php'; ?>

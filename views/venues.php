@@ -14,17 +14,22 @@ $pdo = db_pdo();
 
 $filters = venue_normalise_filters($_GET);
 
+$sort = (string)($_GET['sort'] ?? 'recommended');
+if (!isset(venue_sort_options()[$sort])) {
+    $sort = 'recommended';
+}
+
 $perPage = 12;
 $page    = max(1, (int)($_GET['page'] ?? 1));
 
-$result = venue_list($pdo, $filters, $page, $perPage);
+$result = venue_list($pdo, $filters, $page, $perPage, $sort);
 $venues = $result['rows'];
 $total  = $result['total'];
 
 $totalPages = max(1, (int)ceil($total / $perPage));
 if ($page > $totalPages) {
     $page = $totalPages;   // clamp; re-query if we overshot a filtered set
-    $result = venue_list($pdo, $filters, $page, $perPage);
+    $result = venue_list($pdo, $filters, $page, $perPage, $sort);
     $venues = $result['rows'];
 }
 
@@ -32,6 +37,18 @@ if ($page > $totalPages) {
 $eventTypes = venue_event_types($pdo);
 $venueTypes = venue_types_all($pdo);
 $emirates   = venue_emirates($pdo);
+
+// Contextual title: single selected emirate → "Venues in {Name}".
+$selectedEmirateSlugs = $filters['emirate'] ?? [];
+$pageHeading = 'All venues';
+if (count($selectedEmirateSlugs) === 1) {
+    foreach ($emirates as $em) {
+        if ($em['slug'] === $selectedEmirateSlugs[0]) {
+            $pageHeading = 'Venues in ' . $em['name'];
+            break;
+        }
+    }
+}
 
 $page_title   = 'Browse Venues — All The Venues';
 $content_view = __DIR__ . '/content/venues-list.php';
