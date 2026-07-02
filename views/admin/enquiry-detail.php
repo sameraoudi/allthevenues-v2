@@ -130,6 +130,36 @@ $row = static function (string $label, ?string $value): void {
       <?php if (!$partners): ?>
         <p class="text-muted mb-0">No approved partners available.</p>
       <?php else: ?>
+        <?php
+          // Context-aware default: prefer the linked venue(s)' partner, but
+          // only when that partner is approved (i.e. selectable in the list).
+          $approvedEmail = [];
+          foreach ($partners as $p) { $approvedEmail[(int)$p['id']] = (string)$p['email']; }
+
+          $venuePartners = [];   // partner_id => ['name'=>, 'email'=>, 'venues'=>[]] (first-venue order)
+          foreach ($enq['venues'] as $v) {
+              $pid = (int)($v['partner_id'] ?? 0);
+              if ($pid > 0 && isset($approvedEmail[$pid])) {
+                  if (!isset($venuePartners[$pid])) {
+                      $venuePartners[$pid] = ['name' => (string)$v['partner_name'], 'email' => $approvedEmail[$pid], 'venues' => []];
+                  }
+                  $venuePartners[$pid]['venues'][] = (string)$v['name'];
+              }
+          }
+          $defaultPid   = $venuePartners ? (int)array_key_first($venuePartners) : 0;
+          $defaultEmail = $defaultPid ? $venuePartners[$defaultPid]['email'] : '';
+        ?>
+        <?php if (count($venuePartners) > 1): ?>
+          <p class="lead-hint mb-2">
+            Linked venue partners —
+            <?php $bits = [];
+              foreach ($venuePartners as $vp) { $bits[] = e(implode(', ', $vp['venues'])) . ' → ' . e($vp['name']); }
+              echo implode('; ', $bits); /* pre-escaped */ ?>.
+            Defaulted to the first; choose another to forward there.
+          </p>
+        <?php elseif ($defaultPid): ?>
+          <p class="lead-hint mb-2">Defaulted to this venue's partner — override if needed.</p>
+        <?php endif; ?>
         <form method="post" action="<?= e(base_url('admin/enquiries/' . $id . '/assign')) ?>">
           <?php csrf_field(); ?>
           <div class="atv-field">
@@ -137,13 +167,13 @@ $row = static function (string $label, ?string $value): void {
             <select id="p-sel" name="partner_id" required>
               <option value="">Choose a partner…</option>
               <?php foreach ($partners as $p): ?>
-                <option value="<?= e((string)$p['id']) ?>" data-email="<?= e((string)$p['email']) ?>"><?= e($p['org_name']) ?></option>
+                <option value="<?= e((string)$p['id']) ?>" data-email="<?= e((string)$p['email']) ?>"<?= ((int)$p['id'] === $defaultPid) ? ' selected' : '' ?>><?= e($p['org_name']) ?></option>
               <?php endforeach; ?>
             </select>
           </div>
           <div class="atv-field">
             <label for="p-email">Recipient email</label>
-            <input type="email" id="p-email" name="routed_to_email" placeholder="Defaults to partner email" maxlength="255">
+            <input type="email" id="p-email" name="routed_to_email" value="<?= e($defaultEmail) ?>" placeholder="Defaults to partner email" maxlength="255">
           </div>
           <label class="atv-check">
             <input type="checkbox" name="send_email" value="1" checked>

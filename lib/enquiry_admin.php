@@ -180,10 +180,13 @@ function enquiry_admin_get(PDO $pdo, int $id): ?array
     }
 
     $vs = $pdo->prepare(
-        "SELECT v.id, v.name, v.slug, v.status, e.name AS emirate_name, v.partner_id
+        "SELECT v.id, v.name, v.slug, v.status, e.name AS emirate_name,
+                v.partner_id, p.org_name AS partner_name, p.email AS partner_email,
+                p.status AS partner_status
          FROM enquiry_venues ev
          JOIN venues v ON v.id = ev.venue_id
          LEFT JOIN emirates e ON e.id = v.emirate_id
+         LEFT JOIN partners p ON p.id = v.partner_id
          WHERE ev.enquiry_id = :id ORDER BY v.name"
     );
     $vs->execute([':id' => $id]);

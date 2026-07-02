@@ -681,3 +681,5 @@ select:focus-visible,
   .vd-head h1 { font-size: 30px; }
   .vd-highlights { grid-template-columns: 1fr; }
 }
+
+.lead-hint { font-size: 12.5px; color: var(--muted); }
