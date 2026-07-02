@@ -6,7 +6,11 @@ platform. Separate repository from the legacy `allthevenues` site.
 ## Stack
 
 - Structured vanilla **PHP 8** — server-rendered, **no build step**
-- **MySQL** (database `sameraou_atv2`)
+- **MySQL** (database `sameraou_atv2`) — the production/cPanel host is
+  **MySQL, not MariaDB**. All migration SQL in `db/` must use MySQL-compatible
+  syntax only. Avoid MariaDB-only constructs such as `ADD COLUMN IF NOT EXISTS`,
+  `DROP COLUMN IF EXISTS`, and the `INSERT ... AS alias` upsert form
+  (use the `VALUES()` upsert form instead). Test migrations against MySQL.
 - **Bootstrap 5**, self-hosted under `assets/` (no CDN)
 - Hosted on cPanel / **LiteSpeed**
 - Analytics: GoatCounter
