@@ -23,12 +23,20 @@ declare(strict_types=1);
  */
 function csrf_token(): string
 {
+    // Defensive: try to start a session rather than fataling mid-render.
+    // (index.php normally starts it; this keeps the page working even if the
+    // session backend is misconfigured — the primary fix is the app-owned
+    // save path in index.php.)
+    if (session_status() === PHP_SESSION_NONE) {
+        @session_start();
+    }
+
     if (session_status() !== PHP_SESSION_ACTIVE) {
-        trigger_error(
-            'csrf_token() called without an active session. '
-            . 'Caller must invoke session_start() before using CSRF helpers.',
-            E_USER_ERROR
-        );
+        // No session available — return an ephemeral token so rendering
+        // continues without a fatal. It won't persist, so csrf_validate()
+        // will fail closed on submit (safe).
+        error_log('csrf_token(): no active session; using ephemeral token.');
+        return bin2hex(random_bytes(32));
     }
 
     if (empty($_SESSION['csrf_token'])) {
@@ -80,11 +88,12 @@ function csrf_validate(): bool
  */
 function csrf_regenerate(): void
 {
+    if (session_status() === PHP_SESSION_NONE) {
+        @session_start();
+    }
     if (session_status() !== PHP_SESSION_ACTIVE) {
-        trigger_error(
-            'csrf_regenerate() called without an active session.',
-            E_USER_ERROR
-        );
+        error_log('csrf_regenerate(): no active session; skipped.');
+        return;
     }
 
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
