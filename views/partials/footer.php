@@ -47,7 +47,7 @@
     </div>
 
     <div class="site-footer__bottom">
-      <p class="copy">&copy; 2026 All The Venues. All rights reserved.</p>
+      <p class="copy">&copy; 2016&ndash;2026 All The Venues. All rights reserved.</p>
       <div class="soc">
         <a href="https://www.instagram.com/" aria-label="Instagram" rel="noopener" target="_blank"><?= icon('instagram') ?></a>
         <a href="https://www.facebook.com/" aria-label="Facebook" rel="noopener" target="_blank"><?= icon('facebook') ?></a>

@@ -96,12 +96,14 @@ select:focus-visible,
 }
 /* Header lockup: brand icon + serif wordmark. */
 .brand-lockup { display: inline-flex; align-items: center; gap: 12px; }
-.brand-lockup__icon { height: 40px; width: auto; display: block; }
+.brand-lockup__icon { height: 52px; width: auto; display: block; }
 .brand-lockup__word {
   font-family: var(--font-heading); font-weight: 600; font-size: 26px;
   line-height: 1; letter-spacing: .4px; color: #fff; white-space: nowrap;
 }
-.brand-lockup__word .mark { color: var(--sand); }
+/* Own class (not Bootstrap's .mark, which adds a highlight background):
+   "Venues" is a text-colour change only, no background fill. */
+.brand-lockup__accent { color: var(--sand); background: none; }
 .main-nav { display: flex; gap: 24px; list-style: none; font-size: 14px; color: #d7dde3; margin: 0; padding: 0; }
 .main-nav a { color: #d7dde3; }
 .main-nav a:hover { color: #fff; }
@@ -235,8 +237,8 @@ select:focus-visible,
   text-transform: uppercase; color: #c7d0d8; margin-bottom: 12px;
 }
 .footer-col ul { list-style: none; margin: 0; padding: 0; }
-.footer-col li { margin-bottom: 9px; }
-.footer-col a { font-size: 14px; color: #9fb0be; }
+.footer-col li { margin-bottom: 4px; }
+.footer-col a { font-size: 14px; line-height: 1.35; color: #9fb0be; }
 .footer-col a:hover { color: #fff; }
 .site-footer__bottom {
   display: flex; justify-content: space-between; align-items: center;

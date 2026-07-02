@@ -5,7 +5,7 @@
       <img class="brand-lockup__icon"
            src="<?= e(base_url('assets/brand/web_exports/icon_light/icon_light_512x512.png')) ?>"
            alt="" width="512" height="512" aria-hidden="true">
-      <span class="brand-lockup__word">All The <span class="mark">Venues</span></span>
+      <span class="brand-lockup__word">All The <span class="brand-lockup__accent">Venues</span></span>
     </a>
 
     <button class="nav-toggle" type="button" aria-label="Toggle menu"
