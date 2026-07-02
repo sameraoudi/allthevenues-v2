@@ -104,6 +104,8 @@ select:focus-visible,
 /* Own class (not Bootstrap's .mark, which adds a highlight background):
    "Venues" is a text-colour change only, no background fill. */
 .brand-lockup__accent { color: var(--sand); background: none; }
+/* "ATV" abbreviation shows on mobile only (see breakpoint below). */
+.brand-lockup__word--abbr { display: none; }
 .main-nav { display: flex; gap: 24px; list-style: none; font-size: 14px; color: #d7dde3; margin: 0; padding: 0; }
 .main-nav a { color: #d7dde3; }
 .main-nav a:hover { color: #fff; }
@@ -277,7 +279,8 @@ select:focus-visible,
   .atv-fields { grid-template-columns: 1fr; }
   .atv-types { grid-template-columns: repeat(2,1fr); }
   .atv-hero h1 { font-size: 34px; }
-  /* Mobile header: brand icon only, hide the wordmark text. */
-  .brand-lockup__word { display: none; }
+  /* Mobile header: brand icon + "ATV" abbreviation (V in sand). */
+  .brand-lockup__word--full { display: none; }
+  .brand-lockup__word--abbr { display: inline; }
   .brand-lockup__icon { height: 44px; }
 }
