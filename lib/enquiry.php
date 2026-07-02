@@ -88,21 +88,47 @@ function enquiry_context(PDO $pdo, array $req): array
     if ($ids) {
         $place = implode(',', array_fill(0, count($ids), '?'));
         $stmt  = $pdo->prepare(
-            "SELECT id, name, slug FROM venues WHERE status='published' AND id IN ($place)"
+            "SELECT v.id, v.name, v.slug, v.area, v.emirate_id, e.name AS emirate_name
+             FROM venues v
+             LEFT JOIN emirates e ON e.id = v.emirate_id
+             WHERE v.status = 'published' AND v.id IN ($place)"
         );
         $stmt->execute($ids);
         $venues = $stmt->fetchAll();
     }
     $validIds = array_map(static fn($v) => (int)$v['id'], $venues);
 
-    return ['mode' => $mode, 'venue_ids' => $validIds, 'venues' => $venues];
+    // Mode A = one or more chosen venues; Mode B = assisted/partner/general.
+    $venueMode = !empty($validIds);
+
+    // If all chosen venues share one emirate, record it on the enquiry
+    // (context only — the user is NOT asked for location in Mode A).
+    $emIds = array_values(array_unique(array_filter(array_map(
+        static fn($v) => $v['emirate_id'] !== null ? (int)$v['emirate_id'] : null,
+        $venues
+    ), static fn($x) => $x !== null)));
+    $contextEmirateId = (count($emIds) === 1) ? $emIds[0] : null;
+
+    return [
+        'mode'              => $mode,
+        'venue_mode'        => $venueMode,
+        'venue_ids'         => $validIds,
+        'venues'            => $venues,
+        'context_emirate_id'=> $contextEmirateId,
+    ];
 }
 
 /**
  * Validate + normalise submitted enquiry input.
+ *
+ * $venueMode = true (Mode A: venue already chosen) drops the venue-determined
+ * fields entirely — Location/emirate, venue_preference, indoor_outdoor are
+ * ignored and stored NULL, never required. Guest count and budget stay in
+ * both modes (event attributes).
+ *
  * @return array{errors: array<string,string>, clean: array}
  */
-function enquiry_validate(PDO $pdo, array $in): array
+function enquiry_validate(PDO $pdo, array $in, bool $venueMode = false): array
 {
     $errors = [];
     $clean  = [];
@@ -168,31 +194,34 @@ function enquiry_validate(PDO $pdo, array $in): array
     $flex = trim((string)($in['date_flexibility'] ?? ''));
     $clean['date_flexibility'] = isset(enquiry_date_flexibility()[$flex]) ? $flex : null;
 
-    // --- emirate (optional) ---
-    $clean['emirate_id'] = null;
-    $emId = (int)($in['emirate'] ?? 0);
-    if ($emId > 0) {
-        $s = $pdo->prepare('SELECT 1 FROM emirates WHERE id = :id AND active = 1');
-        $s->execute([':id' => $emId]);
-        if ($s->fetchColumn() !== false) {
-            $clean['emirate_id'] = $emId;
-        }
-    }
-
-    // --- guest_count (optional, band key) ---
+    // --- guest_count (optional, band key) — both modes ---
     $g = trim((string)($in['guest_count'] ?? ''));
     $clean['guest_count'] = isset(venue_guest_bands()[$g]) ? $g : null;
 
-    // --- budget_range (optional, pricing level) ---
+    // --- budget_range (optional, pricing level) — both modes ---
     $b = trim((string)($in['budget_range'] ?? ''));
     $clean['budget_range'] = in_array($b, venue_pricing_levels(), true) ? $b : null;
 
-    // --- indoor_outdoor (optional, enum) ---
-    $io = trim((string)($in['indoor_outdoor'] ?? ''));
-    $clean['indoor_outdoor'] = isset(venue_indoor_outdoor_options()[$io]) ? $io : null;
+    // --- Venue-determined fields: Mode B only. In Mode A the venue is already
+    //     chosen, so these are ignored and stored NULL (not asked). ---
+    $clean['emirate_id']      = null;
+    $clean['indoor_outdoor']  = null;
+    $clean['venue_preference'] = '';
+    if (!$venueMode) {
+        $emId = (int)($in['emirate'] ?? 0);
+        if ($emId > 0) {
+            $s = $pdo->prepare('SELECT 1 FROM emirates WHERE id = :id AND active = 1');
+            $s->execute([':id' => $emId]);
+            if ($s->fetchColumn() !== false) {
+                $clean['emirate_id'] = $emId;
+            }
+        }
+        $io = trim((string)($in['indoor_outdoor'] ?? ''));
+        $clean['indoor_outdoor'] = isset(venue_indoor_outdoor_options()[$io]) ? $io : null;
+        $clean['venue_preference'] = clean_text($in['venue_preference'] ?? '', 255);
+    }
 
-    // --- free text (optional) ---
-    $clean['venue_preference'] = clean_text($in['venue_preference'] ?? '', 255);
+    // --- free text (optional) — event-focused, both modes ---
     $clean['fb_requirements']  = clean_text($in['fb_requirements'] ?? '', 2000);
     $clean['av_requirements']  = clean_text($in['av_requirements'] ?? '', 2000);
     $clean['notes']            = clean_text($in['notes'] ?? '', 4000);

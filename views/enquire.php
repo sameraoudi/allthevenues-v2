@@ -69,9 +69,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     }
     else {
         // 5) Validation
-        $result = enquiry_validate($pdo, $_POST);
+        $result = enquiry_validate($pdo, $_POST, (bool)$context['venue_mode']);
         $errors = $result['errors'];
         $clean  = $result['clean'];
+
+        // Mode A: record the chosen venue's emirate (context only — the user
+        // was not asked for location). Only when the venue(s) share one.
+        if ($context['venue_mode'] && $context['context_emirate_id'] !== null) {
+            $clean['emirate_id'] = (int)$context['context_emirate_id'];
+        }
 
         if (!$errors) {
             $sourcePage = mb_substr((string)($_POST['source_page'] ?? ($_SERVER['HTTP_REFERER'] ?? '/enquire')), 0, 255);

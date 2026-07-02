@@ -295,6 +295,21 @@ select:focus-visible,
 .atv-enq__head h1 { font-size: 32px; margin-bottom: 6px; }
 .atv-enq__intro { color: var(--muted); font-size: 15px; margin-bottom: 18px; }
 .atv-enq__venues { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+
+/* Read-only selected-venue context (Mode A) */
+.atv-enq__context {
+  background: #fbf7ef; border: 1px solid var(--sand); border-radius: 10px;
+  padding: 14px 16px; margin-bottom: 20px;
+}
+.atv-enq__context-label {
+  display: block; font-size: 12px; font-weight: 600; letter-spacing: .4px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+}
+.atv-enq__venue-list { list-style: none; margin: 0; padding: 0; }
+.atv-enq__venue-list li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; padding: 3px 0; }
+.atv-enq__venue-name { font-family: var(--font-heading); font-size: 18px; font-weight: 600; color: var(--navy); }
+.atv-enq__venue-loc { font-size: 13px; color: var(--muted); }
+.atv-enq__venue-loc::before { content: "· "; }
 .atv-enq__alert {
   background: #f7e7e5; border: 1px solid #e5c3bf; color: #8f3b33;
   padding: 12px 14px; border-radius: 8px; font-size: 14px; margin-bottom: 18px;

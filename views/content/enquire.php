@@ -24,8 +24,9 @@ $errline = static function (string $k) use ($errors): void {
 };
 $selected = static fn(string $k, string $v): string => ((string)($old[$k] ?? '') === $v) ? ' selected' : '';
 
-$mode   = $context['mode'];
-$venues = $context['venues'];
+$mode      = $context['mode'];
+$venues    = $context['venues'];
+$venueMode = !empty($context['venue_mode']);   // Mode A when a venue is chosen
 
 // Contextual heading/intro per mode.
 $intro = 'Tell us about your event and we\'ll connect you with the right venues.';
@@ -48,11 +49,23 @@ $hasErrors = !empty($errors) || $formError !== null;
         <p class="atv-enq__intro"><?= $intro /* pre-escaped above */ ?></p>
       </header>
 
-      <?php if ($venues): ?>
-        <div class="atv-enq__venues">
-          <?php foreach ($venues as $v): ?>
-            <span class="atv-chip"><?= e($v['name']) ?></span>
-          <?php endforeach; ?>
+      <?php if ($venueMode && $venues): ?>
+        <div class="atv-enq__context" aria-label="Selected venue<?= count($venues) > 1 ? 's' : '' ?>">
+          <span class="atv-enq__context-label"><?= count($venues) > 1 ? 'Your selected venues' : 'Your selected venue' ?></span>
+          <ul class="atv-enq__venue-list">
+            <?php foreach ($venues as $v): ?>
+              <?php
+                $loc = trim(implode(', ', array_filter([
+                    trim((string)($v['area'] ?? '')),
+                    trim((string)($v['emirate_name'] ?? '')),
+                ])));
+              ?>
+              <li>
+                <span class="atv-enq__venue-name"><?= e($v['name']) ?></span>
+                <?php if ($loc !== ''): ?><span class="atv-enq__venue-loc"><?= e($loc) ?></span><?php endif; ?>
+              </li>
+            <?php endforeach; ?>
+          </ul>
         </div>
       <?php endif; ?>
 
@@ -110,6 +123,7 @@ $hasErrors = !empty($errors) || $formError !== null;
                 <?php endforeach; ?>
               </select>
             </div>
+            <?php if (!$venueMode): /* Mode B only — venue not chosen yet */ ?>
             <div class="atv-field">
               <label for="f-emirate">Location</label>
               <select id="f-emirate" name="emirate">
@@ -119,6 +133,7 @@ $hasErrors = !empty($errors) || $formError !== null;
                 <?php endforeach; ?>
               </select>
             </div>
+            <?php endif; ?>
             <div class="atv-field">
               <label for="f-guests">Guest count</label>
               <select id="f-guests" name="guest_count">
@@ -144,6 +159,7 @@ $hasErrors = !empty($errors) || $formError !== null;
         <fieldset class="atv-enq-step" data-step="2">
           <legend>Requirements</legend>
           <div class="atv-enq-grid">
+            <?php if (!$venueMode): /* Mode B only — properties of the (unchosen) venue */ ?>
             <div class="atv-field">
               <label for="f-pref">Venue preference</label>
               <input type="text" id="f-pref" name="venue_preference" value="<?= $val('venue_preference') ?>"
@@ -158,6 +174,7 @@ $hasErrors = !empty($errors) || $formError !== null;
                 <?php endforeach; ?>
               </select>
             </div>
+            <?php endif; ?>
             <div class="atv-field atv-field--full">
               <label for="f-fb">Food &amp; beverage requirements</label>
               <textarea id="f-fb" name="fb_requirements" rows="2" maxlength="2000"><?= $val('fb_requirements') ?></textarea>
