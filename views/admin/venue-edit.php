@@ -1,0 +1,124 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * Admin venue edit form. Expects $venue (original), $old (display values),
+ * $errors, ?$flash, $venueTypes, $emirates, $id.
+ * Rich-text fields show the stored (sanitized) HTML as editable source; they
+ * are re-sanitized on save.
+ */
+/** @var array $venue @var array $old @var array $errors @var array $venueTypes @var array $emirates @var int $id */
+$flash = $flash ?? null;
+$v   = static fn(string $k, string $d = ''): string => e((string)($old[$k] ?? $d));
+$has = static fn(string $k): bool => isset($errors[$k]);
+$err = static function (string $k) use ($errors): void {
+    if (isset($errors[$k])) echo '<p class="atv-enq-err" role="alert">' . e($errors[$k]) . '</p>';
+};
+$sel = static fn(string $k, $val): string => ((string)($old[$k] ?? '') === (string)$val) ? ' selected' : '';
+$ta  = static fn(string $k): string => e((string)($old[$k] ?? ''));   // textarea source (already sanitized)
+$textFields = ['facilities' => 'Facilities', 'food_beverage' => 'Food & beverage', 'av_support' => 'AV & technical',
+               'restrictions' => 'Notes & restrictions', 'packages' => 'Packages', 'special_offer' => 'Special offer'];
+?>
+<p><a class="lead-back" href="<?= e(base_url('admin/venues')) ?>">&larr; Back to venues</a></p>
+
+<?php if ($flash): ?><div class="lead-flash lead-flash--<?= e($flash['type']) ?>" role="status"><?= e($flash['msg']) ?></div><?php endif; ?>
+<?php if (!empty($errors['_form'])): ?><div class="lead-flash lead-flash--error" role="alert"><?= e($errors['_form']) ?></div><?php endif; ?>
+
+<form class="admin-form" method="post" action="<?= e(base_url('admin/venues/edit')) ?>" novalidate>
+  <?php csrf_field(); ?>
+  <input type="hidden" name="id" value="<?= e((string)$id) ?>">
+
+  <div class="admin-panel">
+    <div class="lead-detail__head">
+      <h2 class="admin-panel__title">Basics</h2>
+      <?php if (($venue['status'] ?? '') === 'published'): ?>
+        <a class="lead-back" href="<?= e(base_url('venues/' . rawurlencode((string)$venue['slug']))) ?>" target="_blank" rel="noopener">View public page ↗</a>
+      <?php endif; ?>
+    </div>
+    <div class="admin-form__grid">
+      <div class="atv-field atv-field--full">
+        <label for="f-name">Name <span class="req">*</span></label>
+        <input type="text" id="f-name" name="name" value="<?= $v('name') ?>" maxlength="255" class="<?= $has('name') ? 'is-invalid' : '' ?>">
+        <?php $err('name'); ?>
+      </div>
+      <div class="atv-field atv-field--full">
+        <label for="f-slug">Slug <span class="req">*</span></label>
+        <input type="text" id="f-slug" name="slug" value="<?= $v('slug') ?>" maxlength="191" class="<?= $has('slug') ? 'is-invalid' : '' ?>">
+        <p class="lead-hint">Changing the slug changes the public URL (/venues/&lt;slug&gt;). Old links will stop working.</p>
+        <?php $err('slug'); ?>
+      </div>
+      <div class="atv-field">
+        <label for="f-status">Status</label>
+        <select id="f-status" name="status">
+          <?php foreach (venue_admin_statuses() as $k => $s): ?><option value="<?= e($k) ?>"<?= $sel('status', $k) ?>><?= e($s[0]) ?></option><?php endforeach; ?>
+        </select>
+      </div>
+      <div class="atv-field">
+        <label for="f-type">Venue type</label>
+        <select id="f-type" name="venue_type_id">
+          <option value="">—</option>
+          <?php foreach ($venueTypes as $vt): ?><option value="<?= e((string)$vt['id']) ?>"<?= $sel('venue_type_id', $vt['id']) ?>><?= e($vt['name']) ?></option><?php endforeach; ?>
+        </select>
+      </div>
+      <div class="atv-field">
+        <label for="f-emirate">Emirate</label>
+        <select id="f-emirate" name="emirate_id">
+          <option value="">—</option>
+          <?php foreach ($emirates as $em): ?><option value="<?= e((string)$em['id']) ?>"<?= $sel('emirate_id', $em['id']) ?>><?= e($em['name']) ?></option><?php endforeach; ?>
+        </select>
+      </div>
+      <div class="atv-field">
+        <label for="f-io">Indoor / outdoor</label>
+        <select id="f-io" name="indoor_outdoor">
+          <?php foreach (venue_indoor_outdoor_options() as $k => $label): ?><option value="<?= e($k) ?>"<?= $sel('indoor_outdoor', $k) ?>><?= e($label) ?></option><?php endforeach; ?>
+        </select>
+      </div>
+      <div class="atv-field"><label for="f-area">Area</label><input type="text" id="f-area" name="area" value="<?= $v('area') ?>" maxlength="150"></div>
+      <div class="atv-field atv-field--full"><label for="f-address">Address</label><input type="text" id="f-address" name="address" value="<?= $v('address') ?>" maxlength="255"></div>
+      <div class="atv-field">
+        <label class="atv-check"><input type="checkbox" name="is_featured" value="1"<?= !empty($old['is_featured']) ? ' checked' : '' ?>> <span>Featured</span></label>
+        <label class="atv-check"><input type="checkbox" name="is_verified" value="1"<?= !empty($old['is_verified']) ? ' checked' : '' ?>> <span>Verified</span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">Capacity &amp; pricing</h2>
+    <div class="admin-form__grid">
+      <div class="atv-field"><label for="f-cmin">Minimum guests</label><input type="number" id="f-cmin" name="capacity_min" value="<?= $v('capacity_min') ?>" min="0"></div>
+      <div class="atv-field"><label for="f-cmax">Maximum capacity</label><input type="number" id="f-cmax" name="capacity_max" value="<?= $v('capacity_max') ?>" min="0"></div>
+      <div class="atv-field"><label for="f-spend">Minimum spend (AED)</label><input type="number" id="f-spend" name="minimum_spend" value="<?= $v('minimum_spend') ?>" min="0" step="0.01"></div>
+      <div class="atv-field">
+        <label for="f-price">Pricing level</label>
+        <select id="f-price" name="pricing_level">
+          <option value="">—</option>
+          <?php foreach (venue_pricing_levels() as $pl): ?><option value="<?= e($pl) ?>"<?= $sel('pricing_level', $pl) ?>><?= e($pl) ?></option><?php endforeach; ?>
+        </select>
+      </div>
+      <div class="atv-field atv-field--full"><label for="f-video">Video URL</label><input type="text" id="f-video" name="video_url" value="<?= $v('video_url') ?>" maxlength="255"></div>
+    </div>
+  </div>
+
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">Description &amp; highlights</h2>
+    <p class="lead-hint mb-2">Rich text — only p, br, strong, em, lists and links are kept; everything else is stripped on save.</p>
+    <div class="atv-field"><label for="f-desc">Description</label><textarea id="f-desc" name="description" rows="5"><?= $ta('description') ?></textarea></div>
+    <div class="atv-field"><label for="f-best">Best for</label><textarea id="f-best" name="best_for" rows="2"><?= $ta('best_for') ?></textarea></div>
+    <div class="atv-field">
+      <label for="f-high">What makes it special (highlights)</label>
+      <textarea id="f-high" name="highlights" rows="4" placeholder="One differentiator per line (or short HTML list)"><?= $ta('highlights') ?></textarea>
+    </div>
+  </div>
+
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">Details</h2>
+    <?php foreach ($textFields as $k => $label): ?>
+      <div class="atv-field"><label for="f-<?= e($k) ?>"><?= e($label) ?></label><textarea id="f-<?= e($k) ?>" name="<?= e($k) ?>" rows="3"><?= $ta($k) ?></textarea></div>
+    <?php endforeach; ?>
+  </div>
+
+  <div class="admin-form__actions">
+    <button type="submit" class="atv-btn">Save venue</button>
+    <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('admin/venues')) ?>">Cancel</a>
+  </div>
+</form>

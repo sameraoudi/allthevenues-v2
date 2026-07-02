@@ -23,6 +23,13 @@ if ($sub === 'enquiries' || strncmp($sub, 'enquiries/', 10) === 0) {
     return;
 }
 
+// Venue management (list / edit) — gated. Own dynamic sub-routes.
+if ($sub === 'venues' || strncmp($sub, 'venues/', 7) === 0) {
+    auth_require_admin();
+    require __DIR__ . '/venues.php';
+    return;
+}
+
 switch ($sub) {
 
     /* ---- Login (public) -------------------------------------------------- */
@@ -77,7 +84,6 @@ switch ($sub) {
         break;
 
     /* ---- Placeholder sections (gated) ----------------------------------- */
-    case 'venues':
     case 'partners':
         auth_require_admin();
         $admin_active       = $sub;

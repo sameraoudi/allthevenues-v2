@@ -107,6 +107,7 @@ CREATE TABLE IF NOT EXISTS venues (
     -- Content (sanitized HTML where rich text)
     description    TEXT         DEFAULT NULL,
     best_for       TEXT         DEFAULT NULL,
+    highlights     TEXT         DEFAULT NULL,          -- curated "what makes it special" (admin-edited, sanitized)
     facilities     TEXT         DEFAULT NULL,
     food_beverage  TEXT         DEFAULT NULL,
     av_support     TEXT         DEFAULT NULL,

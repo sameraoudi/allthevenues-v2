@@ -726,3 +726,29 @@ select:focus-visible,
   .phead__acts { width: 100%; flex-direction: row; }
   .phead__acts .atv-btn { flex: 1; }
 }
+
+/* ---- Admin: venue management ---------------------------------------------- */
+.lead-status--published     { background: #cdebd6; color: #16663b; }
+.lead-status--draft         { background: #e6e2da; color: #6b6357; }
+.lead-status--pending       { background: #fbeecb; color: #8a6d1b; }
+.lead-status--needs_changes { background: #f1dcda; color: #8f3b33; }
+.lead-status--archived      { background: #e6e2da; color: #6b6357; }
+
+.admin-form .admin-panel { margin-bottom: 18px; }
+.admin-form__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+.admin-form .atv-field { margin-bottom: 14px; }
+.admin-form .atv-field--full { grid-column: 1 / -1; }
+.admin-form label { display: block; font-size: 13px; font-weight: 500; color: var(--navy); margin-bottom: 6px; }
+.admin-form .req { color: #b4534a; }
+.admin-form input[type=text], .admin-form input[type=number], .admin-form input[type=email],
+.admin-form select, .admin-form textarea {
+  width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
+  font-size: 14px; font-family: var(--font-body); background: #fbfaf7; color: var(--ink);
+}
+.admin-form textarea { resize: vertical; }
+.admin-form .is-invalid { border-color: #b4534a; background: #fdf6f5; }
+.admin-form .atv-check { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 400; margin-bottom: 6px; }
+.admin-form .atv-check input { width: auto; }
+.admin-form__actions { display: flex; gap: 12px; margin: 4px 0 44px; }
+
+@media (max-width: 700px) { .admin-form__grid { grid-template-columns: 1fr; } }

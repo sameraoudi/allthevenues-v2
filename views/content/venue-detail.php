@@ -24,6 +24,19 @@ $ioLabels   = venue_indoor_outdoor_options();
 $ioLabel    = !empty($venue['indoor_outdoor']) ? ($ioLabels[$venue['indoor_outdoor']] ?? $venue['indoor_outdoor']) : '';
 $bestForTags = tags_from($venue['best_for'] ?? null, 6);
 
+// "What makes it special" now comes from venues.highlights (sanitized HTML,
+// admin-edited). Parse into check-list items — supports "one per line" text
+// or an HTML list. Empty highlights → the section is omitted (no fallback).
+$hlItems = [];
+$hlRaw = trim((string)($venue['highlights'] ?? ''));
+if ($hlRaw !== '') {
+    $hlNorm = preg_replace('#</(li|p)\s*>|<br\s*/?>#i', "\n", $hlRaw) ?? $hlRaw;
+    foreach (preg_split('/\n+/', strip_tags($hlNorm)) ?: [] as $line) {
+        $line = trim($line);
+        if ($line !== '') { $hlItems[] = $line; }
+    }
+}
+
 // Rich-text section helper (sanitized HTML → rendered raw).
 $section = static function (string $title, ?string $html): void {
     if (trim((string)$html) === '') return;
@@ -105,10 +118,10 @@ $more    = max(0, count($images) - 3);
           <h2>About this venue</h2>
           <div class="venue-richtext"><?= $venue['description'] /* sanitized */ ?></div>
         <?php endif; ?>
-        <?php if ($bestForTags): ?>
+        <?php if ($hlItems): ?>
           <h2>What makes it special</h2>
           <div class="vd-highlights">
-            <?php foreach ($bestForTags as $t): ?>
+            <?php foreach ($hlItems as $t): ?>
               <div><?= icon('check-circle') ?> <?= e($t) ?></div>
             <?php endforeach; ?>
           </div>

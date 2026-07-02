@@ -201,3 +201,19 @@ db/005_enquiry_partner.sql
 
 Adds the nullable `partner_id` column + FK. MySQL host; run once (re-running
 errors 1060 — harmless).
+
+---
+
+## Admin venue management: `venues.highlights` (U4a)
+
+Curated "What makes it special" differentiators, edited in admin and sanitized
+on save (replaces the previous best_for-derived highlights on the public venue
+detail). Folded into `db/001_schema.sql` for fresh imports; apply once on the
+live DB via phpMyAdmin BEFORE deploying the U4a code:
+
+```
+db/006_venue_highlights.sql
+```
+
+Adds `venues.highlights TEXT NULL`. MySQL host; run once (re-running errors
+1060 — harmless).
