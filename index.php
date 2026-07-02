@@ -41,12 +41,22 @@ if ($path === '') {
     $path = '/';
 }
 
+// Static (exact-match) routes.
 $routes = [
-    '/' => __DIR__ . '/views/home.php',
+    '/'        => __DIR__ . '/views/home.php',
+    '/venues'  => __DIR__ . '/views/venues.php',
+    '/enquire' => __DIR__ . '/views/enquire.php',
 ];
 
 if (isset($routes[$path])) {
     require $routes[$path];
+    exit;
+}
+
+// Dynamic route: /venues/{slug}  (slug is a-z0-9-, validated here).
+if (preg_match('#^/venues/([a-z0-9-]+)$#', $path, $m)) {
+    $slug = $m[1];
+    require __DIR__ . '/views/venue.php';
     exit;
 }
 

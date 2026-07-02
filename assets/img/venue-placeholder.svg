@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" role="img" aria-label="No image available">
+  <rect width="800" height="600" fill="#e9ecef"/>
+  <g fill="#adb5bd">
+    <path d="M250 380l70-90 55 70 40-50 135 160H250z"/>
+    <circle cx="300" cy="250" r="35"/>
+  </g>
+  <text x="400" y="470" font-family="Arial, Helvetica, sans-serif" font-size="30" fill="#868e96" text-anchor="middle">All The Venues</text>
+</svg>

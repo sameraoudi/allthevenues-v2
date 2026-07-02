@@ -1,0 +1,38 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * Listing handler: /venues
+ * Fetches published venues with bound filters + pagination, then renders
+ * the layout with the venues-list content view.
+ */
+
+require_once __DIR__ . '/../lib/helpers.php';
+require_once __DIR__ . '/../lib/venues.php';
+
+$pdo = db_pdo();
+
+$filters = venue_normalise_filters($_GET);
+
+$perPage = 12;
+$page    = max(1, (int)($_GET['page'] ?? 1));
+
+$result = venue_list($pdo, $filters, $page, $perPage);
+$venues = $result['rows'];
+$total  = $result['total'];
+
+$totalPages = max(1, (int)ceil($total / $perPage));
+if ($page > $totalPages) {
+    $page = $totalPages;   // clamp; re-query if we overshot a filtered set
+    $result = venue_list($pdo, $filters, $page, $perPage);
+    $venues = $result['rows'];
+}
+
+// Taxonomy for the filter controls.
+$eventTypes = venue_event_types($pdo);
+$venueTypes = venue_types_all($pdo);
+$emirates   = venue_emirates($pdo);
+
+$page_title   = 'Browse Venues — All The Venues';
+$content_view = __DIR__ . '/content/venues-list.php';
+require __DIR__ . '/layout.php';

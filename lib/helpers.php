@@ -42,6 +42,85 @@ if (!function_exists('base_url')) {
     }
 }
 
+if (!function_exists('app_path')) {
+    /** Absolute filesystem path inside the app docroot. */
+    function app_path(string $rel = ''): string
+    {
+        $root = dirname(__DIR__);
+        return $rel === '' ? $root : $root . '/' . ltrim($rel, '/');
+    }
+}
+
+if (!function_exists('venue_img_src')) {
+    /**
+     * URL for a migrated media path, with graceful fallback.
+     * Falls back to the bundled placeholder when the path is empty OR the
+     * file is not present on disk (e.g. before the media copy runs, or a
+     * missing record). Served from 'self' — CSP-safe.
+     */
+    function venue_img_src(?string $relPath): string
+    {
+        $relPath = trim((string)$relPath);
+        if ($relPath !== '' && is_file(app_path($relPath))) {
+            return base_url($relPath);
+        }
+        return base_url('assets/img/venue-placeholder.svg');
+    }
+}
+
+if (!function_exists('tags_from')) {
+    /**
+     * Split a comma/newline-separated string into a list of trimmed,
+     * de-duplicated, non-empty tags. Tags are plain text (escape on output).
+     */
+    function tags_from(?string $value, int $limit = 0): array
+    {
+        $value = strip_tags((string)$value);
+        $parts = preg_split('/[,\r\n]+/', $value) ?: [];
+        $tags = [];
+        foreach ($parts as $p) {
+            $p = trim($p);
+            if ($p !== '' && !in_array($p, $tags, true)) {
+                $tags[] = $p;
+            }
+        }
+        return ($limit > 0) ? array_slice($tags, 0, $limit) : $tags;
+    }
+}
+
+if (!function_exists('snippet')) {
+    /** Plain-text snippet from (possibly HTML) content, truncated on a word. */
+    function snippet(?string $html, int $max = 140): string
+    {
+        $text = trim(preg_replace('/\s+/', ' ', strip_tags((string)$html)) ?? '');
+        if ($text === '' || mb_strlen($text) <= $max) {
+            return $text;
+        }
+        $cut = mb_substr($text, 0, $max);
+        $sp = mb_strrpos($cut, ' ');
+        if ($sp !== false && $sp > 0) {
+            $cut = mb_substr($cut, 0, $sp);
+        }
+        return $cut . '…';
+    }
+}
+
+if (!function_exists('query_string')) {
+    /**
+     * Build a URL query string from a params map (page/filters), skipping
+     * empty values. http_build_query URL-encodes keys+values; the caller
+     * still e()s the whole attribute value in HTML.
+     */
+    function query_string(array $params): string
+    {
+        $clean = array_filter(
+            $params,
+            static fn($v) => $v !== '' && $v !== null
+        );
+        return $clean ? '?' . http_build_query($clean) : '';
+    }
+}
+
 if (!function_exists('redirect')) {
     /**
      * Send a redirect and stop. Relative paths are resolved against

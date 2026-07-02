@@ -36,6 +36,9 @@ function db_pdo(): PDO
     }
 
     $dsn = sprintf('mysql:host=%s;dbname=%s;charset=utf8mb4', DB_HOST, DB_NAME);
+    if (defined('DB_PORT') && DB_PORT) {   // optional; default 3306 when unset
+        $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4', DB_HOST, (int)DB_PORT, DB_NAME);
+    }
 
     $pdo = new PDO($dsn, DB_USER, DB_PASS, [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,

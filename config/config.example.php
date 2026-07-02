@@ -14,6 +14,7 @@ define('DB_HOST', 'localhost');
 define('DB_NAME', 'sameraou_atv2');
 define('DB_USER', 'sameraou_atv2');
 define('DB_PASS', 'REPLACE_ME');
+// define('DB_PORT', 3306);   // optional — only needed for a non-default port
 
 // --- Site -----------------------------------------------------------------
 // Base URL, no trailing slash.
