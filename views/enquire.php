@@ -82,7 +82,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         if (!$errors) {
             $sourcePage = mb_substr((string)($_POST['source_page'] ?? ($_SERVER['HTTP_REFERER'] ?? '/enquire')), 0, 255);
             try {
-                $saved = enquiry_insert($pdo, $clean, $context['venue_ids'], $sourcePage);
+                $saved = enquiry_insert($pdo, $clean, $context['venue_ids'], $sourcePage, (string)$context['mode']);
 
                 // Save succeeded — attempt emails, never hard-fail the submit.
                 try {

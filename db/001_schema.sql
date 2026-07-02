@@ -259,6 +259,7 @@ CREATE TABLE IF NOT EXISTS enquiries (
     notes            TEXT         DEFAULT NULL,
     consent_to_share TINYINT(1)   NOT NULL DEFAULT 0,
     source_page      VARCHAR(255) DEFAULT NULL,
+    mode             ENUM('venue','assisted','partner','general') NOT NULL DEFAULT 'general',
     status           ENUM('new','reviewed','forwarded','accepted','contacted','won','lost','closed','spam') NOT NULL DEFAULT 'new',
     created_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

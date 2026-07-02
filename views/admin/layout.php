@@ -16,9 +16,17 @@ $admin_page_title = $admin_page_title ?? 'Admin';
 $admin_active     = $admin_active     ?? 'dashboard';
 $me               = auth_current_user();
 
+// New-enquiry count for the sidebar badge (cheap; ignore errors).
+$newCount = 0;
+try {
+    $newCount = (int)db_pdo()->query("SELECT COUNT(*) FROM enquiries WHERE status='new'")->fetchColumn();
+} catch (Throwable $e) {
+    $newCount = 0;
+}
+
 $nav = [
     'dashboard' => ['label' => 'Dashboard', 'url' => base_url('admin'),           'icon' => 'grid'],
-    'enquiries' => ['label' => 'Enquiries', 'url' => base_url('admin/enquiries'), 'icon' => 'inbox'],
+    'enquiries' => ['label' => 'Enquiries', 'url' => base_url('admin/enquiries'), 'icon' => 'inbox', 'badge' => $newCount],
     'venues'    => ['label' => 'Venues',    'url' => base_url('admin/venues'),    'icon' => 'building'],
     'partners'  => ['label' => 'Partners',  'url' => base_url('admin/partners'),  'icon' => 'users'],
 ];
@@ -47,6 +55,7 @@ $nav = [
         <?php foreach ($nav as $key => $item): ?>
           <a class="admin-nav__item<?= $admin_active === $key ? ' is-active' : '' ?>" href="<?= e($item['url']) ?>">
             <?= icon($item['icon']) ?><span><?= e($item['label']) ?></span>
+            <?php if (!empty($item['badge'])): ?><span class="admin-nav__badge"><?= e((string)$item['badge']) ?></span><?php endif; ?>
           </a>
         <?php endforeach; ?>
       </nav>

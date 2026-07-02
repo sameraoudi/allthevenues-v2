@@ -15,6 +15,14 @@ require_once __DIR__ . '/../../lib/ratelimit.php';
 $pdo = db_pdo();
 $sub = isset($adminSub) ? trim((string)$adminSub, '/') : '';
 
+// Enquiries lead inbox (list / detail / actions / CSV) — gated. Handles its
+// own dynamic sub-routes, so it sits before the exact-match switch.
+if ($sub === 'enquiries' || strncmp($sub, 'enquiries/', 10) === 0) {
+    auth_require_admin();
+    require __DIR__ . '/enquiries.php';
+    return;
+}
+
 switch ($sub) {
 
     /* ---- Login (public) -------------------------------------------------- */
@@ -69,7 +77,6 @@ switch ($sub) {
         break;
 
     /* ---- Placeholder sections (gated) ----------------------------------- */
-    case 'enquiries':
     case 'venues':
     case 'partners':
         auth_require_admin();

@@ -170,3 +170,18 @@ php db/set_admin_password.php samer@allthevenues.com 'a-long-strong-passphrase'
 Then sign in at **`/admin/login`**. Wrong credentials are rate-limited and
 return a generic error (no user enumeration); the admin area fails closed
 (any `/admin/*` while logged out → `/admin/login`).
+
+---
+
+## U3b-2 forward patch: `enquiries.mode`
+
+Records how each enquiry was made (venue / assisted / partner / general) so the
+admin inbox can label it reliably. Folded into `db/001_schema.sql` for fresh
+imports; for the already-imported live DB, apply once via phpMyAdmin:
+
+```
+db/004_enquiry_mode.sql
+```
+
+Adds the `mode` column and backfills existing rows (any enquiry with a linked
+venue → `venue`). MySQL host; run once (re-running errors 1060 — harmless).

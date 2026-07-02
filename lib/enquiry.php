@@ -233,8 +233,12 @@ function enquiry_validate(PDO $pdo, array $in, bool $venueMode = false): array
  * Persist an enquiry + its venue links in a transaction.
  * @return array{id:int, reference:string}
  */
-function enquiry_insert(PDO $pdo, array $clean, array $venueIds, string $sourcePage): array
+function enquiry_insert(PDO $pdo, array $clean, array $venueIds, string $sourcePage, string $mode = 'general'): array
 {
+    // Normalise the context mode to the stored enum.
+    $modeMap = ['single' => 'venue', 'multi' => 'venue', 'assisted' => 'assisted', 'partner' => 'partner'];
+    $modeVal = $modeMap[$mode] ?? ($venueIds ? 'venue' : 'general');
+
     $pdo->beginTransaction();
     try {
         $reference = enquiry_generate_reference($pdo);
@@ -244,12 +248,12 @@ function enquiry_insert(PDO $pdo, array $clean, array $venueIds, string $sourceP
                 (reference, name, email, phone, company, event_type_id, event_date,
                  date_flexibility, emirate_id, guest_count, budget_range,
                  venue_preference, indoor_outdoor, fb_requirements, av_requirements,
-                 notes, consent_to_share, source_page, status)
+                 notes, consent_to_share, source_page, mode, status)
              VALUES
                 (:reference, :name, :email, :phone, :company, :event_type_id, :event_date,
                  :date_flexibility, :emirate_id, :guest_count, :budget_range,
                  :venue_preference, :indoor_outdoor, :fb_requirements, :av_requirements,
-                 :notes, :consent_to_share, :source_page, :status)'
+                 :notes, :consent_to_share, :source_page, :mode, :status)'
         );
         $stmt->execute([
             ':reference'        => $reference,
@@ -270,6 +274,7 @@ function enquiry_insert(PDO $pdo, array $clean, array $venueIds, string $sourceP
             ':notes'            => $clean['notes'] ?: null,
             ':consent_to_share' => $clean['consent_to_share'],
             ':source_page'      => mb_substr($sourcePage, 0, 255),
+            ':mode'             => $modeVal,
             ':status'           => 'new',
         ]);
         $id = (int)$pdo->lastInsertId();
