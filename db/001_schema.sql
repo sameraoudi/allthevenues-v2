@@ -97,6 +97,7 @@ CREATE TABLE IF NOT EXISTS venues (
     is_verified    TINYINT(1)   NOT NULL DEFAULT 0,
     -- Classification
     venue_type_id  INT UNSIGNED DEFAULT NULL,
+    indoor_outdoor ENUM('indoor','outdoor','both') NOT NULL DEFAULT 'indoor',
     emirate_id     INT UNSIGNED DEFAULT NULL,
     area           VARCHAR(150) DEFAULT NULL,
     address        VARCHAR(255) DEFAULT NULL,

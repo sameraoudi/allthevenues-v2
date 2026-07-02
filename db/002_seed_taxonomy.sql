@@ -1,7 +1,7 @@
 -- =============================================================================
 -- All The Venues — Phase-1 taxonomy seed (U1a)
 -- Target database: sameraou_atv2
--- Spec: docs/ATV-SCHEMA.md §1 (event_types 15, venue_types 15, emirates 8).
+-- Spec: docs/ATV-SCHEMA.md §1 (event_types 15, venue_types 17, emirates 8).
 --
 -- Fixed ids so FK references (venue_type_id, event_type_id, emirate_id) are
 -- stable across environments. Re-runnable: INSERT ... ON DUPLICATE KEY UPDATE
@@ -38,7 +38,7 @@ ON DUPLICATE KEY UPDATE
     active     = VALUES(active);
 
 -- -----------------------------------------------------------------------------
--- venue_types — 15 (order = sort_order)
+-- venue_types — 17 (order = sort_order)
 -- -----------------------------------------------------------------------------
 INSERT INTO venue_types (id, name, slug, sort_order, active) VALUES
     ( 1, 'Hotel Ballroom',       'hotel-ballroom',       1,  1),
@@ -55,7 +55,9 @@ INSERT INTO venue_types (id, name, slug, sort_order, active) VALUES
     (12, 'Island Venue',         'island-venue',         12, 1),
     (13, 'Garden Venue',         'garden-venue',         13, 1),
     (14, 'Lounge',               'lounge',               14, 1),
-    (15, 'Unique Venue',         'unique-venue',         15, 1)
+    (15, 'Unique Venue',         'unique-venue',         15, 1),
+    (16, 'Villa',                'villa',                16, 1),
+    (17, 'Warehouse',            'warehouse',            17, 1)
 ON DUPLICATE KEY UPDATE
     name       = VALUES(name),
     slug       = VALUES(slug),
