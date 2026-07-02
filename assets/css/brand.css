@@ -343,12 +343,16 @@ select:focus-visible,
 /* Nav buttons */
 .atv-enq-nav { display: flex; gap: 12px; margin-top: 24px; }
 .atv-enq-nav--center { justify-content: center; }
-.step-back, .step-next { display: none; }   /* no-JS: only Submit shows */
+/* Base (no-JS): every step is visible and only Submit shows. Next/Back are
+   revealed by JS in stepper mode. Nothing here hides a step by default, so a
+   missing/blocked/erroring app.js still leaves the whole form usable. */
+.step-back, .step-next { display: none; }
 .step-submit { display: inline-block; }
 
-/* Stepper active (JS): one step at a time */
-.js-stepper .atv-enq-step { display: none; }
-.js-stepper .atv-enq-step.is-active { display: block; }
+/* Stepper mode — added by app.js ONLY after it confirms it can drive the
+   form. Hides inactive steps; the active step (and, as a safety net, the
+   first step) stays visible. */
+.is-stepper .atv-enq-step:not(.is-active) { display: none; }
 
 /* Success */
 .atv-enq__success { text-align: center; }
