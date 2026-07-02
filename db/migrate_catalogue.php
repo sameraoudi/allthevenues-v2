@@ -1,6 +1,13 @@
 <?php
 declare(strict_types=1);
 
+// CLI only — never run over HTTP (this script truncates + rebuilds the
+// catalogue). Defence in depth alongside db/.htaccess + .cpanel.yml exclude.
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('CLI only');
+}
+
 /**
  * All The Venues — legacy CATALOGUE migration (U1b).
  *

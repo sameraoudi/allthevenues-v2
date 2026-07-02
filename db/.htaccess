@@ -1,0 +1,10 @@
+# Deny all direct web access. Migration SQL + CLI scripts here are run from
+# the repo checkout (~/repositories/allthevenues-v2/db), never over HTTP.
+# db/ is also excluded from deployment (.cpanel.yml); this is defence in depth.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+</IfModule>
