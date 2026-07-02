@@ -1,0 +1,13 @@
+# Environment-specific secrets — created per environment, never committed.
+config/config.php
+
+# Logs
+*.log
+
+# Uploaded files — keep the directory scaffolding, ignore contents.
+uploads/*
+!uploads/.htaccess
+!uploads/.gitkeep
+
+# OS cruft
+.DS_Store

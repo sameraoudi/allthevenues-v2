@@ -1,0 +1,14 @@
+# Uploads directory — user-supplied files. NEVER execute code here.
+# Same hardening pattern as the legacy images/ fix.
+
+# Disable CGI/script execution.
+Options -ExecCGI -Indexes
+
+# Refuse to hand any executable/interpreted type to a handler.
+<FilesMatch "\.(php|php[0-9]?|phtml|pht|phar|cgi|pl|py|sh|asp|aspx|jsp|htaccess)$">
+    Require all denied
+</FilesMatch>
+
+# Strip handlers so a mislabeled file can't be interpreted.
+RemoveHandler .php .php3 .php4 .php5 .php7 .php8 .phtml .pht .phar .cgi .pl .py
+RemoveType .php .php3 .php4 .php5 .php7 .php8 .phtml .pht .phar

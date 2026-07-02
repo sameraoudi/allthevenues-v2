@@ -1,0 +1,8 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home1/sameraou/atv-staging
+    # NEVER use -a: it clobbers perms on this host. Use explicit flags only.
+    # .htaccess IS deployed here — it is our versioned security config.
+    - /usr/bin/rsync -rlt --no-perms --no-owner --no-group --exclude='.git' --exclude='.gitignore' --exclude='.cpanel.yml' ./ $DEPLOYPATH/
+    - /bin/date > $DEPLOYPATH/.last_deploy

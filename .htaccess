@@ -1,0 +1,51 @@
+# All The Venues — root .htaccess (versioned security config).
+# Deploy target: staging.allthevenues.com, docroot /home1/sameraou/atv-staging
+# (outside public_html — no inherited CSP). LiteSpeed honors Apache .htaccess.
+#
+# NO php_flag / php_value directives here — on this host they crash the site.
+
+RewriteEngine On
+
+# === Force HTTPS (301), excluding localhost dev ===
+RewriteCond %{HTTP_HOST} !^localhost [NC]
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# === Security headers ===
+<IfModule mod_headers.c>
+    # HSTS — unconditional (staging is HTTPS-only; HTTP is redirected above).
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
+
+    # Content-Security-Policy — TIGHT. Bootstrap is self-hosted (no CDN).
+    # Only external origin allowed is GoatCounter analytics:
+    #   script  gc.zgo.at (count.js)
+    #   connect allthevenues.goatcounter.com (pixel/API endpoint)
+    # Maps / Turnstile / web fonts get added here as those features land.
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://gc.zgo.at; style-src 'self'; img-src 'self' data: https://allthevenues.goatcounter.com; font-src 'self'; connect-src 'self' https://allthevenues.goatcounter.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
+</IfModule>
+
+# === Front-controller routing ===
+# Serve real files/directories directly; route everything else to index.php.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+RewriteRule ^ index.php [L]
+
+# === Deny dotfiles (.htaccess, .git, .env, etc.) ===
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# === Hide sensitive file types from the web ===
+<FilesMatch "\.(bak|old|orig|swp|swo|tmp|log|sql|sh|inc|yml|env|ini|dist|sample|example)$">
+    Require all denied
+</FilesMatch>
+
+# === Hardening ===
+Options -Indexes
+ServerSignature Off
