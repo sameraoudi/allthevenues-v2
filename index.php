@@ -75,6 +75,14 @@ if (preg_match('#^/venues/([a-z0-9-]+)$#', $path, $m)) {
     exit;
 }
 
+// Admin area: /admin and /admin/* → the admin controller ($adminSub = the
+// path after /admin). Login is public there; everything else fails closed.
+if (preg_match('#^/admin(?:/(.*))?$#', $path, $m)) {
+    $adminSub = $m[1] ?? '';
+    require __DIR__ . '/views/admin/dispatch.php';
+    exit;
+}
+
 http_response_code(404);
 require __DIR__ . '/views/404.php';
 exit;

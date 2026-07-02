@@ -1,0 +1,74 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * Admin shell layout — left sidebar + top bar + content. Used by gated admin
+ * pages. Expects in scope:
+ *   string $page_title, $admin_page_title, $admin_active, $admin_content_view.
+ */
+
+require_once __DIR__ . '/../../lib/helpers.php';
+require_once __DIR__ . '/../../lib/icons.php';
+require_once __DIR__ . '/../../lib/auth.php';
+
+$page_title       = $page_title       ?? 'Admin — All The Venues';
+$admin_page_title = $admin_page_title ?? 'Admin';
+$admin_active     = $admin_active     ?? 'dashboard';
+$me               = auth_current_user();
+
+$nav = [
+    'dashboard' => ['label' => 'Dashboard', 'url' => base_url('admin'),           'icon' => 'grid'],
+    'enquiries' => ['label' => 'Enquiries', 'url' => base_url('admin/enquiries'), 'icon' => 'inbox'],
+    'venues'    => ['label' => 'Venues',    'url' => base_url('admin/venues'),    'icon' => 'building'],
+    'partners'  => ['label' => 'Partners',  'url' => base_url('admin/partners'),  'icon' => 'users'],
+];
+?>
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title><?= e($page_title) ?></title>
+    <link rel="icon" href="<?= e(base_url('assets/brand/favicon_app_icon/favicon.ico')) ?>" sizes="any">
+    <link rel="stylesheet" href="<?= e(base_url('assets/css/bootstrap.min.css')) ?>">
+    <link rel="stylesheet" href="<?= e(base_url('assets/css/brand.css')) ?>">
+    <link rel="stylesheet" href="<?= e(base_url('assets/css/app.css')) ?>">
+</head>
+<body class="admin-body">
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <a class="admin-brand" href="<?= e(base_url('admin')) ?>">
+        <img src="<?= e(base_url('assets/brand/web_exports/icon_light/icon_light_512x512.png')) ?>"
+             alt="" width="512" height="512" aria-hidden="true">
+        <span>Admin</span>
+      </a>
+      <nav class="admin-nav" aria-label="Admin">
+        <?php foreach ($nav as $key => $item): ?>
+          <a class="admin-nav__item<?= $admin_active === $key ? ' is-active' : '' ?>" href="<?= e($item['url']) ?>">
+            <?= icon($item['icon']) ?><span><?= e($item['label']) ?></span>
+          </a>
+        <?php endforeach; ?>
+      </nav>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <h1 class="admin-topbar__title"><?= e($admin_page_title) ?></h1>
+        <div class="admin-topbar__right">
+          <span class="admin-topbar__user"><?= e($me['name'] ?: 'Admin') ?></span>
+          <a class="atv-btn atv-btn--sm" href="<?= e(base_url('admin/logout')) ?>"><?= icon('logout') ?> Logout</a>
+        </div>
+      </header>
+
+      <main class="admin-content">
+        <?php
+        if (isset($admin_content_view) && is_file($admin_content_view)) {
+            require $admin_content_view;
+        }
+        ?>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

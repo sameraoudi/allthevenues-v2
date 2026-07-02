@@ -35,6 +35,11 @@ function _icon_paths(string $name): ?string
             'image'        => '<rect x="3" y="4" width="18" height="15" rx="2"/><circle cx="8.5" cy="9" r="1.6"/><path d="M21 16l-5-4-7 6"/>',
             'presentation' => '<rect x="3" y="4" width="18" height="11" rx="1"/><path d="M12 15v4"/><path d="M8 21h8"/>',
             'sparkles'     => '<path d="M12 4l1.6 4.4L18 10l-4.4 1.6L12 16l-1.6-4.4L6 10l4.4-1.6z"/><path d="M18.5 15l.6 1.9 1.9.6-1.9.6-.6 1.9-.6-1.9-1.9-.6 1.9-.6z"/>',
+            // Admin
+            'grid'         => '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+            'inbox'        => '<path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M3 13h5l2 3h4l2-3h5"/>',
+            'building'     => '<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h.01M15 7h.01M9 11h.01M15 11h.01"/><path d="M10 21v-3h4v3"/>',
+            'logout'       => '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/>',
             // Socials
             'instagram'    => '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17 7h.01"/>',
             'facebook'     => '<path d="M14.5 8.5H16V5.5h-1.5A3.5 3.5 0 0 0 11 9v2H9v3h2v6h3v-6h2l.5-3H14V9c0-.3.2-.5.5-.5z"/>',

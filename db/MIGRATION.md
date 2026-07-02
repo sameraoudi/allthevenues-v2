@@ -145,3 +145,28 @@ Counts: partners **71**, venues **98**, layout rows **344**, images **257**,
 documents **144**, admins **2**. Re-run produces identical results
 (idempotent). 4 venues have an unresolved `provider` (partner_id NULL):
 Majesty 101 Mega Yacht, A4 Space, Moana Island, The Empty Quarter Gallery.
+
+---
+
+## Admin password bootstrap (U3b-1)
+
+The migrated admins (`users`, `role=admin`) have unusable passwords, so no one
+can sign in to `/admin` until a password is set. Do this once per admin, on
+the server (CLI only — the script refuses to run over HTTP, and `db/` is
+excluded from deploy + web-denied):
+
+```bash
+php db/set_admin_password.php <admin-email> '<new-password>'
+# e.g.
+php db/set_admin_password.php samer@allthevenues.com 'a-long-strong-passphrase'
+```
+
+- Sets `users.password_hash = password_hash($pw, PASSWORD_DEFAULT)` (bcrypt)
+  for the matching `role='admin'` user.
+- Minimum password length: 10 characters.
+- If the account's `status` isn't `active`, the script warns — set it to
+  `active` to allow login.
+
+Then sign in at **`/admin/login`**. Wrong credentials are rate-limited and
+return a generic error (no user enumeration); the admin area fails closed
+(any `/admin/*` while logged out → `/admin/login`).
