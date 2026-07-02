@@ -4,6 +4,11 @@ config/config.php
 # Logs
 *.log
 
+# Legacy DB dumps — never commit (keep them outside the repo, e.g. ~/atv-legacy/).
+*.sql.gz
+sameraou_atv*.sql
+!db/[0-9]*.sql
+
 # Uploaded files — keep the directory scaffolding, ignore contents.
 uploads/*
 !uploads/.htaccess
