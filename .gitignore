@@ -14,5 +14,13 @@ uploads/*
 !uploads/.htaccess
 !uploads/.gitkeep
 
+# Runtime data (rate-limit counters, mail logs) — keep scaffolding, ignore contents.
+storage/ratelimit/*
+storage/mail/*
+!storage/.htaccess
+!storage/.gitkeep
+!storage/ratelimit/.gitkeep
+!storage/mail/.gitkeep
+
 # OS cruft
 .DS_Store

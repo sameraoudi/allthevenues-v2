@@ -22,11 +22,12 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
     Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
 
     # Content-Security-Policy — TIGHT. Bootstrap is self-hosted (no CDN).
-    # Only external origin allowed is GoatCounter analytics:
-    #   script  gc.zgo.at (count.js)
-    #   connect allthevenues.goatcounter.com (pixel/API endpoint)
-    # Maps / Turnstile / web fonts get added here as those features land.
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://gc.zgo.at; style-src 'self'; img-src 'self' data: https://allthevenues.goatcounter.com; font-src 'self'; connect-src 'self' https://allthevenues.goatcounter.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
+    # External origins allowed:
+    #   GoatCounter analytics — script gc.zgo.at, connect allthevenues.goatcounter.com
+    #   Cloudflare Turnstile (enquiry anti-bot) — script + frame + connect
+    #     challenges.cloudflare.com
+    # Maps / web fonts get added here as those features land.
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://gc.zgo.at https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data: https://allthevenues.goatcounter.com; font-src 'self'; connect-src 'self' https://allthevenues.goatcounter.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
 </IfModule>
 
 # === Front-controller routing ===

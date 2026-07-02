@@ -19,3 +19,25 @@ define('DB_PASS', 'REPLACE_ME');
 // --- Site -----------------------------------------------------------------
 // Base URL, no trailing slash.
 define('BASE_URL', 'https://staging.allthevenues.com');
+
+// --- Cloudflare Turnstile (enquiry anti-bot) ------------------------------
+// Dev: Cloudflare's test keys below always pass on any domain. When the
+// secret starts with "1x" (test key), server-side verify auto-passes with
+// no network call. Staging/prod: real keys from the Cloudflare dashboard.
+define('TURNSTILE_SITE_KEY',   '1x00000000000000000000AA');
+define('TURNSTILE_SECRET_KEY', '1x0000000000000000000000000000000AA');
+
+// --- Mail -----------------------------------------------------------------
+// Transport: 'mail' (PHP mail(), cPanel default) | 'smtp' | 'log' (dev — writes
+// .eml files to storage/mail/, sends nothing).
+define('MAIL_TRANSPORT', 'mail');
+define('MAIL_FROM',      'no-reply@allthevenues.com');
+define('MAIL_FROM_NAME', 'All The Venues');
+// Where new-enquiry notifications go (comma-separated for multiple).
+define('MAIL_ADMIN_RECIPIENTS', 'leads@allthevenues.com');
+// SMTP settings (only used when MAIL_TRANSPORT = 'smtp').
+define('SMTP_HOST',   '');
+define('SMTP_PORT',   587);
+define('SMTP_USER',   '');
+define('SMTP_PASS',   '');
+define('SMTP_SECURE', 'tls');   // 'tls' | 'ssl' | ''
