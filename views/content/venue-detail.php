@@ -156,7 +156,7 @@ $updated = !empty($venue['updated_at']) ? date('j M Y', strtotime((string)$venue
 
     <!-- Sidebar: quick facts + enquiry CTA -->
     <div class="col-lg-4">
-      <div class="card shadow-sm mb-4 sticky-lg-top" style="top:1rem;">
+      <div class="card shadow-sm mb-4 sticky-lg-top detail-sticky">
         <div class="card-body">
           <h2 class="h5 card-title">Quick facts</h2>
           <ul class="list-unstyled small mb-3">
@@ -206,7 +206,7 @@ $updated = !empty($venue['updated_at']) ? date('j M Y', strtotime((string)$venue
   <?php if ($similar): ?>
     <section class="mt-4 pt-2">
       <h2 class="h4 mb-3">Similar venues</h2>
-      <div class="row">
+      <div class="atv-cards">
         <?php foreach ($similar as $venue): /* reuse card; $venue reassigned intentionally */ ?>
           <?php require __DIR__ . '/../partials/venue-card.php'; ?>
         <?php endforeach; ?>

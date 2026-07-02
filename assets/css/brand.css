@@ -1,0 +1,233 @@
+/* =============================================================================
+   All The Venues — brand foundation (design tokens, self-hosted fonts,
+   reusable components). Matches docs/atv-design-preview.html + ATV-VISUAL-SPECS.
+   Loaded after Bootstrap so tokens + base typography win; component classes are
+   prefixed .atv-* to coexist with Bootstrap (used by U2's listing/detail).
+   ============================================================================= */
+
+/* ---- Self-hosted fonts (no Google Fonts CDN — keeps CSP self-only) -------- */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 600;              /* variable latin subset */
+  font-display: swap;
+  src: url('../fonts/inter-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal;
+  font-weight: 600 700;              /* variable latin subset */
+  font-display: swap;
+  src: url('../fonts/cormorant-garamond-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/cormorant-garamond-italic-latin.woff2') format('woff2');
+}
+
+/* ---- Design tokens ------------------------------------------------------- */
+:root {
+  --navy:#0E1B2A; --blue:#6C93B7; --action:#426F94; --action-hover:#315B7C;
+  --pearl:#F7F4EF; --sand:#C8B8A0; --ink:#0E1B2A; --muted:#5b6b7a;
+  --line:#e4ded4; --card:#fff;
+  --font-heading:'Cormorant Garamond', Georgia, serif;
+  --font-body:'Inter', system-ui, -apple-system, Arial, sans-serif;
+}
+
+/* ---- Base typography (applies site-wide, incl. U2 pages) ------------------ */
+body {
+  font-family: var(--font-body);
+  background: var(--pearl);
+  color: var(--ink);
+  line-height: 1.6;
+}
+h1, h2, h3, .serif {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+.atv-wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+/* ---- Buttons ------------------------------------------------------------- */
+.atv-btn {
+  display: inline-block; background: var(--action); color: #fff;
+  padding: 12px 22px; border-radius: 8px; font-weight: 600; font-size: 14px;
+  border: none; cursor: pointer; text-align: center; line-height: 1.2;
+  font-family: var(--font-body);
+}
+.atv-btn:hover { background: var(--action-hover); color: #fff; }
+.atv-btn--sm { padding: 9px 16px; font-size: 13px; }
+.atv-btn--sand { background: var(--sand); color: var(--navy); }
+.atv-btn--sand:hover { background: #b9a688; color: var(--navy); }
+.atv-btn--ghost { background: transparent; border: 1px solid var(--line); color: var(--action); }
+.atv-btn--ghost:hover { background: #eef1f4; color: var(--action); }
+
+/* ---- Chips + badges ------------------------------------------------------ */
+.atv-chip {
+  font-size: 12px; color: var(--navy); background: #eef1f4; border: 1px solid var(--line);
+  padding: 3px 10px; border-radius: 20px; display: inline-flex; gap: 5px; align-items: center;
+}
+.atv-badge {
+  background: var(--sand); color: #5a4a30; font-size: 11px; font-weight: 600;
+  letter-spacing: .5px; padding: 4px 10px; border-radius: 6px;
+}
+.atv-badge--partner { background: #e7eef4; color: var(--action); }
+
+/* ---- Header / nav -------------------------------------------------------- */
+.site-header { background: var(--navy); color: #fff; }
+.site-header .atv-wrap {
+  display: flex; align-items: center; justify-content: space-between;
+  min-height: 74px; gap: 20px; flex-wrap: wrap;
+}
+.brand-logo { display: inline-flex; align-items: center; }
+.brand-logo img { height: 38px; width: auto; display: block; }
+.main-nav { display: flex; gap: 24px; list-style: none; font-size: 14px; color: #d7dde3; margin: 0; padding: 0; }
+.main-nav a { color: #d7dde3; }
+.main-nav a:hover { color: #fff; }
+.site-header .right { display: flex; align-items: center; gap: 16px; }
+.shortlist { font-size: 14px; color: #fff; display: inline-flex; gap: 7px; align-items: center; cursor: pointer; }
+.shortlist .n { background: var(--sand); color: var(--navy); font-weight: 600; border-radius: 20px; padding: 1px 9px; font-size: 12px; }
+.nav-toggle { display: none; background: none; border: 0; color: #fff; cursor: pointer; }
+
+/* ---- Hero ---------------------------------------------------------------- */
+.atv-hero { position: relative; color: #fff; background: var(--navy); }
+.atv-hero__bg {
+  position: absolute; inset: 0; background-size: cover; background-position: center;
+  /* Navy gradient overlay, deepened on the text (left) side for legibility. */
+  background-image:
+    linear-gradient(90deg, rgba(14,27,42,.94) 0%, rgba(14,27,42,.6) 55%, rgba(14,27,42,.3) 100%),
+    url('../img/hero.webp');
+}
+.atv-hero .atv-wrap { position: relative; padding: 74px 24px 88px; }
+.atv-hero h1 { font-size: 54px; line-height: 1.06; max-width: 640px; color: #fff; }
+.atv-hero h1 em { font-style: italic; color: var(--sand); }
+.atv-hero p.sub { margin-top: 18px; font-size: 17px; color: #d7dde3; max-width: 560px; }
+
+/* ---- Guided search card -------------------------------------------------- */
+.atv-search {
+  background: #fff; color: var(--ink); border-radius: 14px; padding: 22px 24px 18px;
+  margin-top: 32px; max-width: 840px; box-shadow: 0 24px 60px rgba(14,27,42,.35);
+}
+.atv-search .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.atv-search .top b { font-size: 16px; font-family: var(--font-body); }
+.atv-fields { display: grid; grid-template-columns: repeat(4,1fr) auto; gap: 14px; align-items: end; }
+.atv-field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.atv-field select {
+  width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px;
+  font-size: 14px; color: var(--ink); background: #fbfaf7; font-family: var(--font-body);
+  appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235b6b7a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+}
+.atv-search .atv-btn { height: 44px; }
+.atv-assist { margin-top: 14px; font-size: 13.5px; color: var(--action); }
+.atv-assist a { font-weight: 600; text-decoration: underline; color: var(--action); }
+
+/* ---- Sections ------------------------------------------------------------ */
+.atv-sec { padding: 54px 0; }
+.atv-sec--tight { padding-top: 0; }
+.atv-sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+.atv-sec h2 { font-size: 32px; }
+.atv-sec .link { font-size: 14px; color: var(--action); font-weight: 600; }
+.atv-sub2 { color: var(--muted); font-size: 15px; margin: 4px 0 26px; }
+
+/* ---- Event types --------------------------------------------------------- */
+.atv-types { display: grid; grid-template-columns: repeat(7,1fr); gap: 14px; margin-top: 22px; }
+.atv-type {
+  background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 20px 8px;
+  text-align: center; color: var(--navy); display: block;
+}
+.atv-type:hover { border-color: var(--blue); box-shadow: 0 6px 18px rgba(14,27,42,.08); color: var(--navy); }
+.atv-type svg { width: 24px; height: 24px; color: var(--blue); }
+.atv-type span { display: block; margin-top: 10px; font-size: 13px; color: var(--navy); font-weight: 500; }
+
+/* ---- Venue card (branded; used on home + U2 listing/detail) --------------- */
+.atv-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 22px; }
+.atv-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  overflow: hidden; box-shadow: 0 10px 26px rgba(14,27,42,.08);
+  display: flex; flex-direction: column; height: 100%;
+}
+.atv-card__img { height: 220px; background: var(--navy) center/cover no-repeat; position: relative; display: block; }
+.atv-card__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.atv-card__badges { position: absolute; top: 12px; left: 12px; display: flex; gap: 8px; }
+.atv-card__heart {
+  position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(255,255,255,.92); display: flex; align-items: center; justify-content: center; color: var(--navy);
+}
+.atv-card__heart svg { width: 16px; height: 16px; }
+.atv-card__body { padding: 16px 18px; display: flex; flex-direction: column; flex: 1 1 auto; }
+.atv-card__body h3 { font-size: 22px; margin-bottom: 2px; }
+.atv-card__body h3 a { color: var(--ink); }
+.atv-card__addr { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+.atv-card__chips { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; }
+.atv-card__desc { font-size: 13.5px; color: #40525f; margin-bottom: 14px; flex: 1 1 auto; }
+.atv-card__foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 12px; margin-top: auto; }
+.atv-card__foot .link { font-size: 13px; color: var(--action); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+.atv-card__foot .link svg { width: 14px; height: 14px; }
+.atv-card__foot .spend { font-size: 12px; color: var(--muted); }
+.atv-chip svg { width: 13px; height: 13px; }
+
+/* ---- How it works -------------------------------------------------------- */
+.atv-how { background: #fff; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.atv-how .atv-wrap { padding: 48px 24px; }
+.atv-how h2 { font-size: 32px; text-align: center; margin-bottom: 30px; }
+.atv-steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 26px; }
+.atv-step { text-align: center; padding: 0 10px; }
+.atv-step .num {
+  width: 46px; height: 46px; border-radius: 50%; background: var(--navy); color: var(--sand);
+  font-family: var(--font-heading); font-size: 22px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;
+}
+.atv-step b { font-family: var(--font-heading); font-size: 21px; font-weight: 600; display: block; margin-bottom: 5px; }
+.atv-step p { font-size: 13.5px; color: var(--muted); }
+
+/* ---- Trust row ----------------------------------------------------------- */
+.atv-trust { display: grid; grid-template-columns: repeat(3,1fr); gap: 26px; padding: 44px 0; }
+.atv-trust .t { display: flex; gap: 14px; }
+.atv-trust .t .ic {
+  color: var(--sand); background: var(--navy); width: 46px; height: 46px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
+}
+.atv-trust .t .ic svg { width: 22px; height: 22px; }
+.atv-trust .t b { font-family: var(--font-heading); font-size: 20px; font-weight: 600; display: block; }
+.atv-trust .t p { font-size: 13px; color: var(--muted); }
+
+/* ---- Provider band ------------------------------------------------------- */
+.atv-band {
+  background: var(--navy); color: #fff; border-radius: 16px; margin: 8px 0 56px;
+  padding: 34px 40px; display: flex; justify-content: space-between; align-items: center; gap: 24px;
+}
+.atv-band h3 { font-size: 26px; color: #fff; }
+.atv-band p { color: #c7d0d8; font-size: 14px; margin-top: 6px; max-width: 560px; }
+
+/* ---- Footer -------------------------------------------------------------- */
+.site-footer { background: var(--navy); color: #9fb0be; padding: 40px 0; }
+.site-footer .atv-wrap { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+.site-footer .brand-logo img { height: 34px; }
+.site-footer .soc { display: flex; gap: 14px; color: #c7d0d8; align-items: center; }
+.site-footer .soc a { color: #c7d0d8; display: inline-flex; }
+.site-footer .soc a:hover { color: #fff; }
+.site-footer .soc svg { width: 20px; height: 20px; }
+
+/* ---- Responsive (mirrors the preview breakpoints) ------------------------ */
+@media (max-width: 900px) {
+  .main-nav { display: none; }
+  .main-nav.open { display: flex; flex-direction: column; gap: 12px; width: 100%; padding: 8px 0 4px; }
+  .nav-toggle { display: inline-flex; }
+  .atv-hero h1 { font-size: 40px; }
+  .atv-fields { grid-template-columns: 1fr 1fr; }
+  .atv-fields .atv-btn { grid-column: 1 / -1; }
+  .atv-types { grid-template-columns: repeat(3,1fr); }
+  .atv-cards { grid-template-columns: 1fr; }
+  .atv-steps { grid-template-columns: 1fr; }
+  .atv-trust { grid-template-columns: 1fr; }
+  .atv-band { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 560px) {
+  .atv-fields { grid-template-columns: 1fr; }
+  .atv-types { grid-template-columns: repeat(2,1fr); }
+  .atv-hero h1 { font-size: 34px; }
+}

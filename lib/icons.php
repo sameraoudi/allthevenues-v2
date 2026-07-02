@@ -1,0 +1,85 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * Curated inline-SVG icon set (no Font Awesome / CDN — keeps CSP self-only).
+ * Simple, consistent line icons (24x24, currentColor) — a step toward a
+ * future custom set. Use icon('name', 'css-class').
+ */
+
+/** Inner SVG markup for each icon (paths only; wrapped by icon()). */
+function _icon_paths(string $name): ?string
+{
+    static $set = null;
+    if ($set === null) {
+        $set = [
+            // UI
+            'chevron-down' => '<path d="M6 9l6 6 6-6"/>',
+            'arrow-right'  => '<path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>',
+            'menu'         => '<path d="M4 7h16M4 12h16M4 17h16"/>',
+            'heart'        => '<path d="M12 20S3.5 14.7 3.5 9.4C3.5 6.9 5.4 5 7.9 5c1.6 0 3 .8 4.1 2.1C13 5.8 14.4 5 16 5c2.5 0 4.4 1.9 4.4 4.4C20.4 14.7 12 20 12 20z"/>',
+            'users'        => '<circle cx="9" cy="8" r="3"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16 5.5a3 3 0 0 1 0 6"/><path d="M18.5 20a5.5 5.5 0 0 0-2.7-4.8"/>',
+            // Trust
+            'check-circle' => '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',
+            'info-circle'  => '<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/>',
+            'hand-heart'   => '<path d="M11.5 8.5l.5.5.5-.5a1.8 1.8 0 0 1 2.6 2.6L12 14.5 8.9 11.1a1.8 1.8 0 0 1 2.6-2.6z"/><path d="M3 13l3.5 3.5A4 4 0 0 0 9.3 18H15a2 2 0 0 0 0-4h-3.5"/>',
+            // Event types
+            'ring'         => '<circle cx="12" cy="14.5" r="5.5"/><path d="M9 9l3-4 3 4"/>',
+            'briefcase'    => '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5.5A2.5 2.5 0 0 1 10.5 3h3A2.5 2.5 0 0 1 16 5.5V7"/><path d="M3 12.5h18"/>',
+            'glass-cheers' => '<path d="M12 4v9"/><path d="M8 21h8"/><path d="M12 13v8"/><path d="M6.5 4h11l-1 5a4.5 4.5 0 0 1-9 0z"/>',
+            'rocket'       => '<path d="M12 3c3.5 1 6 3.5 7 7-1 3.5-3.5 6-7 7-1-3-2.9-4.9-5.9-5.9C7.1 8.6 9 4 12 3z"/><circle cx="13.5" cy="9.5" r="1.4"/><path d="M6 15c-1 1-1.2 3.8-1.2 3.8S7.6 18.6 8.5 17.6"/>',
+            'tree'         => '<path d="M12 3l4.5 7h-2.8L18 16H6l4.3-6H7.5z"/><path d="M12 16v5"/>',
+            'star'         => '<path d="M12 3.5l2.5 5.1 5.6.8-4 4 1 5.6L12 16.4 6.9 19l1-5.6-4-4 5.6-.8z"/>',
+            'cake'         => '<path d="M4 21h16"/><path d="M5 21v-6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6"/><path d="M4.5 16.5c1.6 0 1.6 1.4 3.2 1.4S9.3 16.5 12 16.5s1.6 1.4 3.2 1.4 1.6-1.4 3.2-1.4"/><path d="M12 8v3"/><path d="M12 5h.01"/>',
+            'anchor'       => '<circle cx="12" cy="5" r="2"/><path d="M12 7v13"/><path d="M5 12a7 7 0 0 0 14 0"/><path d="M5 12H3"/><path d="M19 12h2"/>',
+            'image'        => '<rect x="3" y="4" width="18" height="15" rx="2"/><circle cx="8.5" cy="9" r="1.6"/><path d="M21 16l-5-4-7 6"/>',
+            'presentation' => '<rect x="3" y="4" width="18" height="11" rx="1"/><path d="M12 15v4"/><path d="M8 21h8"/>',
+            'sparkles'     => '<path d="M12 4l1.6 4.4L18 10l-4.4 1.6L12 16l-1.6-4.4L6 10l4.4-1.6z"/><path d="M18.5 15l.6 1.9 1.9.6-1.9.6-.6 1.9-.6-1.9-1.9-.6 1.9-.6z"/>',
+            // Socials
+            'instagram'    => '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17 7h.01"/>',
+            'facebook'     => '<path d="M14.5 8.5H16V5.5h-1.5A3.5 3.5 0 0 0 11 9v2H9v3h2v6h3v-6h2l.5-3H14V9c0-.3.2-.5.5-.5z"/>',
+            'linkedin'     => '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 10.5V17"/><path d="M8 7.5h.01"/><path d="M12 17v-3.5a2 2 0 0 1 4 0V17"/>',
+        ];
+    }
+    return $set[$name] ?? null;
+}
+
+/**
+ * Render an inline SVG icon. Returns '' for unknown names.
+ */
+function icon(string $name, string $class = '', ?string $title = null): string
+{
+    $inner = _icon_paths($name);
+    if ($inner === null) {
+        $inner = _icon_paths('sparkles');   // safe fallback
+    }
+    $cls   = $class !== '' ? ' class="' . htmlspecialchars($class, ENT_QUOTES, 'UTF-8') . '"' : '';
+    $label = $title !== null
+        ? ' role="img" aria-label="' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '"'
+        : ' aria-hidden="true"';
+    return '<svg' . $cls . $label . ' viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+        . 'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' . $inner . '</svg>';
+}
+
+/** Map an event_type slug → icon name (fallback: sparkles). */
+function event_type_icon(string $slug): string
+{
+    static $map = [
+        'wedding'          => 'ring',
+        'engagement'       => 'ring',
+        'corporate-event'  => 'briefcase',
+        'conference'       => 'users',
+        'meeting'          => 'users',
+        'networking-event' => 'users',
+        'training'         => 'presentation',
+        'exhibition'       => 'image',
+        'product-launch'   => 'rocket',
+        'gala-dinner'      => 'star',
+        'private-party'    => 'glass-cheers',
+        'birthday'         => 'cake',
+        'outdoor-event'    => 'tree',
+        'yacht-event'      => 'anchor',
+        'other'            => 'sparkles',
+    ];
+    return $map[$slug] ?? 'sparkles';
+}

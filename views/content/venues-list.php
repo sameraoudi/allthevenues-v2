@@ -134,7 +134,7 @@ $hasFilters = (bool)array_filter($carry, static fn($v) => $v !== '');
           <?php endif; ?>
         </div>
       <?php else: ?>
-        <div class="row">
+        <div class="atv-cards">
           <?php foreach ($venues as $venue): ?>
             <?php require __DIR__ . '/../partials/venue-card.php'; ?>
           <?php endforeach; ?>

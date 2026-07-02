@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All The Venues — design direction preview (v2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+:root{
+  --navy:#0E1B2A; --blue:#6C93B7; --action:#426F94; --action-hover:#315B7C;
+  --pearl:#F7F4EF; --sand:#C8B8A0; --ink:#0E1B2A; --muted:#5b6b7a; --line:#e4ded4; --card:#fff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--pearl);color:var(--ink);line-height:1.6}
+h1,h2,h3,.serif{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;letter-spacing:.2px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+a{color:inherit;text-decoration:none}
+.btn{display:inline-block;background:var(--action);color:#fff;padding:12px 22px;border-radius:8px;font-weight:600;font-size:14px;border:none;cursor:pointer}
+.btn:hover{background:var(--action-hover)}
+.btn-sm{padding:9px 16px;font-size:13px}
+.chip{font-size:12px;color:var(--navy);background:#eef1f4;border:1px solid var(--line);padding:3px 10px;border-radius:20px;display:inline-flex;gap:5px;align-items:center}
+
+.nav{background:var(--navy);color:#fff}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:74px;gap:20px}
+.logo{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:23px;letter-spacing:.5px;white-space:nowrap}
+.logo .mark{color:var(--sand)}
+.nav ul{display:flex;gap:24px;list-style:none;font-size:14px;color:#d7dde3}
+.nav ul li:hover{color:#fff;cursor:pointer}
+.nav .right{display:flex;align-items:center;gap:16px}
+.shortlist{font-size:14px;color:#fff;display:flex;gap:7px;align-items:center;cursor:pointer}
+.shortlist .n{background:var(--sand);color:var(--navy);font-weight:600;border-radius:20px;padding:1px 9px;font-size:12px}
+
+.hero{position:relative;color:#fff;background:var(--navy)}
+.hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;
+  background-image:linear-gradient(90deg,rgba(14,27,42,.94) 0%,rgba(14,27,42,.6) 55%,rgba(14,27,42,.3) 100%),url('https://staging.allthevenues.com/uploads/venues/images/1486026632_oneandonly-main.JPG')}
+.hero .wrap{position:relative;padding:74px 24px 88px}
+.hero h1{font-size:54px;line-height:1.06;max-width:640px}
+.hero h1 em{font-style:italic;color:var(--sand)}
+.hero p.sub{margin-top:18px;font-size:17px;color:#d7dde3;max-width:560px}
+
+.search{background:#fff;color:var(--ink);border-radius:14px;padding:22px 24px 18px;margin-top:32px;max-width:840px;box-shadow:0 24px 60px rgba(14,27,42,.35)}
+.search .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.search .top b{font-size:16px}
+.search .top .reset{font-size:13px;color:var(--muted);cursor:pointer}
+.fields{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:14px;align-items:end}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.field .box{border:1px solid var(--line);border-radius:8px;padding:11px 12px;font-size:14px;color:var(--muted);background:#fbfaf7;display:flex;justify-content:space-between;align-items:center}
+.assist{margin-top:14px;font-size:13.5px;color:var(--action)}
+.assist a{font-weight:600;text-decoration:underline}
+
+.sec{padding:54px 0}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline}
+.sec h2{font-size:32px}
+.sec .link{font-size:14px;color:var(--action);font-weight:600;cursor:pointer}
+.sub2{color:var(--muted);font-size:15px;margin:4px 0 26px}
+
+.types{display:grid;grid-template-columns:repeat(7,1fr);gap:14px;margin-top:22px}
+.type{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px 8px;text-align:center}
+.type i{font-size:22px;color:var(--blue)}
+.type span{display:block;margin-top:10px;font-size:13px;color:var(--navy);font-weight:500}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 10px 26px rgba(14,27,42,.08)}
+.card .img{height:220px;background:var(--navy) center/cover no-repeat;position:relative}
+.badge{position:absolute;top:12px;left:12px;background:var(--sand);color:#5a4a30;font-size:11px;font-weight:600;letter-spacing:.5px;padding:4px 10px;border-radius:6px}
+.badge.verify{background:#e7eef4;color:var(--action);left:auto;right:52px}
+.heart{position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;color:var(--navy)}
+.card .body{padding:16px 18px}
+.card h3{font-size:22px;margin-bottom:2px}
+.card .addr{font-size:13px;color:var(--muted);margin-bottom:12px}
+.card .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.card .desc{font-size:13.5px;color:#40525f;margin-bottom:14px}
+.card .foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px}
+.card .foot .link{font-size:13px;color:var(--action);font-weight:600}
+.card .foot .spend{font-size:12px;color:var(--muted)}
+
+.how{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.how .wrap{padding:48px 24px}
+.how h2{font-size:32px;text-align:center;margin-bottom:30px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.step{text-align:center;padding:0 10px}
+.step .num{width:46px;height:46px;border-radius:50%;background:var(--navy);color:var(--sand);font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.step b{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:600;display:block;margin-bottom:5px}
+.step p{font-size:13.5px;color:var(--muted)}
+
+.trust{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;padding:44px 0}
+.trust .t{display:flex;gap:14px}
+.trust .t i{color:var(--sand);font-size:22px;background:var(--navy);width:46px;height:46px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.trust .t b{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600}
+.trust .t p{font-size:13px;color:var(--muted)}
+
+.band{background:var(--navy);color:#fff;border-radius:16px;margin:8px 0 56px;padding:34px 40px;display:flex;justify-content:space-between;align-items:center;gap:24px}
+.band h3{font-size:26px}
+.band p{color:#c7d0d8;font-size:14px;margin-top:6px;max-width:560px}
+.band .btn{background:var(--sand);color:var(--navy);white-space:nowrap}
+.band .btn:hover{background:#b9a688}
+
+.footer{background:var(--navy);color:#9fb0be;padding:40px 0}
+.footer .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.footer .logo{color:#fff}
+.footer .soc{display:flex;gap:14px;font-size:16px;color:#c7d0d8}
+
+.palette{background:#fff;border-top:1px solid var(--line);padding:30px 0}
+.sw{display:flex;gap:18px;flex-wrap:wrap}
+.sw div{font-size:12px;color:var(--muted)}
+.sw .c{width:118px;height:58px;border-radius:10px;border:1px solid var(--line);margin-bottom:6px}
+.note{max-width:1120px;margin:0 auto;padding:14px 24px 0;font-size:12px;color:var(--muted)}
+
+@media(max-width:900px){
+  .nav ul{display:none}
+  .hero h1{font-size:40px}
+  .fields{grid-template-columns:1fr 1fr}
+  .fields .btn{grid-column:1 / -1}
+  .types{grid-template-columns:repeat(3,1fr)}
+  .cards{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr}
+  .trust{grid-template-columns:1fr}
+  .band{flex-direction:column;align-items:flex-start}
+}
+@media(max-width:560px){ .fields{grid-template-columns:1fr} .types{grid-template-columns:repeat(2,1fr)} .hero h1{font-size:34px} }
+</style>
+</head>
+<body>
+
+<div class="nav"><div class="wrap">
+  <div class="logo">All The <span class="mark">Venues</span></div>
+  <ul><li>Venues</li><li>Event Types</li><li>Locations</li><li>Inspiration</li><li>About Us</li><li>For Partners</li></ul>
+  <div class="right">
+    <span class="shortlist"><i class="fa-regular fa-heart"></i> Shortlist <span class="n">2</span></span>
+    <button class="btn btn-sm">Enquire Now</button>
+  </div>
+</div></div>
+
+<div class="hero"><div class="hero-bg"></div><div class="wrap">
+  <h1>Find the right UAE venue for your next event</h1>
+  <p class="sub">Discover curated UAE venues, compare key details, and send one structured enquiry.</p>
+  <div class="search">
+    <div class="top"><b>Tell us about your event</b><span class="reset">Reset <i class="fa-solid fa-rotate-right"></i></span></div>
+    <div class="fields">
+      <div class="field"><label>Event Type</label><div class="box">Select event type <i class="fa-solid fa-chevron-down"></i></div></div>
+      <div class="field"><label>Location</label><div class="box">Select location <i class="fa-solid fa-chevron-down"></i></div></div>
+      <div class="field"><label>Guest Count</label><div class="box">Any number <i class="fa-solid fa-chevron-down"></i></div></div>
+      <div class="field"><label>Budget</label><div class="box">Any budget <i class="fa-solid fa-chevron-down"></i></div></div>
+      <button class="btn">Find Venues</button>
+    </div>
+    <p class="assist">Not sure where to start? <a href="#">Let us help you find a venue.</a></p>
+  </div>
+</div></div>
+
+<div class="sec"><div class="wrap">
+  <div class="sec-head"><h2>Popular event types</h2><span class="link">View all types</span></div>
+  <div class="types">
+    <div class="type"><i class="fa-solid fa-ring"></i><span>Weddings</span></div>
+    <div class="type"><i class="fa-solid fa-briefcase"></i><span>Corporate</span></div>
+    <div class="type"><i class="fa-solid fa-champagne-glasses"></i><span>Private Parties</span></div>
+    <div class="type"><i class="fa-solid fa-users"></i><span>Conferences</span></div>
+    <div class="type"><i class="fa-solid fa-rocket"></i><span>Launches</span></div>
+    <div class="type"><i class="fa-solid fa-tree"></i><span>Outdoor</span></div>
+    <div class="type"><i class="fa-solid fa-star"></i><span>Galas</span></div>
+  </div>
+</div></div>
+
+<div class="sec" style="padding-top:0"><div class="wrap">
+  <div class="sec-head"><h2>Featured venues</h2><span class="link">View all venues</span></div>
+  <div class="sub2">Hand-picked spaces for every kind of celebration</div>
+  <div class="cards">
+    <div class="card">
+      <div class="img" style="background-image:url('https://staging.allthevenues.com/uploads/venues/images/1486027548_Armani-Ballroom.JPG')">
+        <span class="badge">Featured</span><span class="badge verify">Partner managed</span><span class="heart"><i class="fa-regular fa-heart"></i></span></div>
+      <div class="body"><h3>The Grand Ballroom</h3><div class="addr">Downtown Dubai</div>
+        <div class="chips"><span class="chip"><i class="fa-solid fa-user-group"></i> 600</span><span class="chip">Indoor</span><span class="chip">Hotel Ballroom</span></div>
+        <div class="desc">A pillar-less ballroom with high ceilings and elegant contemporary interiors.</div>
+        <div class="foot"><span class="spend">From AED 180,000</span><span class="link">View details →</span></div></div>
+    </div>
+    <div class="card">
+      <div class="img" style="background-image:url('https://staging.allthevenues.com/uploads/venues/images/1485941894_Zabeel-BeachWedding-Main.jpg')">
+        <span class="badge">Featured</span><span class="heart"><i class="fa-regular fa-heart"></i></span></div>
+      <div class="body"><h3>Jumeirah Beach Garden</h3><div class="addr">Jumeirah Beach Hotel</div>
+        <div class="chips"><span class="chip"><i class="fa-solid fa-user-group"></i> 300</span><span class="chip">Outdoor</span><span class="chip">Garden</span></div>
+        <div class="desc">Beachfront garden with direct beach views — perfect for weddings.</div>
+        <div class="foot"><span class="spend">Minimum spend available</span><span class="link">View details →</span></div></div>
+    </div>
+    <div class="card">
+      <div class="img" style="background-image:url('https://staging.allthevenues.com/uploads/venues/images/1486015164_fourseasons-dana-main.jpeg')">
+        <span class="badge">Featured</span><span class="heart"><i class="fa-regular fa-heart"></i></span></div>
+      <div class="body"><h3>Four Seasons — Dana</h3><div class="addr">Jumeirah, Dubai</div>
+        <div class="chips"><span class="chip"><i class="fa-solid fa-user-group"></i> 450</span><span class="chip">Indoor</span><span class="chip">Resort</span></div>
+        <div class="desc">A luxurious resort with versatile indoor and outdoor spaces.</div>
+        <div class="foot"><span class="spend">Price on request</span><span class="link">View details →</span></div></div>
+    </div>
+  </div>
+</div></div>
+
+<div class="how"><div class="wrap">
+  <h2>How it works</h2>
+  <div class="steps">
+    <div class="step"><div class="num">1</div><b>Tell us what you're planning</b><p>Share your event type, location, guest count, and budget.</p></div>
+    <div class="step"><div class="num">2</div><b>Compare suitable venues</b><p>Browse curated matches with capacity, layouts, and key details side by side.</p></div>
+    <div class="step"><div class="num">3</div><b>Enquire with selected venues</b><p>Send one structured enquiry and hear back from the right venue partners.</p></div>
+  </div>
+</div></div>
+
+<div class="wrap"><div class="trust">
+  <div class="t"><i class="fa-solid fa-circle-check"></i><div><b>Curated &amp; Verified</b><p>Venue information is reviewed for quality, clarity, and suitability before publication.</p></div></div>
+  <div class="t"><i class="fa-solid fa-circle-info"></i><div><b>Accurate Information</b><p>Up-to-date capacity, layouts, facilities, and minimum spends.</p></div></div>
+  <div class="t"><i class="fa-solid fa-hand-holding-heart"></i><div><b>Personal Support</b><p>Our team is here to help you find the right venue, for free.</p></div></div>
+</div></div>
+
+<div class="wrap"><div class="band">
+  <div><h3>Are you a venue provider?</h3><p>Showcase your venue to event planners and receive structured enquiries through a curated UAE venue platform.</p></div>
+  <button class="btn">Become a venue partner</button>
+</div></div>
+
+<div class="footer"><div class="wrap">
+  <div class="logo">All The <span style="color:var(--sand)">Venues</span></div>
+  <div class="soc"><i class="fa-brands fa-instagram"></i><i class="fa-brands fa-facebook"></i><i class="fa-brands fa-linkedin"></i></div>
+</div></div>
+
+<div class="palette"><div class="wrap">
+  <div class="sw">
+    <div><div class="c" style="background:#0E1B2A"></div>Deep Navy · #0E1B2A</div>
+    <div><div class="c" style="background:#426F94"></div>Action Blue · #426F94</div>
+    <div><div class="c" style="background:#6C93B7"></div>Soft Blue (accent) · #6C93B7</div>
+    <div><div class="c" style="background:#F7F4EF"></div>Pearl · #F7F4EF</div>
+    <div><div class="c" style="background:#C8B8A0"></div>Soft Sand · #C8B8A0</div>
+  </div>
+</div></div>
+<p class="note">v2 — CTAs now Action Blue (#426F94), Soft Blue demoted to accent (icons/links). Added: Enquire Now in nav, assisted-matching link, How-it-works, reworded provider CTA, price-safe labels, Partner-managed badge, taller cards + shadow, softened trust copy, footer typo fixed, responsive rules. Logo is a title-case placeholder — real logo drops in from brand/. Icons are Font Awesome placeholders — custom line set for production.</p>
+
+</body>
+</html>

@@ -13,6 +13,7 @@ declare(strict_types=1);
 $page_title   = $page_title   ?? 'All The Venues';
 $content_view = $content_view ?? null;
 require_once __DIR__ . '/../lib/helpers.php';
+require_once __DIR__ . '/../lib/icons.php';
 ?>
 <!doctype html>
 <html lang="en">
@@ -20,7 +21,11 @@ require_once __DIR__ . '/../lib/helpers.php';
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($page_title) ?></title>
+    <link rel="icon" href="<?= e(base_url('assets/brand/favicon_app_icon/favicon.ico')) ?>" sizes="any">
+    <link rel="icon" type="image/png" href="<?= e(base_url('assets/brand/favicon_app_icon/atv_app_icon_deep_navy_32x32.png')) ?>" sizes="32x32">
+    <link rel="apple-touch-icon" href="<?= e(base_url('assets/brand/favicon_app_icon/atv_app_icon_deep_navy_180x180.png')) ?>">
     <link rel="stylesheet" href="<?= e(base_url('assets/css/bootstrap.min.css')) ?>">
+    <link rel="stylesheet" href="<?= e(base_url('assets/css/brand.css')) ?>">
     <link rel="stylesheet" href="<?= e(base_url('assets/css/app.css')) ?>">
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -38,5 +43,6 @@ require_once __DIR__ . '/../lib/helpers.php';
     <?php require __DIR__ . '/partials/footer.php'; ?>
 
     <script src="<?= e(base_url('assets/js/bootstrap.bundle.min.js')) ?>"></script>
+    <script src="<?= e(base_url('assets/js/app.js')) ?>"></script>
 </body>
 </html>

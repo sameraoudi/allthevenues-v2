@@ -1,20 +1,28 @@
 <?php declare(strict_types=1); ?>
-<header class="border-bottom bg-white">
-    <nav class="navbar navbar-expand-lg container">
-        <a class="navbar-brand fw-semibold" href="<?= e(base_url('/')) ?>">
-            All The Venues
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navMain" aria-controls="navMain"
-                aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navMain">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= e(base_url('venues')) ?>">Browse Venues</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+<header class="site-header">
+  <div class="atv-wrap">
+    <a class="brand-logo" href="<?= e(base_url('/')) ?>" aria-label="All The Venues — home">
+      <img src="<?= e(base_url('assets/brand/web_exports/horizontal_light/horizontal_light_512w.png')) ?>"
+           alt="All The Venues" width="512" height="120">
+    </a>
+
+    <button class="nav-toggle" type="button" aria-label="Toggle menu"
+            data-nav-toggle aria-controls="mainNav" aria-expanded="false">
+      <?= icon('menu') ?>
+    </button>
+
+    <ul class="main-nav" id="mainNav">
+      <li><a href="<?= e(base_url('venues')) ?>">Venues</a></li>
+      <li><a href="<?= e(base_url('venues')) ?>">Event types</a></li>
+      <li><a href="<?= e(base_url('venues')) ?>">Locations</a></li>
+      <li><a href="<?= e(base_url('enquire')) ?>">For partners</a></li>
+    </ul>
+
+    <div class="right">
+      <a class="shortlist" href="<?= e(base_url('venues')) ?>">
+        <?= icon('heart') ?> Shortlist <span class="n">0</span>
+      </a>
+      <a class="atv-btn atv-btn--sm" href="<?= e(base_url('enquire')) ?>">Enquire now</a>
+    </div>
+  </div>
 </header>

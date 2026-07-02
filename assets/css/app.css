@@ -1,24 +1,19 @@
-/* All The Venues — site styles. Layered on top of self-hosted Bootstrap 5. */
+/* All The Venues — app-specific tweaks layered on brand.css + Bootstrap.
+   (Design tokens, fonts, body background, and the branded venue card now
+   live in brand.css.) */
 
-body {
-    background-color: #f8f9fa;
-}
-
-/* Venue cards: keep image area consistent + cover-cropped. */
-.venue-card .venue-card__img img,
-.carousel-inner img {
+/* Detail-page gallery images cover their frames (Bootstrap carousel/ratio). */
+.carousel-inner img,
+.ratio > img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
-.venue-card {
-    transition: box-shadow .15s ease-in-out, transform .15s ease-in-out;
-}
-.venue-card:hover {
-    transform: translateY(-2px);
-}
 
-/* Sanitized rich-text blocks from migrated content. */
+/* Sticky detail sidebar offset (CSP-safe class; no inline style). */
+.detail-sticky { top: 1rem; }
+
+/* Sanitized rich-text blocks from migrated venue content. */
 .venue-richtext {
     line-height: 1.6;
 }
