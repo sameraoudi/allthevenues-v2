@@ -28,9 +28,13 @@ $mode      = $context['mode'];
 $venues    = $context['venues'];
 $venueMode = !empty($context['venue_mode']);   // Mode A when a venue is chosen
 
+$partner = $context['partner'] ?? null;   // specific partner (?partner=id)
+
 // Contextual heading/intro per mode.
 $intro = 'Tell us about your event and we\'ll connect you with the right venues.';
-if ($mode === 'single' && $venues) {
+if ($partner) {
+    $intro = 'Enquiring about a venue from ' . e($partner['org_name']) . '. Share your event details and we\'ll help connect you.';
+} elseif ($mode === 'single' && $venues) {
     $intro = 'Enquiring about ' . e($venues[0]['name']) . '.';
 } elseif ($mode === 'multi' && $venues) {
     $intro = 'Enquiring about ' . count($venues) . ' shortlisted venues.';
@@ -69,6 +73,15 @@ $hasErrors = !empty($errors) || $formError !== null;
         </div>
       <?php endif; ?>
 
+      <?php if ($partner): ?>
+        <div class="atv-enq__context" aria-label="Selected partner">
+          <span class="atv-enq__context-label">Enquiring about partner</span>
+          <ul class="atv-enq__venue-list">
+            <li><span class="atv-enq__venue-name"><?= e($partner['org_name']) ?></span></li>
+          </ul>
+        </div>
+      <?php endif; ?>
+
       <?php if ($formError !== null): ?>
         <div class="atv-enq__alert" role="alert"><?= e($formError) ?></div>
       <?php endif; ?>
@@ -88,6 +101,9 @@ $hasErrors = !empty($errors) || $formError !== null;
         <?php foreach ($context['venue_ids'] as $vid): ?>
           <input type="hidden" name="venue_ids[]" value="<?= e((string)$vid) ?>">
         <?php endforeach; ?>
+        <?php if (!empty($context['partner_id'])): ?>
+          <input type="hidden" name="partner_id" value="<?= e((string)$context['partner_id']) ?>">
+        <?php endif; ?>
 
         <!-- Honeypot (do not fill) -->
         <div class="atv-hp" aria-hidden="true">

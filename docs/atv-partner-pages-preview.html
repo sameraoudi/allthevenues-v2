@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All The Venues — partner pages preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+:root{--navy:#0E1B2A;--blue:#6C93B7;--action:#426F94;--action-hover:#315B7C;--pearl:#F7F4EF;--sand:#C8B8A0;--ink:#0E1B2A;--muted:#5b6b7a;--line:#e4ded4;--card:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--pearl);color:var(--ink);line-height:1.6}
+h1,h2,h3,h4,.serif{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+a{color:inherit;text-decoration:none}
+.btn{display:inline-block;background:var(--action);color:#fff;padding:11px 20px;border-radius:8px;font-weight:600;font-size:14px;border:none;cursor:pointer}
+.btn:hover{background:var(--action-hover)}
+.btn-out{background:#fff;border:1px solid var(--line);color:var(--navy)}
+.chip{font-size:12px;color:var(--navy);background:#eef1f4;border:1px solid var(--line);padding:3px 10px;border-radius:20px;display:inline-flex;gap:5px;align-items:center}
+.badge{background:var(--sand);color:#5a4a30;font-size:11px;font-weight:600;letter-spacing:.5px;padding:4px 10px;border-radius:6px}
+.badge.verified{background:#e7eef3;color:var(--action)}
+.crumb{font-size:13px;color:var(--muted);padding:16px 0}
+.crumb b{color:var(--navy);font-weight:500}
+.screenlabel{background:var(--navy);color:var(--sand);font-family:'Cormorant Garamond',serif;font-size:20px;padding:12px 24px;margin-top:40px}
+
+/* header */
+.nav{background:var(--navy);color:#fff}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:66px}
+.logo{font-family:'Cormorant Garamond',serif;font-size:22px}.logo .m{color:var(--sand)}
+.nav .r{display:flex;gap:14px;align-items:center;font-size:14px;color:#d7dde3}
+
+/* listing */
+.listhead{display:flex;justify-content:space-between;align-items:flex-end;margin:6px 0 20px}
+.listhead h1{font-size:34px}.listhead .cnt{font-size:14px;color:var(--muted)}
+.listhead .sub{font-size:14px;color:var(--muted);max-width:560px;margin-top:4px}
+.sortbox{font-size:13px;color:var(--muted);border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 12px}
+.layout{display:grid;grid-template-columns:250px 1fr;gap:26px;padding-bottom:50px}
+.filters{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;height:fit-content}
+.filters .fh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.filters .fh b{font-family:'Cormorant Garamond',serif;font-size:19px}
+.filters .fh a{font-size:12px;color:var(--action)}
+.searchbox{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 10px 9px 32px;font-size:13px;color:var(--muted);background:#fbfaf7 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%235b6b7a'%3E%3Cpath d='M11.7 10.3a5 5 0 1 0-1.4 1.4l3 3a1 1 0 0 0 1.4-1.4zM3 7a4 4 0 1 1 8 0 4 4 0 0 1-8 0z'/%3E%3C/svg%3E") no-repeat 10px center;margin-bottom:4px}
+.fgroup{border-top:1px solid var(--line);padding:12px 0}
+.fgroup label.t{display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer}
+.fopt{font-size:13px;color:var(--muted);padding:6px 0 0;display:flex;gap:8px;align-items:center}
+.fopt input{accent-color:var(--action)}
+.applybtn{width:100%;margin-top:14px}
+
+/* partner cards grid */
+.pgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.pcard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 8px 22px rgba(14,27,42,.07);display:flex;flex-direction:column;position:relative}
+.pcard .badge{position:absolute;top:16px;right:16px}
+.pcard .top{display:flex;gap:14px;align-items:center;margin-bottom:12px}
+.pcard .logo-sq{width:58px;height:58px;border-radius:12px;background:var(--pearl);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--action);flex-shrink:0}
+.pcard h3{font-size:21px;line-height:1.2}
+.pcard .grp{font-size:12px;color:var(--muted);margin-top:2px}
+.pcard .about{font-size:13px;color:#40525f;margin-bottom:14px;flex:1}
+.pcard .meta{display:flex;gap:14px;font-size:12.5px;color:var(--muted);margin-bottom:14px}
+.pcard .meta i{color:var(--blue);margin-right:5px}
+.pcard .foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px}
+.pcard .foot .vn{font-size:12.5px;color:var(--navy);font-weight:600}
+.pcard .foot .lk{font-size:13px;color:var(--action);font-weight:600}
+.pager{display:flex;gap:6px;justify-content:center;padding:22px 0 8px}
+.pager span{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted);background:#fff}
+.pager span.on{background:var(--action);color:#fff;border-color:var(--action)}
+.fchips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px;align-items:center}
+.fchips .fl{font-size:12px;color:var(--muted);margin-right:2px}
+.fchips span.f{background:#fff;border:1px solid var(--line);color:var(--navy);font-size:12.5px;padding:5px 11px;border-radius:20px;display:inline-flex;gap:8px;align-items:center}
+.fchips span.f i{color:var(--muted);cursor:pointer;font-size:11px}
+
+/* partner detail */
+.phead{background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px 28px;margin:6px 0 26px;box-shadow:0 8px 22px rgba(14,27,42,.06);display:flex;gap:22px;align-items:flex-start}
+.phead .logo-lg{width:88px;height:88px;border-radius:16px;background:var(--pearl);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:38px;color:var(--action);flex-shrink:0}
+.phead .hbody{flex:1}
+.phead .badges{display:flex;gap:8px;margin-bottom:8px}
+.phead h1{font-size:36px;line-height:1.1}
+.phead .sub{font-size:13.5px;color:var(--muted);margin-top:6px;display:flex;gap:16px;flex-wrap:wrap}
+.phead .sub i{color:var(--blue);margin-right:5px}
+.phead .web{font-size:13px;color:var(--action);font-weight:600;margin-top:10px;display:inline-block}
+.phead .acts{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.dbody{display:grid;grid-template-columns:1fr 320px;gap:30px;padding-bottom:12px}
+.dbody h2{font-size:26px;margin-bottom:10px}
+.dbody p{font-size:14.5px;color:#40525f;margin-bottom:16px}
+.keypanel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;height:fit-content}
+.keypanel h4{font-size:20px;margin-bottom:12px}
+.krow{display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-top:1px solid var(--line)}
+.krow .k{color:var(--muted)}.krow .v{color:var(--navy);font-weight:500;text-align:right}
+.enqbar{background:var(--navy);color:#fff;border-radius:12px;padding:16px 18px;margin-top:16px}
+.enqbar p{font-size:13px;color:#c7d0d8;margin-bottom:10px}
+.enqbar .btn{background:var(--sand);color:var(--navy);width:100%;text-align:center}
+
+/* partner's venues strip (reuse simcard) */
+.simsec{padding:20px 0 54px}
+.simsec h2{font-size:30px}
+.simsec .cnt{font-size:13px;color:var(--muted);margin-bottom:16px}
+.simgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:4px}
+.simcard{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 8px 22px rgba(14,27,42,.06)}
+.simcard .im{height:152px;background:var(--navy) center/cover no-repeat;position:relative}
+.simcard .im .badge{position:absolute;top:10px;left:10px}
+.simcard .bd{padding:13px 16px}
+.simcard h3{font-size:20px}
+.simcard .a{font-size:12.5px;color:var(--muted);margin:2px 0 8px}
+.simcard .ch{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.simcard .lk{font-size:12.5px;color:var(--action);font-weight:600}
+.note{max-width:1160px;margin:22px auto 0;padding:14px 24px;font-size:13px;color:var(--muted);border-left:3px solid var(--sand);background:#fff}
+</style>
+</head>
+<body>
+
+<div class="nav"><div class="wrap"><div class="logo">All The <span class="m">Venues</span></div>
+<div class="r"><span>Venues</span><span>Partners</span><span>Event Types</span><span>Locations</span><span><i class="fa-regular fa-heart"></i> Shortlist</span><button class="btn" style="padding:8px 14px">Enquire Now</button></div></div></div>
+
+<div class="note"><b>Design intent.</b> Partner pages showcase the provider and <b>their venues</b>, then funnel to an enquiry that routes through All The Venues — they deliberately do <b>not</b> expose the partner's direct email/phone. That keeps every lead inside the managed layer (the platform's whole value), the same principle as the enquiry &amp; forwarding contexts.</div>
+
+<!-- ============ SCREEN 1 : PARTNERS BROWSE ============ -->
+<div class="screenlabel">1 · Partners — browse</div>
+<div class="wrap">
+  <div class="crumb">Home › <b>Partners</b></div>
+  <div class="listhead">
+    <div><h1>Venue Partners</h1><div class="sub">Explore hotels, resorts, restaurants, and unique-venue operators across the UAE, with selected partners verified by All The Venues.</div></div>
+    <div class="sortbox">Sort by: Featured <i class="fa-solid fa-chevron-down"></i></div>
+  </div>
+  <div class="layout">
+    <aside class="filters">
+      <div class="fh"><b>Filter</b><a href="#">Reset all</a></div>
+      <input class="searchbox" placeholder="Search partners…">
+      <div class="fgroup"><label class="t">Location <i class="fa-solid fa-chevron-down"></i></label>
+        <div class="fopt"><input type="checkbox" checked> Dubai <span style="margin-left:auto;color:#a9b3bd">42</span></div>
+        <div class="fopt"><input type="checkbox"> Abu Dhabi <span style="margin-left:auto;color:#a9b3bd">14</span></div>
+        <div class="fopt"><input type="checkbox"> Sharjah <span style="margin-left:auto;color:#a9b3bd">7</span></div>
+        <div class="fopt"><input type="checkbox"> Ras Al Khaimah <span style="margin-left:auto;color:#a9b3bd">4</span></div>
+      </div>
+      <div class="fgroup"><label class="t">Partner type <i class="fa-solid fa-chevron-down"></i></label>
+        <div class="fopt"><input type="checkbox"> Hotel</div>
+        <div class="fopt"><input type="checkbox"> Resort</div>
+        <div class="fopt"><input type="checkbox"> Restaurant</div>
+        <div class="fopt"><input type="checkbox"> Unique venue</div>
+      </div>
+      <div class="fgroup"><label class="t"><span><input type="checkbox" style="accent-color:var(--action)"> Verified only</span></label></div>
+      <button class="btn applybtn">Apply filters</button>
+    </aside>
+
+    <div>
+      <div class="fchips"><span class="fl">Active filters:</span><span class="f">Dubai <i class="fa-solid fa-xmark"></i></span><span class="f">Hotel <i class="fa-solid fa-xmark"></i></span><span class="f">Verified only <i class="fa-solid fa-xmark"></i></span><span class="fl" style="cursor:pointer;color:var(--action)">Clear all</span></div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px">71 partners &nbsp;·&nbsp; showing 1–8</div>
+      <div class="pgrid">
+
+        <div class="pcard"><span class="badge">FEATURED</span>
+          <div class="top"><div class="logo-sq">PH</div><div><h3>Park Hyatt Dubai</h3><div class="grp">Hotel · Dubai</div></div></div>
+          <div class="about">Waterfront five-star hotel on Dubai Creek, with a signature garden, ballroom and terrace venues favoured for weddings and galas.</div>
+          <div class="meta"><span><i class="fa-solid fa-location-dot"></i>Dubai Creek</span><span><i class="fa-solid fa-shield-halved"></i>Verified partner</span></div>
+          <div class="foot"><span class="vn">6 venues</span><span class="lk">View partner <i class="fa-solid fa-arrow-right" style="font-size:11px"></i></span></div>
+        </div>
+
+        <div class="pcard"><span class="badge verified">VERIFIED</span>
+          <div class="top"><div class="logo-sq">WA</div><div><h3>Waldorf Astoria</h3><div class="grp">Hotel · Ras Al Khaimah</div></div></div>
+          <div class="about">Palatial beachfront resort on Al Marjan Island, offering grand ballrooms and outdoor lawns for large-scale celebrations.</div>
+          <div class="meta"><span><i class="fa-solid fa-location-dot"></i>Al Marjan Island</span></div>
+          <div class="foot"><span class="vn">4 venues</span><span class="lk">View partner <i class="fa-solid fa-arrow-right" style="font-size:11px"></i></span></div>
+        </div>
+
+        <div class="pcard">
+          <div class="top"><div class="logo-sq">ME</div><div><h3>Meliá Desert Palm</h3><div class="grp">Resort · Dubai</div></div></div>
+          <div class="about">Boutique polo-estate retreat set in private paddocks, an intimate setting for garden weddings and executive retreats.</div>
+          <div class="meta"><span><i class="fa-solid fa-location-dot"></i>Al Awir</span><span><i class="fa-solid fa-shield-halved"></i>Verified partner</span></div>
+          <div class="foot"><span class="vn">3 venues</span><span class="lk">View partner <i class="fa-solid fa-arrow-right" style="font-size:11px"></i></span></div>
+        </div>
+
+        <div class="pcard">
+          <div class="top"><div class="logo-sq">ZE</div><div><h3>Zero Gravity</h3><div class="grp">Restaurant · Dubai</div></div></div>
+          <div class="about">Beachfront dining, pool and events destination beside Skydive Dubai — a lively backdrop for parties and brand launches.</div>
+          <div class="meta"><span><i class="fa-solid fa-location-dot"></i>Dubai Marina</span></div>
+          <div class="foot"><span class="vn">2 venues</span><span class="lk">View partner <i class="fa-solid fa-arrow-right" style="font-size:11px"></i></span></div>
+        </div>
+
+      </div>
+      <div class="pager"><span><i class="fa-solid fa-chevron-left"></i></span><span class="on">1</span><span>2</span><span>3</span><span>…</span><span>9</span><span><i class="fa-solid fa-chevron-right"></i></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN 2 : SINGLE PARTNER ============ -->
+<div class="screenlabel">2 · Partner — single page</div>
+<div class="wrap">
+  <div class="crumb">Home › Partners › <b>Park Hyatt Dubai</b></div>
+
+  <div class="phead">
+    <div class="logo-lg">PH</div>
+    <div class="hbody">
+      <div class="badges"><span class="badge">FEATURED PARTNER</span><span class="badge verified">VERIFIED</span></div>
+      <h1>Park Hyatt Dubai</h1>
+      <div class="sub"><span><i class="fa-solid fa-building"></i>Hotel</span><span><i class="fa-solid fa-location-dot"></i>Dubai Creek, Dubai</span><span><i class="fa-solid fa-champagne-glasses"></i>6 venues</span><span><i class="fa-regular fa-calendar"></i>Partner since 2021</span></div>
+      <a class="web" href="#">Visit website <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px"></i></a>
+    </div>
+    <div class="acts"><button class="btn"><i class="fa-regular fa-paper-plane"></i>&nbsp; Enquire about this partner</button><button class="btn btn-out"><i class="fa-solid fa-champagne-glasses"></i>&nbsp; View venues</button></div>
+  </div>
+
+  <div class="dbody">
+    <div>
+      <h2>About Park Hyatt Dubai</h2>
+      <p>Set along the tranquil waters of Dubai Creek and the Dubai Creek Golf &amp; Yacht Club, Park Hyatt Dubai is a Moorish-inspired retreat of low-rise, whitewashed architecture, palm gardens and waterfront terraces. Its event spaces range from an intimate private dining room to a pillar-less ballroom and a signature garden lawn — a favourite for weddings, gala dinners and corporate celebrations that want a resort feel minutes from the city.</p>
+      <p>The hotel's events team delivers full in-house catering, décor and audio-visual support, with waterfront and garden settings that photograph beautifully year-round.</p>
+
+      <div class="simsec" style="padding-top:6px">
+        <h2>Venues by this partner</h2>
+        <div class="cnt">6 published venues</div>
+        <div class="simgrid">
+          <div class="simcard"><div class="im"><span class="badge">FEATURED</span></div><div class="bd"><h3>The Ballroom</h3><div class="a">Dubai Creek, Dubai</div><div class="ch"><span class="chip">Up to 600</span><span class="chip">Indoor</span></div><span class="lk">View details <i class="fa-solid fa-arrow-right" style="font-size:10px"></i></span></div></div>
+          <div class="simcard"><div class="im"></div><div class="bd"><h3>Garden Lawn</h3><div class="a">Dubai Creek, Dubai</div><div class="ch"><span class="chip">Up to 400</span><span class="chip">Outdoor</span></div><span class="lk">View details <i class="fa-solid fa-arrow-right" style="font-size:10px"></i></span></div></div>
+          <div class="simcard"><div class="im"></div><div class="bd"><h3>Creek Terrace</h3><div class="a">Dubai Creek, Dubai</div><div class="ch"><span class="chip">Up to 150</span><span class="chip">Both</span></div><span class="lk">View details <i class="fa-solid fa-arrow-right" style="font-size:10px"></i></span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="keypanel">
+        <h4>Partner information</h4>
+        <div class="krow"><span class="k">Type</span><span class="v">Hotel</span></div>
+        <div class="krow"><span class="k">Location</span><span class="v">Dubai Creek, Dubai</span></div>
+        <div class="krow"><span class="k">Venues listed</span><span class="v">6</span></div>
+        <div class="krow"><span class="k">Best for</span><span class="v">Weddings · Galas · Corporate</span></div>
+        <div class="krow"><span class="k">Verified by ATV</span><span class="v"><i class="fa-solid fa-circle-check" style="color:var(--action)"></i> Yes</span></div>
+        <div class="krow"><span class="k">Partner since</span><span class="v">2021</span></div>
+        <div class="krow"><span class="k">Last updated</span><span class="v">Jun 2026</span></div>
+        <div class="krow"><span class="k">Enquiries</span><span class="v">Managed through ATV</span></div>
+      </div>
+      <div class="enqbar">
+        <p>Interested in a venue from Park Hyatt Dubai? Share your event details once, and we'll help connect you with the right contact.</p>
+        <button class="btn">Enquire about this partner</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="height:40px"></div>
+</body>
+</html>

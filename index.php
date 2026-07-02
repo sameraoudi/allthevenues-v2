@@ -58,9 +58,10 @@ if ($path === '') {
 
 // Static (exact-match) routes.
 $routes = [
-    '/'        => __DIR__ . '/views/home.php',
-    '/venues'  => __DIR__ . '/views/venues.php',
-    '/enquire' => __DIR__ . '/views/enquire.php',
+    '/'         => __DIR__ . '/views/home.php',
+    '/venues'   => __DIR__ . '/views/venues.php',
+    '/partners' => __DIR__ . '/views/partners.php',
+    '/enquire'  => __DIR__ . '/views/enquire.php',
 ];
 
 if (isset($routes[$path])) {
@@ -72,6 +73,13 @@ if (isset($routes[$path])) {
 if (preg_match('#^/venues/([a-z0-9-]+)$#', $path, $m)) {
     $slug = $m[1];
     require __DIR__ . '/views/venue.php';
+    exit;
+}
+
+// Dynamic route: /partners/{slug}
+if (preg_match('#^/partners/([a-z0-9-]+)$#', $path, $m)) {
+    $slug = $m[1];
+    require __DIR__ . '/views/partner.php';
     exit;
 }
 

@@ -260,6 +260,7 @@ CREATE TABLE IF NOT EXISTS enquiries (
     consent_to_share TINYINT(1)   NOT NULL DEFAULT 0,
     source_page      VARCHAR(255) DEFAULT NULL,
     mode             ENUM('venue','assisted','partner','general') NOT NULL DEFAULT 'general',
+    partner_id       INT UNSIGNED DEFAULT NULL,          -- partner-mode enquiries (?partner=id)
     status           ENUM('new','reviewed','forwarded','accepted','contacted','won','lost','closed','spam') NOT NULL DEFAULT 'new',
     created_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -269,11 +270,14 @@ CREATE TABLE IF NOT EXISTS enquiries (
     KEY idx_enquiries_status (status),
     KEY idx_enquiries_event_type (event_type_id),
     KEY idx_enquiries_emirate (emirate_id),
+    KEY idx_enquiries_partner (partner_id),
     KEY idx_enquiries_created (created_at),
     CONSTRAINT fk_enquiries_event_type FOREIGN KEY (event_type_id)
         REFERENCES event_types (id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT fk_enquiries_emirate FOREIGN KEY (emirate_id)
-        REFERENCES emirates (id) ON DELETE SET NULL ON UPDATE CASCADE
+        REFERENCES emirates (id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_enquiries_partner FOREIGN KEY (partner_id)
+        REFERENCES partners (id) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS enquiry_venues (

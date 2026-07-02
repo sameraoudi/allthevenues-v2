@@ -109,13 +109,15 @@ function _enquiry_admin_select(): string
                    e.guest_count, e.budget_range, e.mode, e.status, e.created_at,
                    et.name AS event_type_name,
                    em.name AS emirate_name,
+                   pp.org_name AS partner_name,
                    (SELECT COUNT(*) FROM enquiry_venues ev WHERE ev.enquiry_id = e.id) AS venue_count,
                    (SELECT GROUP_CONCAT(v.name ORDER BY v.name SEPARATOR ', ')
                       FROM enquiry_venues ev JOIN venues v ON v.id = ev.venue_id
                       WHERE ev.enquiry_id = e.id) AS venue_names
             FROM enquiries e
             LEFT JOIN event_types et ON et.id = e.event_type_id
-            LEFT JOIN emirates    em ON em.id = e.emirate_id";
+            LEFT JOIN emirates    em ON em.id = e.emirate_id
+            LEFT JOIN partners    pp ON pp.id = e.partner_id";
 }
 
 /** Paginated list. @return array{rows:array,total:int} */
@@ -167,10 +169,12 @@ function enquiry_admin_counts(PDO $pdo): array
 /** Full enquiry detail + linked venues + routing history. */
 function enquiry_admin_get(PDO $pdo, int $id): ?array
 {
-    $sql = "SELECT e.*, et.name AS event_type_name, em.name AS emirate_name
+    $sql = "SELECT e.*, et.name AS event_type_name, em.name AS emirate_name,
+                   pp.org_name AS partner_name, pp.slug AS partner_slug
             FROM enquiries e
             LEFT JOIN event_types et ON et.id = e.event_type_id
             LEFT JOIN emirates    em ON em.id = e.emirate_id
+            LEFT JOIN partners    pp ON pp.id = e.partner_id
             WHERE e.id = :id LIMIT 1";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([':id' => $id]);

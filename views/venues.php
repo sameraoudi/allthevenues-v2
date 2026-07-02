@@ -38,10 +38,20 @@ $eventTypes = venue_event_types($pdo);
 $venueTypes = venue_types_all($pdo);
 $emirates   = venue_emirates($pdo);
 
-// Contextual title: single selected emirate → "Venues in {Name}".
+// Contextual title: partner filter → "Venues by {partner}"; else single
+// selected emirate → "Venues in {Name}".
 $selectedEmirateSlugs = $filters['emirate'] ?? [];
-$pageHeading = 'All venues';
-if (count($selectedEmirateSlugs) === 1) {
+$pageHeading  = 'All venues';
+$partnerName  = null;
+if (isset($filters['partner'])) {
+    $ps = $pdo->prepare("SELECT org_name FROM partners WHERE id = :id AND status='approved' LIMIT 1");
+    $ps->execute([':id' => (int)$filters['partner']]);
+    $partnerName = $ps->fetchColumn() ?: null;
+    if ($partnerName) {
+        $pageHeading = 'Venues by ' . $partnerName;
+    }
+}
+if ($partnerName === null && count($selectedEmirateSlugs) === 1) {
     foreach ($emirates as $em) {
         if ($em['slug'] === $selectedEmirateSlugs[0]) {
             $pageHeading = 'Venues in ' . $em['name'];

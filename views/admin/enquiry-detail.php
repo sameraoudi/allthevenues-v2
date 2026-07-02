@@ -60,6 +60,7 @@ $row = static function (string $label, ?string $value): void {
       <?php
         $row('Consent to share', $enq['consent_to_share'] ? 'Yes' : 'No');
         $row('Mode', $modeLabel);
+        if (!empty($enq['partner_name'])) { $row('About partner', $enq['partner_name']); }
         $row('Source', $enq['source_page']);
         $row('Received', date('j M Y H:i', strtotime((string)$enq['created_at'])));
         $row('Updated', date('j M Y H:i', strtotime((string)$enq['updated_at'])));

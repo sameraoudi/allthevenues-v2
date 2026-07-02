@@ -82,6 +82,22 @@ function enquiry_context(PDO $pdo, array $req): array
         $ids  = [];   // no specific venue
     }
 
+    // Partner-mode context: ?partner=id (GET) or partner_id (POST). Resolves
+    // an APPROVED partner; sets mode=partner with no specific venue.
+    $partnerId = (int)($req['partner'] ?? $req['partner_id'] ?? 0);
+    $partner   = null;
+    if ($partnerId > 0) {
+        $ps = $pdo->prepare("SELECT id, org_name, slug FROM partners WHERE id = :id AND status = 'approved' LIMIT 1");
+        $ps->execute([':id' => $partnerId]);
+        $partner = $ps->fetch() ?: null;
+    }
+    if ($partner !== null) {
+        $mode = 'partner';
+        $ids  = [];
+    } else {
+        $partnerId = 0;
+    }
+
     // Keep only distinct, published venue ids (validated).
     $ids = array_values(array_unique(array_filter($ids, static fn($i) => $i > 0)));
     $venues = [];
@@ -115,6 +131,8 @@ function enquiry_context(PDO $pdo, array $req): array
         'venue_ids'         => $validIds,
         'venues'            => $venues,
         'context_emirate_id'=> $contextEmirateId,
+        'partner_id'        => $partnerId,
+        'partner'           => $partner,
     ];
 }
 
@@ -233,11 +251,12 @@ function enquiry_validate(PDO $pdo, array $in, bool $venueMode = false): array
  * Persist an enquiry + its venue links in a transaction.
  * @return array{id:int, reference:string}
  */
-function enquiry_insert(PDO $pdo, array $clean, array $venueIds, string $sourcePage, string $mode = 'general'): array
+function enquiry_insert(PDO $pdo, array $clean, array $venueIds, string $sourcePage, string $mode = 'general', ?int $partnerId = null): array
 {
     // Normalise the context mode to the stored enum.
     $modeMap = ['single' => 'venue', 'multi' => 'venue', 'assisted' => 'assisted', 'partner' => 'partner'];
     $modeVal = $modeMap[$mode] ?? ($venueIds ? 'venue' : 'general');
+    $partnerId = ($partnerId && $partnerId > 0) ? $partnerId : null;
 
     $pdo->beginTransaction();
     try {
@@ -248,12 +267,12 @@ function enquiry_insert(PDO $pdo, array $clean, array $venueIds, string $sourceP
                 (reference, name, email, phone, company, event_type_id, event_date,
                  date_flexibility, emirate_id, guest_count, budget_range,
                  venue_preference, indoor_outdoor, fb_requirements, av_requirements,
-                 notes, consent_to_share, source_page, mode, status)
+                 notes, consent_to_share, source_page, mode, partner_id, status)
              VALUES
                 (:reference, :name, :email, :phone, :company, :event_type_id, :event_date,
                  :date_flexibility, :emirate_id, :guest_count, :budget_range,
                  :venue_preference, :indoor_outdoor, :fb_requirements, :av_requirements,
-                 :notes, :consent_to_share, :source_page, :mode, :status)'
+                 :notes, :consent_to_share, :source_page, :mode, :partner_id, :status)'
         );
         $stmt->execute([
             ':reference'        => $reference,
@@ -275,6 +294,7 @@ function enquiry_insert(PDO $pdo, array $clean, array $venueIds, string $sourceP
             ':consent_to_share' => $clean['consent_to_share'],
             ':source_page'      => mb_substr($sourcePage, 0, 255),
             ':mode'             => $modeVal,
+            ':partner_id'       => $partnerId,
             ':status'           => 'new',
         ]);
         $id = (int)$pdo->lastInsertId();

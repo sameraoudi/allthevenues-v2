@@ -127,6 +127,11 @@ function venue_normalise_filters(array $in): array
         $out['indoor_outdoor'] = $io;
     }
 
+    $partner = (int)($in['partner'] ?? 0);
+    if ($partner > 0) {
+        $out['partner'] = $partner;
+    }
+
     return $out;
 }
 
@@ -175,6 +180,10 @@ function venue_filter_sql(array $f): array
         $sql .= ' AND v.capacity_max IS NOT NULL AND v.capacity_max >= :guest_min';
         $params[':guest_min'] = (int)$bands[$f['guest_count']][1];
     }
+    if (isset($f['partner'])) {
+        $sql .= ' AND v.partner_id = :partner';
+        $params[':partner'] = (int)$f['partner'];
+    }
 
     return [$sql, $params];
 }
@@ -201,7 +210,7 @@ function venue_sort_options(): array
 function venue_filter_params(array $filters, string $sort = 'recommended', int $page = 1): array
 {
     $p = [];
-    foreach (['event_type', 'venue_type', 'guest_count', 'budget', 'indoor_outdoor'] as $k) {
+    foreach (['event_type', 'venue_type', 'guest_count', 'budget', 'indoor_outdoor', 'partner'] as $k) {
         if (isset($filters[$k])) {
             $p[$k] = $filters[$k];
         }

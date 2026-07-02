@@ -16,6 +16,7 @@
 
     <ul class="main-nav" id="mainNav">
       <li><a href="<?= e(base_url('venues')) ?>">Venues</a></li>
+      <li><a href="<?= e(base_url('partners')) ?>">Partners</a></li>
       <li><a href="<?= e(base_url('venues')) ?>">Event types</a></li>
       <li><a href="<?= e(base_url('venues')) ?>">Locations</a></li>
       <li><a href="<?= e(base_url('enquire')) ?>">For partners</a></li>
