@@ -73,6 +73,9 @@ CREATE TABLE IF NOT EXISTS partners (
     city_text     VARCHAR(150) DEFAULT NULL,
     about         TEXT         DEFAULT NULL,          -- sanitized HTML
     logo_path     VARCHAR(255) DEFAULT NULL,
+    cover_image_path VARCHAR(255) DEFAULT NULL,
+    cover_thumb_path VARCHAR(255) DEFAULT NULL,
+    cover_image_alt  VARCHAR(255) DEFAULT NULL,
     status        ENUM('draft','pending','approved','suspended') NOT NULL DEFAULT 'draft',
     is_featured   TINYINT(1)   NOT NULL DEFAULT 0,
     is_verified   TINYINT(1)   NOT NULL DEFAULT 0,
