@@ -41,6 +41,11 @@ function _icon_paths(string $name): ?string
             'building'     => '<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h.01M15 7h.01M9 11h.01M15 11h.01"/><path d="M10 21v-3h4v3"/>',
             'map-pin'      => '<path d="M12 21s7-5.5 7-11a7 7 0 0 0-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
             'send'         => '<path d="M21 3 10.5 13.5"/><path d="M21 3l-6.5 18-4-8-8-4z"/>',
+            // Provider-type identity icons (decorative — see provider_type_icon())
+            'hotel'        => '<path d="M4 21V4a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v17"/><path d="M3 21h18"/><path d="M8 7h.01M12 7h.01M16 7h.01M8 11h.01M12 11h.01M16 11h.01"/><path d="M10 21v-4h4v4"/>',
+            'resort'       => '<circle cx="12" cy="7" r="3"/><path d="M12 2.5V4M12 10v1.5M6.5 7H5M19 7h-1.5M8.1 3.1 7 2M17 3.1 15.9 2"/><path d="M3 19c1.6 0 1.6 1.2 3.2 1.2S7.8 19 9.4 19s1.6 1.2 3.2 1.2S14.2 19 15.8 19s1.6 1.2 3.2 1.2"/><path d="M3 22c1.6 0 1.6 1.2 3.2 1.2S7.8 22 9.4 22s1.6 1.2 3.2 1.2S14.2 22 15.8 22s1.6 1.2 3.2 1.2"/>',
+            'restaurant'   => '<path d="M6 3v6a2 2 0 0 0 4 0V3"/><path d="M8 9v12"/><path d="M16.5 3C15 3 14 5 14 7.5S15 12 16.5 12"/><path d="M16.5 3v18"/>',
+            'yacht'        => '<path d="M4 18h16l-2.2 3H6.2z"/><path d="M11 16V3l7 13z"/><path d="M11 16H5l6-3z"/>',
             'logout'       => '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/>',
             // Socials
             'instagram'    => '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17 7h.01"/>',
@@ -89,4 +94,21 @@ function event_type_icon(string $slug): string
         'other'            => 'sparkles',
     ];
     return $map[$slug] ?? 'sparkles';
+}
+
+/**
+ * Map a provider's display type (Hotel / Resort / Restaurant / Unique venue /
+ * …) to an identity icon. Decorative only — unknown/blank → generic building.
+ */
+function provider_type_icon(string $type): string
+{
+    $t = mb_strtolower(trim($type));
+    if ($t === '')                        return 'building';
+    if (str_contains($t, 'hotel'))        return 'hotel';
+    if (str_contains($t, 'resort'))       return 'resort';
+    if (str_contains($t, 'restaurant'))   return 'restaurant';
+    if (str_contains($t, 'conference'))   return 'presentation';
+    if (str_contains($t, 'yacht'))        return 'yacht';
+    if (str_contains($t, 'unique'))       return 'sparkles';
+    return 'building';
 }

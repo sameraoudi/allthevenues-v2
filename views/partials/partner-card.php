@@ -4,8 +4,9 @@ declare(strict_types=1);
 /**
  * Image-led provider card for the /providers grid. Expects $partner (a
  * partner_list row incl. cover_image). Cover image priority: the provider's
- * best published venue image → gradient + initials fallback. Avatar =
- * logo → monogram. NEVER renders email/phone.
+ * best published venue image → seeded gradient fallback. A provider-type icon
+ * chip overlaps the cover (no per-provider logo request). NEVER renders
+ * email/phone.
  */
 /** @var array $partner */
 require_once __DIR__ . '/../../lib/partners.php';
@@ -25,10 +26,6 @@ $coverRel = trim((string)($partner['cover_image'] ?? ''));
 $hasCover = $coverRel !== '' && is_file(app_path($coverRel));
 $gradIdx  = partner_cover_gradient_index($name);
 
-// Avatar: logo if present on disk, else monogram.
-$logoRel = trim((string)($partner['logo_path'] ?? ''));
-$hasLogo = $logoRel !== '' && is_file(app_path($logoRel));
-
 $badges = partner_badges($partner);
 $cover  = $badges[0] ?? null;   // single badge on the card cover
 ?>
@@ -37,9 +34,7 @@ $cover  = $badges[0] ?? null;   // single badge on the card cover
     <?php if ($hasCover): ?><img class="pcard__cover-img" src="<?= e(base_url($coverRel)) ?>" alt="" loading="lazy"><?php endif; ?>
     <?php if ($cover): ?><span class="atv-badge<?= $cover['variant'] === 'verified' ? ' atv-badge--verified' : '' ?> pcard__badge"><?= e($cover['label']) ?></span><?php endif; ?>
     <span class="pcard__count"><?= e((string)$vc) ?> venue<?= $vc === 1 ? '' : 's' ?></span>
-    <span class="pcard__av<?= $hasLogo ? '' : ' pcard__av--mono' ?>">
-      <?php if ($hasLogo): ?><img src="<?= e(base_url($logoRel)) ?>" alt="<?= e($name) ?> logo" loading="lazy"><?php else: ?><?= e(partner_monogram($name)) ?><?php endif; ?>
-    </span>
+    <span class="pcard__type" title="<?= e($type) ?>"><?= icon(provider_type_icon($type)) ?></span>
   </a>
   <div class="pcard__body">
     <h3><a href="<?= e($detail) ?>"><?= e($name) ?></a></h3>
@@ -52,7 +47,7 @@ $cover  = $badges[0] ?? null;   // single badge on the card cover
       <?php else: ?>
         <span class="pcard__vn">Venue provider</span>
       <?php endif; ?>
-      <a class="pcard__lk" href="<?= e($detail) ?>">View provider <?= icon('arrow-right') ?></a>
+      <a class="pcard__lk" href="<?= e($detail) ?>">View <?= icon('arrow-right') ?></a>
     </div>
   </div>
 </article>

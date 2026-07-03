@@ -76,6 +76,17 @@ select:focus-visible,
 .atv-btn--sand:hover { background: #b9a688; color: var(--navy); }
 .atv-btn--ghost { background: transparent; border: 1px solid var(--line); color: var(--action); }
 .atv-btn--ghost:hover { background: #eef1f4; color: var(--action); }
+/* Glassy ghost for use over a dark cover image (e.g. the provider hero). Only
+   the RESTING state is overridden — a readable white label on a dark, blurred,
+   subtly-bordered backdrop. Lower specificity than .atv-btn--ghost:hover, so
+   the standard ghost hover is unchanged. Add alongside .atv-btn--ghost. */
+.atv-btn--glass {
+  background: rgba(14, 27, 42, .48);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  border-color: rgba(255, 255, 255, .55);
+  color: #fff;
+}
 
 /* ---- Chips + badges ------------------------------------------------------ */
 .atv-chip {
@@ -737,9 +748,8 @@ select:focus-visible,
 .pcard__cover-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .pcard__badge { position: absolute; top: 12px; left: 12px; }
 .pcard__count { position: absolute; bottom: 12px; right: 12px; background: rgba(14,27,42,.72); color: #fff; font-size: 11.5px; font-weight: 500; padding: 4px 10px; border-radius: 20px; }
-.pcard__av { width: 52px; height: 52px; border-radius: 12px; background: #fff; border: 1px solid var(--line); box-shadow: 0 4px 10px rgba(14,27,42,.12); display: flex; align-items: center; justify-content: center; overflow: hidden; position: absolute; left: 16px; bottom: -20px; }
-.pcard__av img { width: 100%; height: 100%; object-fit: contain; padding: 5px; }
-.pcard__av--mono { font-family: var(--font-heading); font-size: 22px; font-weight: 600; color: var(--action); }
+.pcard__type { width: 46px; height: 46px; border-radius: 12px; background: #fff; border: 1px solid var(--line); box-shadow: 0 4px 10px rgba(14,27,42,.12); display: flex; align-items: center; justify-content: center; position: absolute; left: 16px; bottom: -18px; }
+.pcard__type svg { width: 24px; height: 24px; color: var(--action); }
 .pcard__body { padding: 26px 18px 16px; display: flex; flex-direction: column; flex: 1; }
 .pcard__body h3 { font-size: 22px; line-height: 1.15; }
 .pcard__body h3 a { color: var(--ink); }
@@ -759,9 +769,8 @@ select:focus-visible,
 .phero__badges { position: absolute; top: 18px; left: 22px; display: flex; gap: 8px; z-index: 2; }
 .phero__info { position: absolute; left: 22px; right: 22px; bottom: 18px; z-index: 2; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
 .phero__id { display: flex; gap: 16px; align-items: flex-end; }
-.phero__av { width: 80px; height: 80px; border-radius: 16px; background: #fff; border: 2px solid #fff; box-shadow: 0 6px 16px rgba(0,0,0,.25); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
-.phero__av img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
-.phero__av--mono { font-family: var(--font-heading); font-size: 34px; font-weight: 600; color: var(--action); }
+.phero__type { width: 62px; height: 62px; border-radius: 16px; background: #fff; border: 2px solid #fff; box-shadow: 0 6px 16px rgba(0,0,0,.25); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.phero__type svg { width: 30px; height: 30px; color: var(--action); }
 .phero__txt h1 { font-size: 34px; color: #fff; line-height: 1.05; }
 .phero__meta { font-size: 13px; color: #e7ecf1; margin-top: 5px; display: flex; gap: 14px; flex-wrap: wrap; }
 .phero__meta svg { width: 14px; height: 14px; color: var(--sand); margin-right: 5px; vertical-align: -2px; }
@@ -781,7 +790,8 @@ select:focus-visible,
 }
 @media (max-width: 480px) {
   .phero__txt h1 { font-size: 27px; }
-  .phero__av { width: 60px; height: 60px; }
+  .phero__type { width: 52px; height: 52px; }
+  .phero__type svg { width: 26px; height: 26px; }
 }
 
 /* ---- Admin: venue management ---------------------------------------------- */

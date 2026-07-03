@@ -31,10 +31,6 @@ $coverRel = trim((string)($partner['cover_image'] ?? ''));
 $hasCover = $coverRel !== '' && is_file(app_path($coverRel));
 $gradIdx  = partner_cover_gradient_index($name);
 
-// Avatar: logo if present on disk, else monogram.
-$logoRel = trim((string)($partner['logo_path'] ?? ''));
-$hasLogo = $logoRel !== '' && is_file(app_path($logoRel));
-
 // approved_at may be an epoch-0 sentinel from the migration (strtotime → 0,
 // which is falsy); prefer a real approved_at, else fall back to created_at.
 $approvedTs = $partner['approved_at'] ? (int)strtotime((string)$partner['approved_at']) : 0;
@@ -51,7 +47,7 @@ $venuesUrl  = base_url('venues') . query_string(['partner' => $id]);
     <a href="<?= e(base_url('providers')) ?>">Venue Providers</a> &rsaquo; <b><?= e($name) ?></b>
   </div>
 
-  <!-- Cover + avatar header -->
+  <!-- Cover + type-icon header -->
   <div class="phero">
     <div class="phero__cover cover-grad--<?= $gradIdx ?>">
       <?php if ($hasCover): ?><img class="phero__cover-img" src="<?= e(base_url($coverRel)) ?>" alt=""><?php endif; ?>
@@ -65,9 +61,7 @@ $venuesUrl  = base_url('venues') . query_string(['partner' => $id]);
     <?php endif; ?>
     <div class="phero__info">
       <div class="phero__id">
-        <span class="phero__av<?= $hasLogo ? '' : ' phero__av--mono' ?>">
-          <?php if ($hasLogo): ?><img src="<?= e(base_url($logoRel)) ?>" alt="<?= e($name) ?> logo"><?php else: ?><?= e(partner_monogram($name)) ?><?php endif; ?>
-        </span>
+        <span class="phero__type" title="<?= e($type) ?>"><?= icon(provider_type_icon($type)) ?></span>
         <div class="phero__txt">
           <h1><?= e($name) ?></h1>
           <div class="phero__meta">
@@ -79,7 +73,7 @@ $venuesUrl  = base_url('venues') . query_string(['partner' => $id]);
       </div>
       <div class="phero__acts">
         <a class="atv-btn" href="<?= e($enquireUrl) ?>"><?= icon('send') ?> Send enquiry</a>
-        <a class="atv-btn atv-btn--ghost" href="<?= e($venuesUrl) ?>"><?= icon('glass-cheers') ?> View venues</a>
+        <a class="atv-btn atv-btn--ghost atv-btn--glass" href="<?= e($venuesUrl) ?>"><?= icon('glass-cheers') ?> View venues</a>
       </div>
     </div>
   </div>
