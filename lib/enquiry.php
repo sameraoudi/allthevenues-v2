@@ -82,9 +82,10 @@ function enquiry_context(PDO $pdo, array $req): array
         $ids  = [];   // no specific venue
     }
 
-    // Partner-mode context: ?partner=id (GET) or partner_id (POST). Resolves
-    // an APPROVED partner; sets mode=partner with no specific venue.
-    $partnerId = (int)($req['partner'] ?? $req['partner_id'] ?? 0);
+    // Provider-mode context: ?provider=id (public term) or ?partner=id / the
+    // POST partner_id (internal term — table/columns keep the "partner" name).
+    // Resolves an APPROVED partner; sets mode=partner with no specific venue.
+    $partnerId = (int)($req['provider'] ?? $req['partner'] ?? $req['partner_id'] ?? 0);
     $partner   = null;
     if ($partnerId > 0) {
         $ps = $pdo->prepare("SELECT id, org_name, slug FROM partners WHERE id = :id AND status = 'approved' LIMIT 1");

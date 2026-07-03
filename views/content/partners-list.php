@@ -11,7 +11,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../lib/partners.php';
 
 $f       = $filters;
-$listUrl = base_url('partners');
+$listUrl = base_url('providers');
 $selEm   = (array)($f['emirate'] ?? []);
 $selTy   = (array)($f['type'] ?? []);
 
@@ -27,13 +27,13 @@ foreach ($selTy as $t)     { $m = $f; $m['type'] = array_values(array_diff($selT
 if (!empty($f['featured'])) { $m = $f; unset($m['featured']); $chips[] = ['Featured only', $chipLink($m)]; }
 ?>
 <div class="atv-wrap">
-  <div class="venues-crumb"><a href="<?= e(base_url('/')) ?>">Home</a> &rsaquo; <b>Partners</b></div>
+  <div class="venues-crumb"><a href="<?= e(base_url('/')) ?>">Home</a> &rsaquo; <b>Venue Providers</b></div>
 
   <div class="venues-head">
     <div>
-      <h1>Venue Partners</h1>
-      <div class="partners-sub">Explore hotels, resorts, restaurants, and unique-venue operators across the UAE, with selected partners verified by All The Venues.</div>
-      <div class="venues-head__cnt"><strong><?= e(number_format($total)) ?></strong> partner<?= $total === 1 ? '' : 's' ?></div>
+      <h1>Venue Providers</h1>
+      <div class="partners-sub">Explore hotels, resorts, restaurants, and unique-venue operators across the UAE, with selected providers verified by All The Venues.</div>
+      <div class="venues-head__cnt"><strong><?= e(number_format($total)) ?></strong> provider<?= $total === 1 ? '' : 's' ?></div>
     </div>
     <div class="venues-head__right">
       <button type="button" class="atv-btn atv-btn--sm atv-btn--ghost venues-filter-toggle" data-filters-toggle aria-expanded="false">Filters</button>
@@ -72,7 +72,7 @@ if (!empty($f['featured'])) { $m = $f; unset($m['featured']); $chips[] = ['Featu
         <div class="venues-filters__head"><b>Filter</b><a href="<?= e($listUrl) ?>">Reset all</a></div>
 
         <div class="fgroup">
-          <input type="search" class="partner-search" name="q" value="<?= e((string)($f['q'] ?? '')) ?>" placeholder="Search partners…" aria-label="Search partners">
+          <input type="search" class="partner-search" name="q" value="<?= e((string)($f['q'] ?? '')) ?>" placeholder="Search providers…" aria-label="Search providers">
         </div>
         <div class="fgroup">
           <div class="fgroup__t">Location</div>
@@ -84,7 +84,7 @@ if (!empty($f['featured'])) { $m = $f; unset($m['featured']); $chips[] = ['Featu
           <?php endforeach; ?>
         </div>
         <div class="fgroup">
-          <div class="fgroup__t">Partner type</div>
+          <div class="fgroup__t">Provider type</div>
           <?php foreach (partner_type_buckets() as $k => $b): ?>
             <label class="fopt">
               <input type="checkbox" name="type[]" value="<?= e($k) ?>"<?= in_array($k, $selTy, true) ? ' checked' : '' ?>>
@@ -95,7 +95,7 @@ if (!empty($f['featured'])) { $m = $f; unset($m['featured']); $chips[] = ['Featu
         <div class="fgroup">
           <label class="fopt">
             <input type="checkbox" name="featured" value="1"<?= !empty($f['featured']) ? ' checked' : '' ?>>
-            Featured partners only
+            Featured providers only
           </label>
         </div>
 
@@ -106,7 +106,7 @@ if (!empty($f['featured'])) { $m = $f; unset($m['featured']); $chips[] = ['Featu
     <div class="venues-results">
       <?php if (!$partners): ?>
         <div class="venues-empty">
-          <p class="h5 mb-2">No partners match your filters.</p>
+          <p class="h5 mb-2">No providers match your filters.</p>
           <?php if ($chips): ?><a class="atv-btn" href="<?= e($listUrl) ?>">Clear filters</a><?php endif; ?>
         </div>
       <?php else: ?>
@@ -116,7 +116,7 @@ if (!empty($f['featured'])) { $m = $f; unset($m['featured']); $chips[] = ['Featu
           <?php endforeach; ?>
         </div>
         <?php if ($totalPages > 1): ?>
-          <nav class="venue-pager" aria-label="Partner pages">
+          <nav class="venue-pager" aria-label="Provider pages">
             <?php if ($page > 1): ?><a class="venue-pager__i" href="<?= e($listUrl . query_string(partner_filter_params($f, $sort, $page - 1))) ?>">&lsaquo;</a><?php endif; ?>
             <?php for ($i = 1; $i <= $totalPages; $i++): ?>
               <a class="venue-pager__i<?= $i === $page ? ' is-active' : '' ?>" href="<?= e($listUrl . query_string(partner_filter_params($f, $sort, $i))) ?>"><?= e((string)$i) ?></a>

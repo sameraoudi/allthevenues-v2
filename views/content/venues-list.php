@@ -39,7 +39,7 @@ if (isset($f['event_type']))     { $m = $f; unset($m['event_type']);     $chips[
 if (isset($f['guest_count']))    { $m = $f; unset($m['guest_count']);    $chips[] = [venue_guest_bands()[$f['guest_count']][0] ?? $f['guest_count'], $chipLink($m)]; }
 if (isset($f['budget']))         { $m = $f; unset($m['budget']);         $chips[] = [$f['budget'], $chipLink($m)]; }
 if (isset($f['indoor_outdoor'])) { $m = $f; unset($m['indoor_outdoor']); $chips[] = [venue_indoor_outdoor_options()[$f['indoor_outdoor']] ?? $f['indoor_outdoor'], $chipLink($m)]; }
-if (isset($f['partner']) && ($partnerName ?? null)) { $m = $f; unset($m['partner']); $chips[] = ['Partner: ' . $partnerName, $chipLink($m)]; }
+if (isset($f['partner']) && ($partnerName ?? null)) { $m = $f; unset($m['partner']); $chips[] = ['Provider: ' . $partnerName, $chipLink($m)]; }
 $hasFilters = (bool)$chips;
 ?>
 <div class="atv-wrap">

@@ -44,7 +44,7 @@ $snip = snippet($venue['description'] ?? '', 110);
     <img src="<?= e($imgSrc) ?>" alt="<?= e($venue['name'] ?? 'Venue') ?>" loading="lazy" width="800" height="600">
     <span class="atv-card__badges">
       <?php if (!empty($venue['is_featured'])): ?><span class="atv-badge">Featured</span><?php endif; ?>
-      <?php if (!empty($venue['partner_id'])): ?><span class="atv-badge atv-badge--partner">Partner managed</span><?php endif; ?>
+      <?php if (!empty($venue['partner_id'])): ?><span class="atv-badge atv-badge--partner">Provider managed</span><?php endif; ?>
     </span>
     <span class="atv-card__heart" aria-hidden="true"><?= icon('heart') ?></span>
   </a>

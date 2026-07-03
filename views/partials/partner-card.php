@@ -2,43 +2,57 @@
 declare(strict_types=1);
 
 /**
- * Partner card for the /partners grid. Expects $partner (a partner_list row).
- * Logo falls back to an initials monogram. NEVER renders email/phone.
+ * Image-led provider card for the /providers grid. Expects $partner (a
+ * partner_list row incl. cover_image). Cover image priority: the provider's
+ * best published venue image → gradient + initials fallback. Avatar =
+ * logo → monogram. NEVER renders email/phone.
  */
 /** @var array $partner */
 require_once __DIR__ . '/../../lib/partners.php';
 
 $slug     = (string)($partner['slug'] ?? '');
-$detail   = base_url('partners/' . rawurlencode($slug));
+$detail   = base_url('providers/' . rawurlencode($slug));
+$name     = (string)($partner['org_name'] ?? 'Provider');
 $type     = partner_type_label($partner['raw_org_type'] ?? null);
 $emirate  = trim((string)($partner['emirate_name'] ?? ''));
 $location = trim((string)($partner['city_text'] ?? '')) !== '' ? trim((string)$partner['city_text']) : $emirate;
 $vc       = (int)($partner['venue_count'] ?? 0);
-$logoRel  = trim((string)($partner['logo_path'] ?? ''));
-$hasLogo  = $logoRel !== '' && is_file(app_path($logoRel));
-$grp      = trim($type . ($emirate !== '' ? ' · ' . $emirate : ''), ' ·');
-$about    = snippet($partner['about'] ?? '', 130);
+$verified = partner_is_verified($partner);
+
+// Cover: real venue image if the file exists on disk, else a seeded gradient
+// class (no inline styles — strict CSP style-src 'self').
+$coverRel = trim((string)($partner['cover_image'] ?? ''));
+$hasCover = $coverRel !== '' && is_file(app_path($coverRel));
+$gradIdx  = partner_cover_gradient_index($name);
+
+// Avatar: logo if present on disk, else monogram.
+$logoRel = trim((string)($partner['logo_path'] ?? ''));
+$hasLogo = $logoRel !== '' && is_file(app_path($logoRel));
+
+$badges = partner_badges($partner);
+$cover  = $badges[0] ?? null;   // single badge on the card cover
 ?>
-<article class="partner-card<?= !empty($partner['is_featured']) ? ' partner-card--featured' : '' ?>">
-  <?php if (!empty($partner['is_featured'])): ?><span class="atv-badge partner-card__badge">Featured</span><?php endif; ?>
-  <a class="partner-card__top" href="<?= e($detail) ?>">
-    <?php if ($hasLogo): ?>
-      <span class="partner-logo"><img src="<?= e(base_url($logoRel)) ?>" alt="<?= e($partner['org_name'] ?? 'Partner') ?> logo" loading="lazy"></span>
-    <?php else: ?>
-      <span class="partner-logo partner-logo--mono"><?= e(partner_monogram((string)($partner['org_name'] ?? 'AV'))) ?></span>
-    <?php endif; ?>
-    <span class="partner-card__id">
-      <h3><?= e($partner['org_name'] ?? 'Partner') ?></h3>
-      <?php if ($grp !== ''): ?><span class="partner-card__grp"><?= e($grp) ?></span><?php endif; ?>
+<article class="pcard">
+  <a class="pcard__cover cover-grad--<?= $gradIdx ?>" href="<?= e($detail) ?>" aria-label="<?= e($name) ?>">
+    <?php if ($hasCover): ?><img class="pcard__cover-img" src="<?= e(base_url($coverRel)) ?>" alt="" loading="lazy"><?php endif; ?>
+    <?php if ($cover): ?><span class="atv-badge<?= $cover['variant'] === 'verified' ? ' atv-badge--verified' : '' ?> pcard__badge"><?= e($cover['label']) ?></span><?php endif; ?>
+    <span class="pcard__count"><?= e((string)$vc) ?> venue<?= $vc === 1 ? '' : 's' ?></span>
+    <span class="pcard__av<?= $hasLogo ? '' : ' pcard__av--mono' ?>">
+      <?php if ($hasLogo): ?><img src="<?= e(base_url($logoRel)) ?>" alt="<?= e($name) ?> logo" loading="lazy"><?php else: ?><?= e(partner_monogram($name)) ?><?php endif; ?>
     </span>
   </a>
-  <?php if ($about !== ''): ?><p class="partner-card__about"><?= e($about) ?></p><?php endif; ?>
-  <div class="partner-card__meta">
-    <?php if ($location !== ''): ?><span><?= icon('building') ?> <?= e($location) ?></span><?php endif; ?>
-    <?php if (!empty($partner['is_featured'])): ?><span><?= icon('check-circle') ?> Featured partner</span><?php endif; ?>
-  </div>
-  <div class="partner-card__foot">
-    <span class="partner-card__vn"><?= e((string)$vc) ?> venue<?= $vc === 1 ? '' : 's' ?></span>
-    <a class="partner-card__lk" href="<?= e($detail) ?>">View partner <?= icon('arrow-right') ?></a>
+  <div class="pcard__body">
+    <h3><a href="<?= e($detail) ?>"><?= e($name) ?></a></h3>
+    <div class="pcard__tl">
+      <?= icon('building') ?> <?= e($type) ?><?php if ($location !== ''): ?> &nbsp;·&nbsp; <?= icon('map-pin') ?> <?= e($location) ?><?php endif; ?>
+    </div>
+    <div class="pcard__foot">
+      <?php if ($verified): ?>
+        <span class="pcard__vn pcard__vn--verified"><?= icon('check-circle') ?> Verified provider</span>
+      <?php else: ?>
+        <span class="pcard__vn">Venue provider</span>
+      <?php endif; ?>
+      <a class="pcard__lk" href="<?= e($detail) ?>">View provider <?= icon('arrow-right') ?></a>
+    </div>
   </div>
 </article>

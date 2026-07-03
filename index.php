@@ -56,12 +56,25 @@ if ($path === '') {
     $path = '/';
 }
 
+// Legacy → new terminology: /partners was renamed to /providers. Permanent
+// 301 (done in PHP so it deploys normally — no .htaccess change needed). Query
+// string (listing filters) is preserved.
+$qs = (string)($_SERVER['QUERY_STRING'] ?? '');
+if ($path === '/partners') {
+    header('Location: ' . base_url('providers') . ($qs !== '' ? '?' . $qs : ''), true, 301);
+    exit;
+}
+if (preg_match('#^/partners/([a-z0-9-]+)$#', $path, $m)) {
+    header('Location: ' . base_url('providers/' . $m[1]) . ($qs !== '' ? '?' . $qs : ''), true, 301);
+    exit;
+}
+
 // Static (exact-match) routes.
 $routes = [
-    '/'         => __DIR__ . '/views/home.php',
-    '/venues'   => __DIR__ . '/views/venues.php',
-    '/partners' => __DIR__ . '/views/partners.php',
-    '/enquire'  => __DIR__ . '/views/enquire.php',
+    '/'          => __DIR__ . '/views/home.php',
+    '/venues'    => __DIR__ . '/views/venues.php',
+    '/providers' => __DIR__ . '/views/partners.php',
+    '/enquire'   => __DIR__ . '/views/enquire.php',
 ];
 
 if (isset($routes[$path])) {
@@ -76,8 +89,8 @@ if (preg_match('#^/venues/([a-z0-9-]+)$#', $path, $m)) {
     exit;
 }
 
-// Dynamic route: /partners/{slug}
-if (preg_match('#^/partners/([a-z0-9-]+)$#', $path, $m)) {
+// Dynamic route: /providers/{slug}
+if (preg_match('#^/providers/([a-z0-9-]+)$#', $path, $m)) {
     $slug = $m[1];
     require __DIR__ . '/views/partner.php';
     exit;

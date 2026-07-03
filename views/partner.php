@@ -25,6 +25,6 @@ if ($partner === null) {
 $partnerVenues = partner_published_venues($pdo, (int)$partner['id']);
 $bestFor       = partner_best_for($pdo, (int)$partner['id']);
 
-$page_title   = ($partner['org_name'] ?? 'Partner') . ' — All The Venues';
+$page_title   = ($partner['org_name'] ?? 'Provider') . ' — All The Venues';
 $content_view = __DIR__ . '/content/partner-detail.php';
 require __DIR__ . '/layout.php';

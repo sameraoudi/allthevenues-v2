@@ -44,7 +44,47 @@ function partner_type_label(?string $raw): string
             return $b[0];
         }
     }
-    return $raw !== '' ? 'Unique venue' : 'Venue partner';
+    return $raw !== '' ? 'Unique venue' : 'Venue provider';
+}
+
+/**
+ * Whether a provider is shown as "Verified" (public badge + footer). There is
+ * no is_verified column on partners; the ATV curation flag (is_featured) is the
+ * only vetting signal, so featured providers are treated as verified. When a
+ * real is_verified column lands, flip this one function.
+ */
+function partner_is_verified(array $row): bool
+{
+    return !empty($row['is_featured']);
+}
+
+/** Whether the provider shows the "Featured" badge. */
+function partner_is_featured(array $row): bool
+{
+    return !empty($row['is_featured']);
+}
+
+/**
+ * Public badges for a provider (Featured / Verified), max two. Each entry:
+ * ['label' => string, 'variant' => '' (sand) | 'verified' (blue)].
+ */
+function partner_badges(array $row): array
+{
+    $badges = [];
+    if (partner_is_featured($row)) { $badges[] = ['label' => 'Featured',          'variant' => '']; }
+    if (partner_is_verified($row)) { $badges[] = ['label' => 'Verified provider', 'variant' => 'verified']; }
+    return array_slice($badges, 0, 2);
+}
+
+/**
+ * Deterministic gradient index (0–5) for the rare no-image cover fallback.
+ * Seeded by the provider name so a given provider always gets the same one.
+ * The gradient itself is a CSS class (.cover-grad--N) — never an inline style,
+ * so it stays within the strict CSP (style-src 'self', no unsafe-inline).
+ */
+function partner_cover_gradient_index(string $seed): int
+{
+    return abs(crc32($seed)) % 6;
 }
 
 /** Monogram (initials) for the logo fallback. */
@@ -155,7 +195,14 @@ function partner_list(PDO $pdo, array $filters, int $page, int $perPage, string 
                    p.is_featured, p.created_at, p.approved_at, p.city_text,
                    e.name AS emirate_name, e.slug AS emirate_slug,
                    (" . partner_org_type_expr() . ") AS raw_org_type,
-                   (SELECT COUNT(*) FROM venues v WHERE v.partner_id = p.id AND v.status='published') AS venue_count
+                   (SELECT COUNT(*) FROM venues v WHERE v.partner_id = p.id AND v.status='published') AS venue_count,
+                   (SELECT vi.file_path
+                      FROM venues v2
+                      JOIN venue_images vi ON vi.venue_id = v2.id AND vi.status = 'active'
+                      WHERE v2.partner_id = p.id AND v2.status = 'published'
+                      ORDER BY v2.is_featured DESC, vi.is_primary DESC, v2.name ASC,
+                               vi.sort_order ASC, vi.id ASC
+                      LIMIT 1) AS cover_image
             FROM partners p
             LEFT JOIN emirates e ON e.id = p.emirate_id
             WHERE p.status='approved'" . $where . "
@@ -176,7 +223,14 @@ function partner_by_slug(PDO $pdo, string $slug): ?array
                    p.is_featured, p.created_at, p.approved_at, p.city_text,
                    e.name AS emirate_name, e.slug AS emirate_slug,
                    (" . partner_org_type_expr() . ") AS raw_org_type,
-                   (SELECT COUNT(*) FROM venues v WHERE v.partner_id = p.id AND v.status='published') AS venue_count
+                   (SELECT COUNT(*) FROM venues v WHERE v.partner_id = p.id AND v.status='published') AS venue_count,
+                   (SELECT vi.file_path
+                      FROM venues v2
+                      JOIN venue_images vi ON vi.venue_id = v2.id AND vi.status = 'active'
+                      WHERE v2.partner_id = p.id AND v2.status = 'published'
+                      ORDER BY v2.is_featured DESC, vi.is_primary DESC, v2.name ASC,
+                               vi.sort_order ASC, vi.id ASC
+                      LIMIT 1) AS cover_image
             FROM partners p
             LEFT JOIN emirates e ON e.id = p.emirate_id
             WHERE p.slug = :slug AND p.status='approved' LIMIT 1";

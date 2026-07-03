@@ -14,6 +14,7 @@
         <h4>Explore</h4>
         <ul>
           <li><a href="<?= e(base_url('venues')) ?>">Venues</a></li>
+          <li><a href="<?= e(base_url('providers')) ?>">Venue Providers</a></li>
           <li><a href="<?= e(base_url('venues')) ?>">Event types</a></li>
           <li><a href="<?= e(base_url('venues')) ?>">Locations</a></li>
           <li><a href="#" title="Coming soon">Inspiration</a></li>
@@ -23,7 +24,7 @@
       <div class="footer-col">
         <h4>For partners</h4>
         <ul>
-          <li><a href="<?= e(base_url('enquire') . '?mode=partner') ?>">Become a venue partner</a></li>
+          <li><a href="<?= e(base_url('enquire') . '?mode=partner') ?>">Become a Venue Partner</a></li>
           <li><a href="#" title="Coming soon">Partner login</a></li>
         </ul>
       </div>

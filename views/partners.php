@@ -35,6 +35,6 @@ if ($page > $totalPages) {
 $emirates      = venue_emirates($pdo);
 $emirateCounts = partner_emirate_counts($pdo);
 
-$page_title   = 'Venue Partners — All The Venues';
+$page_title   = 'Venue Providers — All The Venues';
 $content_view = __DIR__ . '/content/partners-list.php';
 require __DIR__ . '/layout.php';
