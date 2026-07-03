@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS partners (
     logo_path     VARCHAR(255) DEFAULT NULL,
     status        ENUM('draft','pending','approved','suspended') NOT NULL DEFAULT 'draft',
     is_featured   TINYINT(1)   NOT NULL DEFAULT 0,
+    is_verified   TINYINT(1)   NOT NULL DEFAULT 0,
     notes         TEXT         DEFAULT NULL,          -- admin-only
     created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     approved_at   DATETIME     DEFAULT NULL,
