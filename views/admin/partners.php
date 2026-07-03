@@ -116,6 +116,16 @@ if ($rest === 'edit') {
             $clean['is_featured'] = !empty($_POST['is_featured']) ? 1 : 0;
             $clean['is_verified'] = !empty($_POST['is_verified']) ? 1 : 0;
 
+            // --- commission_rate (tri-state: blank=unknown/NULL, 0=none, >0=rate %) ---
+            $cr = trim((string)($_POST['commission_rate'] ?? ''));
+            if ($cr === '') {
+                $clean['commission_rate'] = null;                       // unknown
+            } elseif (!is_numeric($cr) || (float)$cr < 0 || (float)$cr > 100) {
+                $errors['commission_rate'] = 'Enter a percentage between 0 and 100, or leave blank for unknown.';
+            } else {
+                $clean['commission_rate'] = round((float)$cr, 2);       // 0 = none, >0 = rate
+            }
+
             $st = trim((string)($_POST['status'] ?? ''));
             $clean['status'] = isset(partner_admin_statuses()[$st]) ? $st : $partner['status'];
 

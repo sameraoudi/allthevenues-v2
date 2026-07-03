@@ -81,6 +81,12 @@ $typeLabel = partner_type_label($rawType);
         <label class="atv-check"><input type="checkbox" name="is_featured" value="1"<?= !empty($old['is_featured']) ? ' checked' : '' ?>> <span>Featured</span></label>
         <label class="atv-check"><input type="checkbox" name="is_verified" value="1"<?= !empty($old['is_verified']) ? ' checked' : '' ?>> <span>Verified</span></label>
       </div>
+      <div class="atv-field">
+        <label for="f-commission">Commission (%)</label>
+        <input type="number" id="f-commission" name="commission_rate" value="<?= $v('commission_rate') ?>" min="0" max="100" step="0.01" class="<?= $has('commission_rate') ? 'is-invalid' : '' ?>">
+        <p class="lead-hint">Admin-only, never public. Blank = unknown · 0 = no commission · or a rate, e.g. 10.</p>
+        <?php $err('commission_rate'); ?>
+      </div>
     </div>
   </div>
 
