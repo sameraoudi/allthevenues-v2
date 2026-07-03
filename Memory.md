@@ -8,8 +8,9 @@ and `VISION.md` (north star).*
 
 ## Current state (as of 3 Jul 2026)
 
-> Latest closeout: **U4b venue image management shipped + verified on prod** (secure WebP upload,
-> set-primary/reorder/alt/delete, ownership + CSRF guards, `uploads/*.php` → 403 confirmed).
+> Latest closeout: **U4d provider management complete + the `/event-types` page shipped**, all verified on
+> prod. Providers now fully editable in admin (Verified/Featured, type, email, about, website, status,
+> single cover image, commission); a new editorial Event Types mosaic replaced the dead navbar link.
 
 **Live on `staging.allthevenues.com`.** The full public shopfront + the admin to run it are built and
 verified on staging. Core loop works end-to-end: browse → enquire → admin inbox → context-aware forward.
@@ -19,9 +20,13 @@ verified on staging. Core loop works end-to-end: browse → enquire → admin in
 - **Venues:** `/venues` listing (filter sidebar, active-filter chips, horizontal cards, sort, pagination,
   mobile toggle) + `/venues/{slug}` detail (bounded gallery + self-hosted lightbox, sticky tabs, Key Info,
   "What makes it special" from `highlights`, map embed, venue website link, similar venues).
-- **Venue Providers:** `/providers` image-led cards (cover = provider's best venue image; type-icon chip;
-  gradient fallback rare) + `/providers/{slug}` cover+avatar header, "Venues by this provider", provider
-  info panel, managed enquiry panel. `/partners` → `/providers` 301. No public PII.
+- **Venue Providers:** `/providers` image-led cards (cover = **provider's own cover image if set, else** best
+  venue image; type-icon chip; gradient fallback rare) + `/providers/{slug}` cover+avatar header, "Venues by
+  this provider", provider info panel, managed enquiry panel. `/partners` → `/providers` 301. No public PII.
+- **Event Types:** `/event-types` editorial mosaic — 6 image-led featured tiles (Wedding hero, Corporate
+  tall, + Conference/Product Launch/Private Party/Exhibition) linking to `/venues?event_type={slug}`; top +
+  bottom enquiry bridges; each tile gated on ≥1 published venue (Gala/Yacht auto-appear once tagged);
+  count-threshold soft label ("Explore venues" under 5). Images live in `assets/img/event-types/{slug}.webp`.
 - Enquiry is **context-aware**: venue-mode (specific venue), assisted-mode ("help me find"), partner-mode
   (`/enquire?provider=id`) — each shows the right fields; all land as tracked leads.
 
@@ -33,12 +38,20 @@ verified on staging. Core loop works end-to-end: browse → enquire → admin in
 - **U4a venue edit** (core fields + the new `highlights` field) with audit.
 - **U4b venue image management** (secure upload via `lib/upload`, WebP re-encode of full + thumb,
   set-primary, reorder, alt text, delete). Verified on prod.
+- **U4d provider management** at `/admin/partners` (list + edit): org/slug/status/emirate/city/contact,
+  **email** (fills migration gaps), **Verified/Featured** (independent), **type** (editable via
+  `partner_group`), **single cover image** (WebP, overrides venue-derived cover), **commission_rate**
+  (admin-only, tri-state). CSRF + RBAC (admin/editor) + audit throughout.
 
 **Data:** 98 venues, ~68 approved providers migrated (latin1→utf8mb4, slugs, taxonomy re-tag, sanitized
 HTML). `venues.website` backfilled 98/98. `venue_event_types` seeded 96/98 from `best_for` (Event Type
-filter now works). Filter logic corrected (guest-band overlap; indoor/outdoor includes "both").
+filter now works). Filter logic corrected (guest-band overlap; indoor/outdoor includes "both"). **Schema
+grown for providers:** `partners.is_verified` (real column, replaces the `is_featured` alias),
+`cover_image_path`/`cover_thumb_path`/`cover_image_alt`, `commission_rate DECIMAL(5,2) NULL` (NULL=unknown /
+0=none / >0=rate), and `partner_group` repurposed as the editable type. Migrations 008–010 applied on prod.
+Samer began filling provider emails + adding providers via the new admin.
 
-**In progress:** none — U4b closed. Next up: U4c (add-venue) or U4d (provider edit).
+**In progress:** none — U4d + Event Types closed. Next up: **U4c** (add-venue) or **U5** (SEO landing pages).
 
 ---
 
@@ -46,11 +59,7 @@ filter now works). Filter logic corrected (guest-band overlap; indoor/outdoor in
 
 **Admin build-out (U4):**
 - **U4c** add-venue (create): reuse the U4b upload path; include the fields Samer flagged missing (images,
-  location/map, website, contact person). New build.
-- **U4d** provider edit: add a real **`is_verified`** column to `partners` (flip `partner_is_verified()`),
-  provider list + edit (type, verified, featured, about, website, status) — cleans the soft migration data
-  (provider type/dates, email gaps). Drop the now-unused `logo_path` from `partner_list`/`partner_by_slug`
-  SELECTs while here.
+  location/map, website, contact person). New build. *(Only remaining U4 item — U4a/b/d all shipped.)*
 
 **Monetization & tiering (Phase 2/3 — see `docs/ATV-TIERS.md`):**
 - Homepage **Featured Venues** driven by `is_featured` (DB) + a **Venue of the Month** editorial slot.
@@ -70,10 +79,12 @@ filter now works). Filter logic corrected (guest-band overlap; indoor/outdoor in
 - **Button capitalization** rule — first letter capital on every button.
 
 **Content track (Samer):**
-- Tag the **2 untagged venues** + fill the **7 empty event types** (Engagement, Gala, Birthday, Outdoor,
-  Yacht, Networking, Other) via admin.
-- Reconcile the **~4 NULL `partner_id`** venues + **approved providers with NULL email**.
-- Real venue **photography** replacing migrated/placeholder imagery where weak.
+- Tag the **2 untagged venues** + fill the empty event types. **Tagging venues to Gala Dinner / Yacht Event
+  auto-activates their tiles** on `/event-types` (they're built + gated, just hidden until they have ≥1
+  published venue) — add `gala-dinner.webp` / `yacht-event.webp` to `assets/img/event-types/` when ready.
+- Fill remaining **provider emails** (started) + reconcile the **~4 NULL `partner_id`** venues; set provider
+  **type / Verified / commission** where known via the new provider admin.
+- Real venue **photography** + **provider cover images** replacing migrated/placeholder imagery where weak.
 
 **Optional / low priority:**
 - **U3c** backfill the 2,378 legacy `inquiry` rows (junk-filtered) into `enquiries` — only if lead history
@@ -101,6 +112,24 @@ filter now works). Filter logic corrected (guest-band overlap; indoor/outdoor in
   preserved; set-primary/reorder/alt/delete with per-venue ownership + CSRF guards + audit rows. Verified on
   prod: jpg/png → WebP, transparency kept, rejects (.svg/.gif/.php.jpg/>12MB/cross-venue/missing-CSRF) all
   fail clean, `/uploads/test.php` → 403 (non-exec confirmed).
+- Committed the canonical docs to the repo (`CLAUDE`/`Memory`/`VISION` + rebuild-plan/tiers/preview) — they'd
+  only existed in the working copy after the project split.
+- **U4d provider management** (schema-before-code throughout; migrations 008–010 applied on prod):
+  - **U4d-1/2** `partners.is_verified` real column + backfill = is_featured; `partner_is_verified()` now reads
+    it (Verified independent of Featured); dropped dead `logo_path` from provider SELECTs.
+  - **U4d-3a** `/admin/partners` list + edit (status/emirate/city/contact/**email**/website/about +
+    independent Verified/Featured), CSRF+RBAC+audit; swapped the dispatch placeholder for a real controller.
+  - **U4d-3c** provider **single cover image** — `lib/upload` refactored to a shared core + `upload_partner_cover`;
+    admin upload/replace/alt/delete; public card (thumb) + detail hero (full) prefer the provider cover,
+    fall back to the venue-derived image; `partners.cover_*` columns.
+  - **U4d-3d** `commission_rate` (admin-only, tri-state NULL/0/>0), validated 0–100, never public.
+  - **U4d-3b** editable **provider type** stored as the bucket label in `partner_group`;
+    `partner_org_type_expr()` prefers it (else the migrated notes value); `/providers` type filter + public
+    display update for free.
+- **`/event-types` page** built from the approved design lock (`docs/atv-event-types-preview.html`): editorial
+  mosaic, 6 gated image tiles → `/venues?event_type` filter, count-threshold soft label, top+bottom enquiry
+  bridges, inline-SVG icons (no CDN), real nav wiring (header+footer). Images committed under
+  `assets/img/event-types/`.
 
 **Late Jun 2026 (rebuild through U3):**
 - U0 scaffold (front controller, `lib/` ported, tailored CSP, self-hosted assets).
