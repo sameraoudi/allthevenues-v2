@@ -20,9 +20,15 @@ require_once __DIR__ . '/venues.php';   // venue card row shape + helpers
 /** SQL expression extracting the raw legacy org type from notes (or NULL). */
 function partner_org_type_expr(string $alias = 'p'): string
 {
-    return "CASE WHEN $alias.notes LIKE 'Legacy org type:%'"
+    // Prefer the admin-set type (partner_group holds the bucket LABEL); else
+    // fall back to the migration-derived value extracted from notes.
+    return "CASE"
+         . " WHEN $alias.partner_group IS NOT NULL AND TRIM($alias.partner_group) <> ''"
+         . " THEN TRIM($alias.partner_group)"
+         . " ELSE (CASE WHEN $alias.notes LIKE 'Legacy org type:%'"
          . " THEN TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX($alias.notes, '\\n', 1), ':', -1))"
-         . " ELSE NULL END";
+         . " ELSE NULL END)"
+         . " END";
 }
 
 /** Public partner-type buckets: key => [label, [underlying legacy values]]. */
@@ -154,6 +160,7 @@ function partner_filter_sql(array $f): array
         $legacy = [];
         foreach ((array)$f['type'] as $t) {
             foreach (partner_type_buckets()[$t][1] as $v) { $legacy[] = $v; }
+            $legacy[] = partner_type_buckets()[$t][0];   // admin-set label matches its bucket
         }
         if ($legacy) {
             $ph = [];

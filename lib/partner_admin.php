@@ -76,10 +76,13 @@ function partner_admin_list(PDO $pdo, array $filters, int $page, int $perPage): 
     return ['rows' => $stmt->fetchAll(), 'total' => $total];
 }
 
-/** Full partner row for editing (any status), or null. */
+/** Full partner row for editing (any status) + effective type, or null. */
 function partner_admin_get(PDO $pdo, int $id): ?array
 {
-    $stmt = $pdo->prepare('SELECT * FROM partners WHERE id = :id LIMIT 1');
+    $stmt = $pdo->prepare(
+        'SELECT p.*, (' . partner_org_type_expr('p') . ') AS raw_org_type
+         FROM partners p WHERE p.id = :id LIMIT 1'
+    );
     $stmt->execute([':id' => $id]);
     $row = $stmt->fetch();
     return $row === false ? null : $row;

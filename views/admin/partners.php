@@ -116,6 +116,15 @@ if ($rest === 'edit') {
             $clean['is_featured'] = !empty($_POST['is_featured']) ? 1 : 0;
             $clean['is_verified'] = !empty($_POST['is_verified']) ? 1 : 0;
 
+            // --- provider type (stored as the bucket LABEL in partner_group;
+            //     blank/invalid → NULL = fall back to the migration-derived type) ---
+            $tk = trim((string)($_POST['partner_type'] ?? ''));
+            if ($tk !== '' && isset(partner_type_buckets()[$tk])) {
+                $clean['partner_group'] = partner_type_buckets()[$tk][0];
+            } else {
+                $clean['partner_group'] = null;
+            }
+
             // --- commission_rate (tri-state: blank=unknown/NULL, 0=none, >0=rate %) ---
             $cr = trim((string)($_POST['commission_rate'] ?? ''));
             if ($cr === '') {

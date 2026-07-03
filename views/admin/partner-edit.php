@@ -19,12 +19,6 @@ $err = static function (string $k) use ($errors): void {
 };
 $sel = static fn(string $k, $val): string => ((string)($old[$k] ?? '') === (string)$val) ? ' selected' : '';
 $ta  = static fn(string $k): string => e((string)($old[$k] ?? ''));   // textarea source (already sanitized)
-
-// Read-only "type" derived from the migrated notes (mirrors partner_org_type_expr()).
-$firstLine = strtok((string)($partner['notes'] ?? ''), "\n");
-$rawType   = ($firstLine !== false && stripos($firstLine, 'Legacy org type:') === 0)
-    ? trim((string)substr(strrchr($firstLine, ':') ?: ':', 1)) : '';
-$typeLabel = partner_type_label($rawType);
 ?>
 <p><a class="lead-back" href="<?= e(base_url('admin/partners')) ?>">&larr; Back to providers</a></p>
 
@@ -68,7 +62,16 @@ $typeLabel = partner_type_label($rawType);
         </select>
       </div>
       <div class="atv-field"><label for="f-city">City / area</label><input type="text" id="f-city" name="city_text" value="<?= $v('city_text') ?>" maxlength="150"></div>
-      <div class="atv-field"><label>Type (from migration)</label><input type="text" value="<?= e($typeLabel) ?>" disabled></div>
+      <div class="atv-field">
+        <label for="f-type">Provider type</label>
+        <select id="f-type" name="partner_type">
+          <option value="">Use type from migration</option>
+          <?php foreach (partner_type_buckets() as $k => $b): ?>
+            <option value="<?= e($k) ?>"<?= ((string)($old['partner_group'] ?? '') === $b[0]) ? ' selected' : '' ?>><?= e($b[0]) ?></option>
+          <?php endforeach; ?>
+        </select>
+        <p class="lead-hint">Currently showing: <b><?= e(partner_type_label($old['raw_org_type'] ?? null)) ?></b>. Blank = keep the type derived from the migration.</p>
+      </div>
       <div class="atv-field"><label for="f-contact">Contact name</label><input type="text" id="f-contact" name="contact_name" value="<?= $v('contact_name') ?>" maxlength="255"></div>
       <div class="atv-field">
         <label for="f-email">Email</label>
