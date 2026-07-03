@@ -18,15 +18,15 @@ require_once __DIR__ . '/../config/db.php';
 /** Guest-count bands → the minimum capacity a venue must offer to qualify. */
 function venue_guest_bands(): array
 {
-    // value => [label, min_capacity_required]
+    // value => [label, band_min, band_max]  (band_max null = open-ended top band)
     return [
-        'lt25'      => ['Up to 25 guests',   1],
-        '25-50'     => ['25–50 guests',      25],
-        '51-100'    => ['51–100 guests',     51],
-        '101-200'   => ['101–200 guests',    101],
-        '201-500'   => ['201–500 guests',    201],
-        '501-1000'  => ['501–1000 guests',   501],
-        '1000plus'  => ['1000+ guests',      1000],
+        'lt25'      => ['Up to 25 guests',   1,    25],
+        '25-50'     => ['25–50 guests',      25,   50],
+        '51-100'    => ['51–100 guests',     51,   100],
+        '101-200'   => ['101–200 guests',    101,  200],
+        '201-500'   => ['201–500 guests',    201,  500],
+        '501-1000'  => ['501–1000 guests',   501,  1000],
+        '1000plus'  => ['1000+ guests',      1000, null],
     ];
 }
 
@@ -168,17 +168,34 @@ function venue_filter_sql(array $f): array
         $params[':event_type'] = $f['event_type'];
     }
     if (isset($f['indoor_outdoor'])) {
-        $sql .= ' AND v.indoor_outdoor = :indoor_outdoor';
-        $params[':indoor_outdoor'] = $f['indoor_outdoor'];
+        // 'both' venues are indoor AND outdoor, so include them when either
+        // indoor or outdoor is selected (exact-match would drop them).
+        if ($f['indoor_outdoor'] === 'both') {
+            $sql .= ' AND v.indoor_outdoor = :indoor_outdoor';
+            $params[':indoor_outdoor'] = 'both';
+        } else {
+            $sql .= ' AND v.indoor_outdoor IN (:indoor_outdoor, :indoor_outdoor_both)';
+            $params[':indoor_outdoor']      = $f['indoor_outdoor'];
+            $params[':indoor_outdoor_both'] = 'both';
+        }
     }
     if (isset($f['budget'])) {
         $sql .= ' AND v.pricing_level = :budget';
         $params[':budget'] = $f['budget'];
     }
     if (isset($f['guest_count'])) {
+        // Match on RANGE OVERLAP: a venue's [capacity_min, capacity_max] must
+        // overlap the selected band [band_min, band_max] — not just clear the
+        // lower bound (which returned everything for small bands). The top band
+        // is open-ended (no band_max) so only the lower bound applies.
         $bands = venue_guest_bands();
+        $band  = $bands[$f['guest_count']];
         $sql .= ' AND v.capacity_max IS NOT NULL AND v.capacity_max >= :guest_min';
-        $params[':guest_min'] = (int)$bands[$f['guest_count']][1];
+        $params[':guest_min'] = (int)$band[1];
+        if (($band[2] ?? null) !== null) {
+            $sql .= ' AND (v.capacity_min IS NULL OR v.capacity_min <= :guest_max)';
+            $params[':guest_max'] = (int)$band[2];
+        }
     }
     if (isset($f['partner'])) {
         $sql .= ' AND v.partner_id = :partner';
