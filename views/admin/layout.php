@@ -15,6 +15,7 @@ $page_title       = $page_title       ?? 'Admin — All The Venues';
 $admin_page_title = $admin_page_title ?? 'Admin';
 $admin_active     = $admin_active     ?? 'dashboard';
 $me               = auth_current_user();
+$roleLabel        = auth_role_label((string)($me['role'] ?? ''));
 
 // New-enquiry count for the sidebar badge (cheap; ignore errors).
 $newCount = 0;
@@ -24,12 +25,17 @@ try {
     $newCount = 0;
 }
 
+// Role-aware nav: each item carries the capability required to see it. Items
+// the current role can't reach are hidden (and the routes are server-gated too).
 $nav = [
-    'dashboard' => ['label' => 'Dashboard', 'url' => base_url('admin'),           'icon' => 'grid'],
-    'enquiries' => ['label' => 'Enquiries', 'url' => base_url('admin/enquiries'), 'icon' => 'inbox', 'badge' => $newCount],
-    'venues'    => ['label' => 'Venues',    'url' => base_url('admin/venues'),    'icon' => 'building'],
-    'partners'  => ['label' => 'Partners',  'url' => base_url('admin/partners'),  'icon' => 'users'],
+    'dashboard' => ['label' => 'Dashboard', 'url' => base_url('admin'),           'icon' => 'grid',     'cap' => null],
+    'enquiries' => ['label' => 'Enquiries', 'url' => base_url('admin/enquiries'), 'icon' => 'inbox',    'cap' => 'enquiries.manage', 'badge' => $newCount],
+    'venues'    => ['label' => 'Venues',    'url' => base_url('admin/venues'),    'icon' => 'building', 'cap' => 'venues.manage'],
+    'partners'  => ['label' => 'Providers', 'url' => base_url('admin/partners'),  'icon' => 'users',    'cap' => 'providers.manage'],
+    'users'     => ['label' => 'Users',     'url' => base_url('admin/users'),     'icon' => 'shield',   'cap' => 'users.manage'],
+    'settings'  => ['label' => 'Settings',  'url' => base_url('admin/settings'),  'icon' => 'settings', 'cap' => 'settings.manage'],
 ];
+$nav = array_filter($nav, static fn($item) => empty($item['cap']) || auth_can($item['cap']));
 ?>
 <!doctype html>
 <html lang="en">
@@ -65,7 +71,10 @@ $nav = [
       <header class="admin-topbar">
         <h1 class="admin-topbar__title"><?= e($admin_page_title) ?></h1>
         <div class="admin-topbar__right">
-          <span class="admin-topbar__user"><?= e($me['name'] ?: 'Admin') ?></span>
+          <span class="admin-topbar__user">
+            <span class="admin-topbar__name"><?= e($me['name'] ?: 'Admin') ?></span>
+            <?php if ($roleLabel !== ''): ?><span class="admin-topbar__role">· <?= e($roleLabel) ?></span><?php endif; ?>
+          </span>
           <a class="atv-btn atv-btn--sm" href="<?= e(base_url('admin/logout')) ?>"><?= icon('logout') ?> Logout</a>
         </div>
       </header>

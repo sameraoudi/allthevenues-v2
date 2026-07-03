@@ -47,6 +47,8 @@ function _icon_paths(string $name): ?string
             'restaurant'   => '<path d="M6 3v6a2 2 0 0 0 4 0V3"/><path d="M8 9v12"/><path d="M16.5 3C15 3 14 5 14 7.5S15 12 16.5 12"/><path d="M16.5 3v18"/>',
             'yacht'        => '<path d="M4 18h16l-2.2 3H6.2z"/><path d="M11 16V3l7 13z"/><path d="M11 16H5l6-3z"/>',
             'logout'       => '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/>',
+            'shield'       => '<path d="M12 3l7 3v5.5c0 4.3-3 7.5-7 8.5-4-1-7-4.2-7-8.5V6z"/><path d="M9 12l2 2 4-4"/>',
+            'settings'     => '<circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l1.8-1.4-1.8-3.1-2.1.8a7.5 7.5 0 0 0-2.6-1.5L14.3 2h-3.6l-.4 2.3a7.5 7.5 0 0 0-2.6 1.5l-2.1-.8-1.8 3.1L5.6 10.5a7.6 7.6 0 0 0 0 3l-1.8 1.4 1.8 3.1 2.1-.8a7.5 7.5 0 0 0 2.6 1.5l.4 2.3h3.6l.4-2.3a7.5 7.5 0 0 0 2.6-1.5l2.1.8 1.8-3.1z"/>',
             // Socials
             'instagram'    => '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17 7h.01"/>',
             'facebook'     => '<path d="M14.5 8.5H16V5.5h-1.5A3.5 3.5 0 0 0 11 9v2H9v3h2v6h3v-6h2l.5-3H14V9c0-.3.2-.5.5-.5z"/>',

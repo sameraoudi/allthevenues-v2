@@ -425,7 +425,9 @@ select:focus-visible,
 }
 .admin-topbar__title { font-size: 24px; margin: 0; }
 .admin-topbar__right { display: flex; align-items: center; gap: 14px; }
-.admin-topbar__user { font-size: 14px; color: var(--muted); }
+.admin-topbar__user { font-size: 14px; color: var(--muted); display: inline-flex; gap: 6px; align-items: baseline; }
+.admin-topbar__name { color: var(--navy); font-weight: 600; }
+.admin-topbar__role { color: var(--muted); font-weight: 400; }
 .admin-topbar .atv-btn { display: inline-flex; align-items: center; gap: 6px; }
 .admin-topbar .atv-btn svg { width: 15px; height: 15px; }
 
@@ -817,5 +819,12 @@ select:focus-visible,
 .admin-form .atv-check { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 400; margin-bottom: 6px; }
 .admin-form .atv-check input { width: auto; }
 .admin-form__actions { display: flex; gap: 12px; margin: 4px 0 44px; }
+
+/* ---- Users & roles (U4) -------------------------------------------------- */
+.lead-status--active   { background: #d7ecdd; color: #1f6a41; }
+.lead-status--disabled { background: #e6e2da; color: #6b6357; }
+.lead-flash--temp { background: #fbeecb; color: #8a6d1b; border: 1px solid #ecd9a6; }
+.temp-pw { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: rgba(0,0,0,.06); border-radius: 5px; padding: 2px 8px; font-size: 14px; letter-spacing: .5px; }
+.user-you { display: inline-block; margin-left: 8px; font-size: 11px; font-weight: 600; color: var(--action); background: #e7eef3; border-radius: 5px; padding: 1px 7px; vertical-align: 1px; }
 
 @media (max-width: 700px) { .admin-form__grid { grid-template-columns: 1fr; } }

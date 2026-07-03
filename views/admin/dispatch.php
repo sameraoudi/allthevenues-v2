@@ -15,18 +15,25 @@ require_once __DIR__ . '/../../lib/ratelimit.php';
 $pdo = db_pdo();
 $sub = isset($adminSub) ? trim((string)$adminSub, '/') : '';
 
-// Enquiries lead inbox (list / detail / actions / CSV) — gated. Handles its
+// Enquiries lead inbox (list / detail / actions / CSV) — staff. Handles its
 // own dynamic sub-routes, so it sits before the exact-match switch.
 if ($sub === 'enquiries' || strncmp($sub, 'enquiries/', 10) === 0) {
-    auth_require_admin();
+    auth_require_role(['admin', 'editor']);
     require __DIR__ . '/enquiries.php';
     return;
 }
 
-// Venue management (list / edit) — gated. Own dynamic sub-routes.
+// Venue management (list / edit) — staff. Own dynamic sub-routes.
 if ($sub === 'venues' || strncmp($sub, 'venues/', 7) === 0) {
-    auth_require_admin();
+    auth_require_role(['admin', 'editor']);
     require __DIR__ . '/venues.php';
+    return;
+}
+
+// User & role management — ADMIN ONLY. Own dynamic sub-routes.
+if ($sub === 'users' || strncmp($sub, 'users/', 6) === 0) {
+    auth_require_role(['admin']);
+    require __DIR__ . '/users.php';
     return;
 }
 
@@ -34,7 +41,7 @@ switch ($sub) {
 
     /* ---- Login (public) -------------------------------------------------- */
     case 'login':
-        if (auth_is_admin()) {
+        if (auth_is_logged_in()) {
             redirect('admin');
         }
         $loginError = null;
@@ -67,9 +74,9 @@ switch ($sub) {
         redirect('admin/login');
         break;
 
-    /* ---- Dashboard (gated) ---------------------------------------------- */
+    /* ---- Dashboard (staff) ---------------------------------------------- */
     case '':
-        auth_require_admin();
+        auth_require_role(['admin', 'editor']);
         $stats = [
             'enquiries_total'  => (int)$pdo->query("SELECT COUNT(*) FROM enquiries")->fetchColumn(),
             'enquiries_new'    => (int)$pdo->query("SELECT COUNT(*) FROM enquiries WHERE status='new'")->fetchColumn(),
@@ -83,13 +90,25 @@ switch ($sub) {
         require __DIR__ . '/layout.php';
         break;
 
-    /* ---- Placeholder sections (gated) ----------------------------------- */
+    /* ---- Providers (provider content) — staff placeholder --------------- */
     case 'partners':
-        auth_require_admin();
-        $admin_active       = $sub;
-        $sectionTitle       = ucfirst($sub);
-        $page_title         = $sectionTitle . ' — Admin';
-        $admin_page_title   = $sectionTitle;
+        auth_require_role(['admin', 'editor']);
+        $admin_active       = 'partners';
+        $sectionTitle       = 'Providers';
+        $page_title         = 'Providers — Admin';
+        $admin_page_title   = 'Providers';
+        $admin_notfound     = false;
+        $admin_content_view = __DIR__ . '/placeholder-content.php';
+        require __DIR__ . '/layout.php';
+        break;
+
+    /* ---- Settings / availability — ADMIN ONLY placeholder --------------- */
+    case 'settings':
+        auth_require_role(['admin']);
+        $admin_active       = 'settings';
+        $sectionTitle       = 'Settings';
+        $page_title         = 'Settings — Admin';
+        $admin_page_title   = 'Settings';
         $admin_notfound     = false;
         $admin_content_view = __DIR__ . '/placeholder-content.php';
         require __DIR__ . '/layout.php';
@@ -97,7 +116,7 @@ switch ($sub) {
 
     /* ---- Unknown /admin/* — gate first, then 404 ------------------------ */
     default:
-        auth_require_admin();
+        auth_require_role(['admin', 'editor']);
         http_response_code(404);
         $admin_active       = '';
         $sectionTitle       = 'Not found';
