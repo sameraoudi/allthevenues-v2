@@ -9,8 +9,9 @@ declare(strict_types=1);
  * Partner "type" is not a clean column in the migrated data (partner_group is
  * NULL; the legacy provider type was folded into `notes` as "Legacy org type:
  * X" by U1b). We extract it from notes and bucket it to Hotel / Resort /
- * Restaurant / Unique venue. There is no is_verified column, so is_featured is
- * the curation flag and all publicly-listed partners are `approved` (vetted).
+ * Restaurant / Unique venue. Verified is a real column (partners.is_verified,
+ * editorial trust) curated separately from is_featured (curation/featured); all
+ * publicly-listed partners are `approved` (vetted).
  */
 
 require_once __DIR__ . '/../config/db.php';
@@ -48,14 +49,12 @@ function partner_type_label(?string $raw): string
 }
 
 /**
- * Whether a provider is shown as "Verified" (public badge + footer). There is
- * no is_verified column on partners; the ATV curation flag (is_featured) is the
- * only vetting signal, so featured providers are treated as verified. When a
- * real is_verified column lands, flip this one function.
+ * Whether a provider is shown as "Verified" (public badge + footer). Reads the
+ * real partners.is_verified column (editorial trust), independent of is_featured.
  */
 function partner_is_verified(array $row): bool
 {
-    return !empty($row['is_featured']);
+    return !empty($row['is_verified']);
 }
 
 /** Whether the provider shows the "Featured" badge. */
@@ -191,8 +190,8 @@ function partner_list(PDO $pdo, array $filters, int $page, int $perPage, string 
     $total = (int)$cnt->fetchColumn();
 
     $offset = max(0, ($page - 1) * $perPage);
-    $sql = "SELECT p.id, p.slug, p.org_name, p.about, p.logo_path, p.website,
-                   p.is_featured, p.created_at, p.approved_at, p.city_text,
+    $sql = "SELECT p.id, p.slug, p.org_name, p.about, p.website,
+                   p.is_featured, p.is_verified, p.created_at, p.approved_at, p.city_text,
                    e.name AS emirate_name, e.slug AS emirate_slug,
                    (" . partner_org_type_expr() . ") AS raw_org_type,
                    (SELECT COUNT(*) FROM venues v WHERE v.partner_id = p.id AND v.status='published') AS venue_count,
@@ -219,8 +218,8 @@ function partner_list(PDO $pdo, array $filters, int $page, int $perPage, string 
 /** Approved partner by slug, or null. */
 function partner_by_slug(PDO $pdo, string $slug): ?array
 {
-    $sql = "SELECT p.id, p.slug, p.org_name, p.about, p.logo_path, p.website,
-                   p.is_featured, p.created_at, p.approved_at, p.city_text,
+    $sql = "SELECT p.id, p.slug, p.org_name, p.about, p.website,
+                   p.is_featured, p.is_verified, p.created_at, p.approved_at, p.city_text,
                    e.name AS emirate_name, e.slug AS emirate_slug,
                    (" . partner_org_type_expr() . ") AS raw_org_type,
                    (SELECT COUNT(*) FROM venues v WHERE v.partner_id = p.id AND v.status='published') AS venue_count,
