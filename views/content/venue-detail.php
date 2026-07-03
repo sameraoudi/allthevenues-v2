@@ -59,11 +59,34 @@ if ($hasFacilities) $tabs['facilities'] = 'Facilities';
 if ($hasPackages)   $tabs['packages']   = 'Packages';
 if ($hasLocation)   $tabs['location']   = 'Location';
 
-// Gallery images (primary first already).
+// Gallery images (primary first already). Order is fixed upstream in the query
+// (is_primary DESC, sort_order, id) so $images[0] is the hero.
 $mainImg = venue_img_src($images[0]['file_path'] ?? null);
 $mainAlt = (string)($images[0]['alt_text'] ?? $name);
 $thumbs  = array_slice($images, 1, 2);
 $more    = max(0, count($images) - 3);
+
+// Full image set for the lightbox (self-hosted viewer; read by assets/js/app.js).
+$allImages = [];
+foreach ($images as $im) {
+    $allImages[] = [
+        'src' => venue_img_src($im['file_path'] ?? null),
+        'alt' => (string)($im['alt_text'] ?? $name),
+    ];
+}
+$imagesJson = htmlspecialchars(
+    (string)json_encode($allImages, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+    ENT_QUOTES, 'UTF-8'
+);
+
+// Map: render the stored embed ONLY when it is a Google Maps iframe (no user
+// input ever reaches an iframe — the value is admin/import-controlled and this
+// guard rejects anything else). Otherwise fall back to a plain Maps search link.
+$mapEmbed = trim((string)($venue['map_embed'] ?? ''));
+$isGoogleMapEmbed = $mapEmbed !== ''
+    && (bool)preg_match('#^<iframe[^>]*\ssrc="https://www\.google\.com/maps/#i', $mapEmbed);
+$mapsQuery   = $headAddr !== '' ? $headAddr . ', ' . $locShort : ($locShort ?: $name);
+$mapsLinkUrl = 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode(trim($mapsQuery, ', '));
 ?>
 <div class="atv-wrap">
   <div class="vd-top">
@@ -78,21 +101,36 @@ $more    = max(0, count($images) - 3);
   </div>
 
   <!-- Gallery -->
-  <div class="vd-gallery" data-gallery>
+  <div class="vd-gallery<?= $thumbs ? '' : ' vd-gallery--single' ?>" data-gallery data-images="<?= $imagesJson ?>">
     <div class="vd-gallery__main">
-      <img id="vdMain" src="<?= e($mainImg) ?>" alt="<?= e($mainAlt) ?>">
+      <img id="vdMain" src="<?= e($mainImg) ?>" alt="<?= e($mainAlt) ?>" data-lightbox-open data-index="0">
       <?php if (!empty($venue['is_featured'])): ?><span class="atv-badge vd-gallery__badge">Featured</span><?php endif; ?>
     </div>
     <?php if ($thumbs): ?>
       <div class="vd-gallery__col">
-        <?php foreach ($thumbs as $i => $t): $src = venue_img_src($t['file_path'] ?? null); ?>
-          <button type="button" class="vd-gallery__thumb" data-full="<?= e($src) ?>" aria-label="View image">
+        <?php foreach ($thumbs as $i => $t):
+              $src = venue_img_src($t['file_path'] ?? null);
+              $idx = $i + 1;                                            // index within $images
+              $isMore = ($i === array_key_last($thumbs) && $more > 0);  // last thumb + overflow
+        ?>
+          <button type="button" class="vd-gallery__thumb"
+                  <?php if ($isMore): ?>data-lightbox-open data-index="<?= e((string)$idx) ?>" aria-label="View all <?= e((string)count($images)) ?> images"
+                  <?php else: ?>data-full="<?= e($src) ?>" data-index="<?= e((string)$idx) ?>" aria-label="View image"<?php endif; ?>>
             <img src="<?= e($src) ?>" alt="<?= e($t['alt_text'] ?? $name) ?>">
-            <?php if ($i === array_key_last($thumbs) && $more > 0): ?><span class="vd-gallery__more">+<?= e((string)$more) ?> more</span><?php endif; ?>
+            <?php if ($isMore): ?><span class="vd-gallery__more">+<?= e((string)$more) ?> more</span><?php endif; ?>
           </button>
         <?php endforeach; ?>
       </div>
     <?php endif; ?>
+  </div>
+
+  <!-- Image lightbox (self-hosted; opened + controlled by assets/js/app.js) -->
+  <div class="vd-lightbox" data-lightbox hidden aria-hidden="true">
+    <button type="button" class="vd-lightbox__close" data-lightbox-close aria-label="Close">&times;</button>
+    <button type="button" class="vd-lightbox__nav vd-lightbox__nav--prev" data-lightbox-prev aria-label="Previous image">&lsaquo;</button>
+    <img class="vd-lightbox__img" data-lightbox-img src="" alt="">
+    <button type="button" class="vd-lightbox__nav vd-lightbox__nav--next" data-lightbox-next aria-label="Next image">&rsaquo;</button>
+    <div class="vd-lightbox__count" data-lightbox-count aria-live="polite"></div>
   </div>
 
   <!-- Title -->
@@ -173,6 +211,11 @@ $more    = max(0, count($images) - 3);
           <h2>Location</h2>
           <?php if ($address !== ''): ?><p class="vd-loc"><?= e($address) ?></p><?php endif; ?>
           <?php if ($locShort !== ''): ?><p class="vd-loc text-muted"><?= e($locShort) ?></p><?php endif; ?>
+          <?php if ($isGoogleMapEmbed): ?>
+            <div class="vd-map"><?= $mapEmbed /* stored Google Maps embed, guarded above */ ?></div>
+          <?php else: ?>
+            <p class="vd-loc"><a href="<?= e($mapsLinkUrl) ?>" target="_blank" rel="noopener nofollow">View on Google Maps <?= icon('arrow-right') ?></a></p>
+          <?php endif; ?>
         </section>
       <?php endif; ?>
     </div>
