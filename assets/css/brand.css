@@ -677,6 +677,10 @@ select:focus-visible,
 .vd-krow { display: flex; justify-content: space-between; gap: 14px; font-size: 13px; padding: 8px 0; border-top: 1px solid var(--line); }
 .vd-krow .k { color: var(--muted); }
 .vd-krow .v { color: var(--navy); font-weight: 500; text-align: right; }
+.vd-krow--link { justify-content: flex-start; }
+.vd-krow--link a { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+.vd-krow--link a:hover { color: var(--navy); }
+.vd-krow--link a svg { width: 14px; height: 14px; }
 .vd-enqbar { background: var(--navy); color: #fff; border-radius: 12px; padding: 18px; margin-top: 16px; }
 .vd-enqbar h4 { color: #fff; font-size: 19px; margin-bottom: 6px; }
 .vd-enqbar p { font-size: 13px; color: #c7d0d8; margin-bottom: 12px; }

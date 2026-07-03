@@ -217,3 +217,68 @@ db/006_venue_highlights.sql
 
 Adds `venues.highlights TEXT NULL`. MySQL host; run once (re-running errors
 1060 — harmless).
+
+---
+
+## Legacy field restore: `venues.website` + `venue_event_types` seed
+
+Two legacy fields that the U1b catalogue migration did not carry over. Both
+are re-runnable CLI scripts in the migrate_catalogue pattern (shared helpers in
+`db/_migrate_lib.php`; legacy→new venue resolution replays the migration's
+`unique_slug(slugify(name))` derivation). Mapping logic is unit-tested:
+
+```
+php tests/migrate_lib_test.php
+```
+
+### PART 1 — `venues.website`
+
+1. Apply the schema (adds the column; folded into `db/001` for fresh imports):
+   ```
+   db/007_venue_website.sql       # idempotent — no-op if the column exists
+   ```
+2. Run the backfill on the server (reads legacy `venues.website`, validates /
+   normalizes to http(s) only, writes the resolved new venue):
+   ```
+   php db/backfill_venue_website.php
+   ```
+   Idempotent (UPDATE keyed on venue id). Reports: legacy rows with a website,
+   backfilled, skipped (empty / invalid / unresolved). The public venue detail
+   shows a subtle "Visit venue website" link (rel="noopener nofollow",
+   target=_blank) only when `venues.website` is non-empty.
+
+### PART 2 — `venue_event_types` seed (fixes the Event Type filter)
+
+First-pass auto-tag from each venue's `best_for` text (the migrated legacy
+`ideal-for`) via a documented keyword map. New DB only — no legacy connection:
+```
+php db/seed_venue_event_types.php
+```
+Idempotent (`INSERT IGNORE` on PK `(venue_id, event_type_id)`; never removes
+admin-added tags). Conservative — niche categories with no clean event type
+(concerts, music videos, photoshoots, fashion shows, car reviews, retail
+pop-ups, brand activations, lifestyle events) are left untagged, not dumped
+into "Other"; untagged venues are reported for admin review (U4/U5).
+
+Keyword → event_type (substring, case-insensitive over `best_for`):
+
+| keyword(s)                                  | event type       |
+|---------------------------------------------|------------------|
+| wedding                                     | Wedding          |
+| engagement                                  | Engagement       |
+| corporate, business, team building          | Corporate Event  |
+| conference                                  | Conference       |
+| meeting                                     | Meeting          |
+| training                                    | Training         |
+| launch                                      | Product Launch   |
+| gala                                        | Gala Dinner      |
+| birthday                                    | Birthday         |
+| baby shower, party, parties, private event, social gathering | Private Party |
+| exhibition                                  | Exhibition       |
+| outdoor                                     | Outdoor Event    |
+| yacht                                       | Yacht Event      |
+| networking                                  | Networking Event |
+
+Local seed against the loaded dump tagged 96/98 venues (263 rows); Event Type
+filter now returns non-zero for Wedding, Corporate, Conference, Training,
+Product Launch, Private Party, Exhibition, Meeting.

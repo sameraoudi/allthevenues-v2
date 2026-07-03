@@ -20,6 +20,7 @@ $address    = trim((string)($venue['address'] ?? ''));
 $locShort   = trim(implode(', ', array_filter([$area, $emirate])));
 $headAddr   = $address !== '' ? $address : $locShort;
 $enquireUrl = base_url('enquire') . query_string(['venue' => (int)$venue['id']]);
+$website    = trim((string)($venue['website'] ?? ''));   // venue's own site (backfilled)
 $ioLabels   = venue_indoor_outdoor_options();
 $ioLabel    = !empty($venue['indoor_outdoor']) ? ($ioLabels[$venue['indoor_outdoor']] ?? $venue['indoor_outdoor']) : '';
 $bestForTags = tags_from($venue['best_for'] ?? null, 6);
@@ -239,6 +240,11 @@ $mapsLinkUrl = 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode
           $krow('Minimum spend', ($venue['minimum_spend'] ?? null) && (float)$venue['minimum_spend'] > 0 ? 'AED ' . number_format((float)$venue['minimum_spend']) : '');
           $krow('Managed by', $venue['partner_name'] ?? '');
         ?>
+        <?php if ($website !== ''): ?>
+          <div class="vd-krow vd-krow--link">
+            <a href="<?= e($website) ?>" target="_blank" rel="noopener nofollow">Visit venue website <?= icon('arrow-right') ?></a>
+          </div>
+        <?php endif; ?>
       </div>
       <div class="vd-enqbar">
         <h4>Interested in this venue?</h4>

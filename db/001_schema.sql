@@ -116,6 +116,7 @@ CREATE TABLE IF NOT EXISTS venues (
     special_offer  TEXT         DEFAULT NULL,
     atv_special_offer TEXT      DEFAULT NULL,
     video_url      VARCHAR(255) DEFAULT NULL,
+    website        VARCHAR(255) DEFAULT NULL,         -- venue's own site (backfilled from legacy; see db/007)
     -- Capacity / price
     capacity_max   INT UNSIGNED DEFAULT NULL,
     capacity_min   INT UNSIGNED DEFAULT NULL,
