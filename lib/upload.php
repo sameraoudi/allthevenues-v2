@@ -38,14 +38,17 @@ function upload_webp_supported(): bool
 }
 
 /**
- * Process one uploaded image → WebP full + thumbnail under the venue folder.
+ * Core: process one uploaded image → WebP full + thumbnail under $relDir
+ * (app-relative, e.g. "uploads/venues/12" or "uploads/partners/5"). Shared by
+ * the venue-image and provider-cover entry points below — same validation,
+ * same result shape.
  *
- * @param array $file    one $_FILES entry (name, tmp_name, error, size)
- * @param int   $venueId owning venue (for the storage path)
+ * @param array  $file   one $_FILES entry (name, tmp_name, error, size)
+ * @param string $relDir app-relative storage directory (no trailing slash)
  * @return array{ok:bool, file_path?:string, thumb_path?:string, error?:string}
  *         paths are app-relative (e.g. uploads/venues/12/ab….webp).
  */
-function upload_venue_image(array $file, int $venueId): array
+function _upload_process_image(array $file, string $relDir): array
 {
     if (!upload_webp_supported()) {
         error_log('upload: GD WebP support missing on this host');
@@ -106,8 +109,7 @@ function upload_venue_image(array $file, int $venueId): array
         return ['ok' => false, 'error' => 'That image couldn’t be processed.'];
     }
 
-    // --- per-venue storage dir (covered by uploads/.htaccess) ---
-    $relDir = 'uploads/venues/' . $venueId;
+    // --- storage dir (covered by uploads/.htaccess across the whole subtree) ---
     $absDir = app_path($relDir);
     if (!is_dir($absDir) && !@mkdir($absDir, 0755, true) && !is_dir($absDir)) {
         error_log('upload: mkdir failed for ' . $absDir);
@@ -127,6 +129,26 @@ function upload_venue_image(array $file, int $venueId): array
         return ['ok' => false, 'error' => 'That image couldn’t be saved.'];
     }
     return ['ok' => true, 'file_path' => $relFull, 'thumb_path' => $relThumb];
+}
+
+/**
+ * Venue image: one $_FILES entry → WebP full + thumb under
+ * uploads/venues/{venueId}/. Behaviour unchanged from before the refactor.
+ * @return array{ok:bool, file_path?:string, thumb_path?:string, error?:string}
+ */
+function upload_venue_image(array $file, int $venueId): array
+{
+    return _upload_process_image($file, 'uploads/venues/' . $venueId);
+}
+
+/**
+ * Provider cover: one $_FILES entry → WebP full + thumb under
+ * uploads/partners/{partnerId}/ (same pipeline, provider folder).
+ * @return array{ok:bool, file_path?:string, thumb_path?:string, error?:string}
+ */
+function upload_partner_cover(array $file, int $partnerId): array
+{
+    return _upload_process_image($file, 'uploads/partners/' . $partnerId);
 }
 
 /**

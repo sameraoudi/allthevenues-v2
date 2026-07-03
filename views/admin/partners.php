@@ -19,7 +19,15 @@ require_once __DIR__ . '/../../lib/partners.php';
 require_once __DIR__ . '/../../lib/partner_admin.php';
 
 $me   = auth_current_user();
-$rest = trim(substr((string)$sub, strlen('partners')), '/');   // '' | 'edit'
+$rest = trim(substr((string)$sub, strlen('partners')), '/');   // '' | 'edit' | 'cover/*'
+
+/* ===================== COVER IMAGE ACTIONS (U4d-3c) ==================== */
+// POST-only cover mutations (upload/alt/delete). The controller validates CSRF,
+// audits, and redirects back to the provider edit page.
+if (strncmp($rest, 'cover/', 6) === 0) {
+    require __DIR__ . '/partner-cover.php';
+    return;
+}
 
 /* ============================ LIST ====================================== */
 if ($rest === '') {

@@ -191,17 +191,18 @@ function partner_list(PDO $pdo, array $filters, int $page, int $perPage, string 
 
     $offset = max(0, ($page - 1) * $perPage);
     $sql = "SELECT p.id, p.slug, p.org_name, p.about, p.website,
-                   p.is_featured, p.is_verified, p.created_at, p.approved_at, p.city_text,
+                   p.is_featured, p.is_verified, p.cover_image_alt, p.created_at, p.approved_at, p.city_text,
                    e.name AS emirate_name, e.slug AS emirate_slug,
                    (" . partner_org_type_expr() . ") AS raw_org_type,
                    (SELECT COUNT(*) FROM venues v WHERE v.partner_id = p.id AND v.status='published') AS venue_count,
-                   (SELECT vi.file_path
+                   COALESCE(p.cover_thumb_path, p.cover_image_path,
+                     (SELECT vi.file_path
                       FROM venues v2
                       JOIN venue_images vi ON vi.venue_id = v2.id AND vi.status = 'active'
                       WHERE v2.partner_id = p.id AND v2.status = 'published'
                       ORDER BY v2.is_featured DESC, vi.is_primary DESC, v2.name ASC,
                                vi.sort_order ASC, vi.id ASC
-                      LIMIT 1) AS cover_image
+                      LIMIT 1)) AS cover_image
             FROM partners p
             LEFT JOIN emirates e ON e.id = p.emirate_id
             WHERE p.status='approved'" . $where . "
@@ -219,17 +220,18 @@ function partner_list(PDO $pdo, array $filters, int $page, int $perPage, string 
 function partner_by_slug(PDO $pdo, string $slug): ?array
 {
     $sql = "SELECT p.id, p.slug, p.org_name, p.about, p.website,
-                   p.is_featured, p.is_verified, p.created_at, p.approved_at, p.city_text,
+                   p.is_featured, p.is_verified, p.cover_image_alt, p.created_at, p.approved_at, p.city_text,
                    e.name AS emirate_name, e.slug AS emirate_slug,
                    (" . partner_org_type_expr() . ") AS raw_org_type,
                    (SELECT COUNT(*) FROM venues v WHERE v.partner_id = p.id AND v.status='published') AS venue_count,
-                   (SELECT vi.file_path
+                   COALESCE(p.cover_image_path, p.cover_thumb_path,
+                     (SELECT vi.file_path
                       FROM venues v2
                       JOIN venue_images vi ON vi.venue_id = v2.id AND vi.status = 'active'
                       WHERE v2.partner_id = p.id AND v2.status = 'published'
                       ORDER BY v2.is_featured DESC, vi.is_primary DESC, v2.name ASC,
                                vi.sort_order ASC, vi.id ASC
-                      LIMIT 1) AS cover_image
+                      LIMIT 1)) AS cover_image
             FROM partners p
             LEFT JOIN emirates e ON e.id = p.emirate_id
             WHERE p.slug = :slug AND p.status='approved' LIMIT 1";

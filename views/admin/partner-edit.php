@@ -95,3 +95,39 @@ $typeLabel = partner_type_label($rawType);
     <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('admin/partners')) ?>">Cancel</a>
   </div>
 </form>
+
+<?php
+/* ---- Cover image (U4d-3c) — single image, OUTSIDE the scalar form above ---- */
+$coverFull   = trim((string)($partner['cover_image_path'] ?? ''));
+$coverThumb  = trim((string)($partner['cover_thumb_path'] ?? ''));
+$coverAlt    = (string)($partner['cover_image_alt'] ?? '');
+$hasCoverImg = $coverFull !== '';
+$coverAction = static fn(string $a): string => e(base_url('admin/partners/cover/' . $a));
+?>
+<div class="admin-panel img-mgr">
+  <h2 class="admin-panel__title">Cover image</h2>
+  <p class="lead-hint mb-2">One landscape image (3:2 works best). JPG, PNG or WebP — converted to WebP automatically. Shown as this provider's cover on the public page, overriding the venue-derived image.</p>
+
+  <?php if ($hasCoverImg): ?>
+    <div class="img-grid">
+      <div class="img-card is-primary">
+        <div class="img-card__thumb"><img src="<?= e(base_url($coverThumb !== '' ? $coverThumb : $coverFull)) ?>" alt="" loading="lazy"></div>
+        <form method="post" action="<?= $coverAction('alt') ?>" class="img-card__alt">
+          <?php csrf_field(); ?><input type="hidden" name="partner_id" value="<?= e((string)$id) ?>">
+          <label class="sr-only" for="cover-alt">Alt text</label>
+          <input type="text" id="cover-alt" name="alt_text" value="<?= e($coverAlt) ?>" maxlength="255" placeholder="Alt text (describe the image)">
+          <button type="submit" class="atv-btn atv-btn--sm atv-btn--ghost">Save alt</button>
+        </form>
+        <div class="img-card__acts">
+          <form method="post" action="<?= $coverAction('delete') ?>" data-confirm="Remove this cover image?"><?php csrf_field(); ?><input type="hidden" name="partner_id" value="<?= e((string)$id) ?>"><button type="submit" class="atv-btn atv-btn--sm atv-btn--danger">Remove</button></form>
+        </div>
+      </div>
+    </div>
+  <?php endif; ?>
+
+  <form class="img-upload" method="post" action="<?= $coverAction('upload') ?>" enctype="multipart/form-data">
+    <?php csrf_field(); ?><input type="hidden" name="partner_id" value="<?= e((string)$id) ?>">
+    <input type="file" name="cover" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" required aria-label="Choose cover image">
+    <button type="submit" class="atv-btn atv-btn--sm"><?= $hasCoverImg ? 'Replace cover' : 'Upload cover' ?></button>
+  </form>
+</div>

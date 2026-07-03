@@ -25,8 +25,8 @@ $website  = trim((string)($partner['website'] ?? ''));
 $verified = partner_is_verified($partner);
 $badges   = partner_badges($partner);   // max two
 
-// Cover: best published venue image if the file exists, else seeded gradient
-// class (no inline styles — strict CSP style-src 'self').
+// Cover: provider-set cover, else best published venue image if the file
+// exists, else seeded gradient class (no inline styles — CSP style-src 'self').
 $coverRel = trim((string)($partner['cover_image'] ?? ''));
 $hasCover = $coverRel !== '' && is_file(app_path($coverRel));
 $gradIdx  = partner_cover_gradient_index($name);
@@ -50,7 +50,7 @@ $venuesUrl  = base_url('venues') . query_string(['partner' => $id]);
   <!-- Cover + type-icon header -->
   <div class="phero">
     <div class="phero__cover cover-grad--<?= $gradIdx ?>">
-      <?php if ($hasCover): ?><img class="phero__cover-img" src="<?= e(base_url($coverRel)) ?>" alt=""><?php endif; ?>
+      <?php if ($hasCover): ?><img class="phero__cover-img" src="<?= e(base_url($coverRel)) ?>" alt="<?= e((string)($partner['cover_image_alt'] ?? '')) ?>"><?php endif; ?>
     </div>
     <?php if ($badges): ?>
       <div class="phero__badges">

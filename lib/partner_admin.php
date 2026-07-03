@@ -98,3 +98,30 @@ function partner_admin_richtext_fields(): array
 {
     return ['about'];
 }
+
+/* ---- Cover image (single provider-owned hero) --------------------------- */
+
+/** Set the cover image paths (leaves cover_image_alt untouched). */
+function partner_cover_replace(PDO $pdo, int $id, string $filePath, string $thumbPath): void
+{
+    $stmt = $pdo->prepare(
+        'UPDATE partners SET cover_image_path = :fp, cover_thumb_path = :tp WHERE id = :id'
+    );
+    $stmt->execute([':fp' => $filePath, ':tp' => $thumbPath, ':id' => $id]);
+}
+
+/** Update the cover alt text (null when empty). */
+function partner_cover_update_alt(PDO $pdo, int $id, string $alt): void
+{
+    $stmt = $pdo->prepare('UPDATE partners SET cover_image_alt = :alt WHERE id = :id');
+    $stmt->execute([':alt' => $alt !== '' ? $alt : null, ':id' => $id]);
+}
+
+/** Clear the cover image (paths + alt) — caller unlinks the files. */
+function partner_cover_clear(PDO $pdo, int $id): void
+{
+    $stmt = $pdo->prepare(
+        'UPDATE partners SET cover_image_path = NULL, cover_thumb_path = NULL, cover_image_alt = NULL WHERE id = :id'
+    );
+    $stmt->execute([':id' => $id]);
+}
