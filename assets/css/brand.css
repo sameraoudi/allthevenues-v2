@@ -846,3 +846,51 @@ select:focus-visible,
 .img-card__acts form { margin: 0; }
 
 @media (max-width: 700px) { .admin-form__grid { grid-template-columns: 1fr; } }
+
+/* =============================================================================
+   Event Types page — /event-types (editorial mosaic). All visuals here; the
+   markup carries no inline styles (strict CSP). Reuses .cover-grad--N for the
+   image-missing fallback.
+   ============================================================================= */
+.atv-et-intro { text-align: center; padding: 52px 0 12px; }
+.atv-et-eyebrow { font-size: 12px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--action); font-weight: 600; }
+.atv-et-intro h1 { font-size: 46px; line-height: 1.05; margin: 10px 0 12px; }
+.atv-et-intro p { font-size: 16px; color: var(--muted); max-width: 620px; margin: 0 auto; }
+
+.atv-et-bridge { display: flex; align-items: center; justify-content: center; gap: 10px 18px; flex-wrap: wrap; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 15px 22px; margin: 22px 0 2px; box-shadow: 0 6px 16px rgba(14,27,42,.05); }
+.atv-et-bridge p { font-size: 14px; color: var(--muted); }
+.atv-et-bridge p b { color: var(--navy); font-weight: 600; }
+.atv-et-bridge__btn { white-space: nowrap; }
+
+.atv-et-mosaic { display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; padding: 34px 0 10px; }
+.atv-et-tile { position: relative; border-radius: 18px; overflow: hidden; display: block; background-color: var(--navy); box-shadow: 0 8px 24px rgba(14,27,42,.08); border: 1px solid var(--line); transition: transform .28s ease, box-shadow .28s ease; }
+.atv-et-tile:hover { transform: translateY(-4px); box-shadow: 0 16px 34px rgba(14,27,42,.16); }
+.atv-et-tile__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
+.atv-et-tile:hover .atv-et-tile__img { transform: scale(1.06); }
+.atv-et-tile__icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.9); }
+.atv-et-tile__icon svg { width: 54px; height: 54px; }
+.atv-et-tile__scrim { position: absolute; inset: 0; background: linear-gradient(to top, rgba(14,27,42,.82) 0%, rgba(14,27,42,.35) 38%, rgba(14,27,42,0) 66%); }
+.atv-et-tile__label { position: absolute; left: 22px; right: 22px; bottom: 20px; color: #fff; z-index: 2; }
+.atv-et-tile__label h3 { font-size: 30px; line-height: 1.05; letter-spacing: .3px; color: #fff; }
+.atv-et-tile__label p { font-size: 13.5px; color: #e4ebf1; margin-top: 5px; max-width: 34ch; opacity: .92; }
+.atv-et-tile__count { position: absolute; top: 16px; right: 16px; z-index: 2; background: rgba(14,27,42,.60); color: #fff; font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 20px; -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); border: 1px solid rgba(255,255,255,.18); }
+
+.atv-et-tile--hero { grid-column: span 8; min-height: 420px; }
+.atv-et-tile--tall { grid-column: span 4; min-height: 420px; }
+.atv-et-tile--quad { grid-column: span 3; min-height: 250px; }
+
+/* smaller tiles: descriptor reveals on hover (desktop); headings only on mobile */
+.atv-et-tile--quad .atv-et-tile__label p { max-height: 0; opacity: 0; overflow: hidden; margin-top: 0; transition: opacity .25s ease, max-height .25s ease, margin-top .25s ease; }
+.atv-et-tile--quad:hover .atv-et-tile__label p { max-height: 64px; opacity: .92; margin-top: 5px; }
+
+.atv-et-cta { margin: 40px 0 60px; background: var(--navy); border-radius: 18px; color: #fff; padding: 38px 34px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.atv-et-cta h2 { font-size: 30px; line-height: 1.1; color: #fff; }
+.atv-et-cta p { font-size: 14px; color: #c6d0d9; margin-top: 6px; max-width: 52ch; }
+.atv-et-cta__btn { white-space: nowrap; }
+
+@media (max-width: 820px) {
+  .atv-et-mosaic { grid-template-columns: repeat(2, 1fr); }
+  .atv-et-tile--hero, .atv-et-tile--tall, .atv-et-tile--quad { grid-column: span 2; min-height: 230px; }
+  .atv-et-intro h1 { font-size: 36px; }
+  .atv-et-tile--quad .atv-et-tile__label p { display: none; }
+}

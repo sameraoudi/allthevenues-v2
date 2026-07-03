@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All The Venues — Event Types page (design preview)</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+:root{--navy:#0E1B2A;--blue:#6C93B7;--action:#426F94;--action-hover:#315B7C;--pearl:#F7F4EF;--sand:#C8B8A0;--ink:#0E1B2A;--muted:#5b6b7a;--line:#e4ded4;--card:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--pearl);color:var(--ink);line-height:1.6}
+h1,h2,h3,h4,.serif{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+a{color:inherit;text-decoration:none}
+.btn{display:inline-block;background:var(--action);color:#fff;padding:11px 20px;border-radius:8px;font-weight:600;font-size:14px;border:none;cursor:pointer}
+.btn:hover{background:var(--action-hover)}
+.screenlabel{background:var(--navy);color:var(--sand);font-family:'Cormorant Garamond',serif;font-size:20px;padding:12px 24px}
+.note{max-width:1160px;margin:22px auto 0;padding:16px 20px;font-size:13.5px;color:var(--muted);border-left:3px solid var(--sand);background:#fff;line-height:1.7}
+.note b{color:var(--navy);font-weight:600}
+.note code{background:#eef1f4;padding:1px 6px;border-radius:4px;font-size:12.5px}
+
+/* header */
+.nav{background:var(--navy);color:#fff}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:66px}
+.logo{font-family:'Cormorant Garamond',serif;font-size:22px}.logo .m{color:var(--sand)}
+.nav .r{display:flex;gap:18px;align-items:center;font-size:14px;color:#d7dde3}
+.nav .r a.on{color:#fff;font-weight:600}
+
+/* page intro */
+.intro{text-align:center;padding:52px 0 12px}
+.intro .eyebrow{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--action);font-weight:600}
+.intro h1{font-size:46px;line-height:1.05;margin:10px 0 12px}
+.intro p{font-size:16px;color:var(--muted);max-width:620px;margin:0 auto}
+
+/* secondary enquiry bridge — for users who don't want to browse */
+.bridge{display:flex;align-items:center;justify-content:center;gap:10px 18px;flex-wrap:wrap;
+        background:#fff;border:1px solid var(--line);border-radius:14px;
+        padding:15px 22px;margin:22px 0 2px;box-shadow:0 6px 16px rgba(14,27,42,.05)}
+.bridge p{font-size:14px;color:var(--muted)}
+.bridge p b{color:var(--navy);font-weight:600}
+.bridge .btn{background:var(--sand);color:var(--navy);white-space:nowrap}
+.bridge .btn:hover{background:#b9a688}
+
+/* ---- editorial mosaic --------------------------------------------------- */
+.mosaic{display:grid;grid-template-columns:repeat(12,1fr);gap:18px;padding:34px 0 10px}
+.tile{position:relative;border-radius:18px;overflow:hidden;display:block;
+      box-shadow:0 8px 24px rgba(14,27,42,.08);border:1px solid var(--line);
+      transition:transform .28s ease, box-shadow .28s ease}
+.tile:hover{transform:translateY(-4px);box-shadow:0 16px 34px rgba(14,27,42,.16)}
+/* the image layer (Samer's photo goes here as background-image) */
+.tile .img{position:absolute;inset:0;background:center/cover no-repeat;transition:transform .5s ease}
+.tile:hover .img{transform:scale(1.06)}
+/* readable scrim, weighted to the lower-left where the label sits */
+.tile .scrim{position:absolute;inset:0;background:
+   linear-gradient(to top, rgba(14,27,42,.82) 0%, rgba(14,27,42,.35) 38%, rgba(14,27,42,0) 66%);}
+.tile .label{position:absolute;left:22px;right:22px;bottom:20px;color:#fff;z-index:2}
+.tile .label h3{font-size:30px;line-height:1.05;letter-spacing:.3px}
+.tile .label p{font-size:13.5px;color:#e4ebf1;margin-top:5px;max-width:34ch;
+               opacity:.92}
+/* smaller tiles: descriptor reveals on hover (desktop); hidden on mobile below */
+.t-quad .label p{max-height:0;opacity:0;overflow:hidden;margin-top:0;
+                 transition:opacity .25s ease, max-height .25s ease, margin-top .25s ease}
+.tile.t-quad:hover .label p{max-height:64px;opacity:.92;margin-top:5px}
+.tile .count{position:absolute;top:16px;right:16px;z-index:2;background:rgba(14,27,42,.60);
+             color:#fff;font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px;
+             backdrop-filter:blur(3px);border:1px solid rgba(255,255,255,.18)}
+/* size classes for the mosaic rhythm */
+.t-hero{grid-column:span 8;min-height:420px}
+.t-tall{grid-column:span 4;min-height:420px}
+.t-quad{grid-column:span 3;min-height:250px}
+.t-half{grid-column:span 6;min-height:230px}
+
+/* placeholder styling so you can see where each photo lands (mock only) */
+.ph{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;
+    color:rgba(255,255,255,.85);text-align:center;padding:20px}
+.ph .pi{font-size:30px;opacity:.9}
+.ph .spec{font-size:11px;letter-spacing:.6px;text-transform:uppercase;
+          background:rgba(255,255,255,.14);padding:4px 10px;border-radius:20px;
+          border:1px solid rgba(255,255,255,.25)}
+/* six illustrative gradients standing in for the real imagery */
+.g1{background:linear-gradient(135deg,#3a5a78,#20364c)}
+.g2{background:linear-gradient(135deg,#4a6b7d,#2b4152)}
+.g3{background:linear-gradient(135deg,#5a6f86,#33445a)}
+.g4{background:linear-gradient(135deg,#6a5f74,#3c3550)}
+.g5{background:linear-gradient(135deg,#417083,#284a5c)}
+.g6{background:linear-gradient(135deg,#7a6a58,#4a3f36)}
+
+/* gated (empty) types — visibly a different, "appears when tagged" state */
+.gated-band{margin:36px 0 10px;padding-top:26px;border-top:1px solid var(--line)}
+.gated-band .gh{font-size:13px;color:var(--muted);margin-bottom:14px;display:flex;
+                align-items:center;gap:8px}
+.gated-band .gh i{color:var(--sand)}
+.gated{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.gcard{position:relative;border-radius:18px;overflow:hidden;min-height:200px;border:1px dashed var(--line);
+       background:#fff;display:flex;align-items:center;justify-content:center;text-align:center;padding:22px}
+.gcard .gi{font-size:26px;color:var(--sand);margin-bottom:8px}
+.gcard h4{font-size:24px;color:var(--navy)}
+.gcard p{font-size:13px;color:var(--muted);margin-top:4px;max-width:40ch}
+.gcard .pill{margin-top:10px;display:inline-block;font-size:11px;letter-spacing:.5px;
+             text-transform:uppercase;color:var(--action);background:#eef1f4;
+             padding:4px 12px;border-radius:20px}
+
+/* closing CTA strip */
+.cta{margin:40px 0 60px;background:var(--navy);border-radius:18px;color:#fff;
+     padding:38px 34px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.cta h2{font-size:30px;line-height:1.1}
+.cta p{font-size:14px;color:#c6d0d9;margin-top:6px;max-width:52ch}
+.cta .btn{background:var(--sand);color:var(--navy)}
+.cta .btn:hover{background:#b9a688}
+
+@media(max-width:820px){
+  .mosaic{grid-template-columns:repeat(2,1fr)}
+  .t-hero,.t-tall,.t-quad,.t-half{grid-column:span 2;min-height:230px}
+  .gated{grid-template-columns:1fr}
+  .intro h1{font-size:36px}
+  .t-quad .label p{display:none}   /* headings only on mobile — no crowding */
+}
+</style>
+</head>
+<body>
+
+<div class="screenlabel">All The Venues — Event Types page · design preview (imagery = placeholders)</div>
+
+<!-- header -->
+<header class="nav"><div class="wrap">
+  <div class="logo">All The <span class="m">Venues</span></div>
+  <nav class="r">
+    <a>Venues</a>
+    <a class="on">Event Types</a>
+    <a>Venue Providers</a>
+    <a class="btn" style="padding:8px 16px">Make an enquiry</a>
+  </nav>
+</div></header>
+
+<div class="wrap">
+
+  <!-- intro -->
+  <section class="intro">
+    <div class="eyebrow">Find your venue by occasion</div>
+    <h1>What are you planning?</h1>
+    <p>Start with the kind of event you're hosting — we'll show you the UAE venues suited to it,
+       and connect you to the right people through one simple enquiry.</p>
+  </section>
+
+  <!-- secondary enquiry bridge (for users who already know what they need) -->
+  <div class="bridge">
+    <p><b>Already know what you need?</b> Share your event details and we'll help match you with suitable venues.</p>
+    <a class="btn">Make an enquiry</a>
+  </div>
+
+  <!-- FEATURED MOSAIC (6 populated types) -->
+  <section class="mosaic">
+
+    <!-- Wedding — hero -->
+    <a class="tile t-hero">
+      <div class="img g1"></div><div class="scrim"></div>
+      <span class="count">32 venues</span>
+      <div class="ph"><i class="pi fa-solid fa-ring"></i><span class="spec">Image · Wedding · 3:2 · 1600px+</span></div>
+      <div class="label">
+        <h3>Weddings</h3>
+        <p>Ballrooms, gardens and waterfront settings for the celebration of a lifetime.</p>
+      </div>
+    </a>
+
+    <!-- Corporate — tall -->
+    <a class="tile t-tall">
+      <div class="img g2"></div><div class="scrim"></div>
+      <span class="count">41 venues</span>
+      <div class="ph"><i class="pi fa-solid fa-briefcase"></i><span class="spec">Image · Corporate · 3:2</span></div>
+      <div class="label">
+        <h3>Corporate Events</h3>
+        <p>Polished spaces for offsites, town halls and company milestones.</p>
+      </div>
+    </a>
+
+    <!-- second row: four quads -->
+    <a class="tile t-quad">
+      <div class="img g3"></div><div class="scrim"></div>
+      <span class="count">18 venues</span>
+      <div class="ph"><i class="pi fa-solid fa-microphone-lines"></i><span class="spec">Image · Conference · 3:2</span></div>
+      <div class="label"><h3>Conferences</h3><p>Large-format venues for talks, panels and delegate experiences.</p></div>
+    </a>
+    <a class="tile t-quad">
+      <div class="img g4"></div><div class="scrim"></div>
+      <span class="count">14 venues</span>
+      <div class="ph"><i class="pi fa-solid fa-rocket"></i><span class="spec">Image · Product Launch · 3:2</span></div>
+      <div class="label"><h3>Product Launches</h3><p>High-impact spaces for reveals, showcases and brand moments.</p></div>
+    </a>
+    <a class="tile t-quad">
+      <div class="img g5"></div><div class="scrim"></div>
+      <span class="count">27 venues</span>
+      <div class="ph"><i class="pi fa-solid fa-champagne-glasses"></i><span class="spec">Image · Private Party · 3:2</span></div>
+      <div class="label"><h3>Private Parties</h3><p>Intimate settings for birthdays, anniversaries and celebrations.</p></div>
+    </a>
+    <a class="tile t-quad">
+      <div class="img g6"></div><div class="scrim"></div>
+      <span class="count">11 venues</span>
+      <div class="ph"><i class="pi fa-solid fa-store"></i><span class="spec">Image · Exhibition · 3:2</span></div>
+      <div class="label"><h3>Exhibitions</h3><p>Flexible spaces for showcases, displays and visitor flow.</p></div>
+    </a>
+  </section>
+
+  <!-- GATED (empty) types: rendered only when they have >=1 published venue -->
+  <section class="gated-band">
+    <div class="gh"><i class="fa-solid fa-circle-info"></i>
+      These appear automatically once venues are tagged to them — hidden from the public page until then.</div>
+    <div class="gated">
+      <div class="gcard">
+        <div>
+          <div class="gi"><i class="fa-solid fa-glass-cheers"></i></div>
+          <h4>Gala Dinners</h4>
+          <p>Grand, dressed-to-impress settings for award nights and fundraisers.</p>
+          <span class="pill">Appears when tagged</span>
+        </div>
+      </div>
+      <div class="gcard">
+        <div>
+          <div class="gi"><i class="fa-solid fa-anchor"></i></div>
+          <h4>Yacht Events</h4>
+          <p>Charter decks and marina views for events out on the water.</p>
+          <span class="pill">Appears when tagged</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- closing CTA -->
+  <section class="cta">
+    <div>
+      <h2>Not sure which fits?</h2>
+      <p>Tell us about your event and we'll point you to the right venues and providers.</p>
+    </div>
+    <a class="btn">Get help finding a venue</a>
+  </section>
+
+</div>
+
+<!-- design notes -->
+<div class="note">
+  <b>How this page behaves</b><br>
+  • <b>Featured cards (6):</b> Wedding, Corporate, Conference, Product Launch, Private Party, Exhibition —
+    each a full-bleed image tile that links to the matching <code>/venues?event_type=…</code> filter.<br>
+  • <b>Gated cards (2):</b> Gala Dinner &amp; Yacht Event render <b>only when they have ≥1 published venue</b>.
+    Until you tag venues, they stay hidden from the public page (the dashed state above is a build-note, not
+    what visitors see). No code change needed to switch them on — just tag venues.<br>
+  • <b>Enquiry bridges:</b> a slim bar under the intro ("Already know what you need?") for planners who
+    don't want to browse, plus the "Not sure which fits?" strip at the bottom — both route into the
+    assisted enquiry flow.<br>
+  • <b>Venue counts (rule):</b> a count renders only when it's reasonably strong (build threshold ≈ ≥5
+    venues; tunable). Below that — and for a just-activated Gala/Yacht — the pill reads <b>"Explore
+    venues"</b> instead of a weak number, so no category looks thin. Numbers shown here are illustrative.<br>
+  • <b>Hover:</b> the approved card lift + a slow image zoom. On the four smaller tiles the descriptor
+    fades in on hover (desktop); mobile shows headings only to avoid crowding.<br><br>
+  <b>Image spec (for the photos you're preparing)</b><br>
+  • Aspect <b>3:2 landscape</b>, min <b>1600px</b> wide, exported <b>WebP</b> (re-encoded on upload anyway).<br>
+  • Keep the <b>lower-left third calmer</b> — that's where the name + descriptor sit over a dark scrim.<br>
+  • Subject weighted center/right; consistent light + mood across all six so the grid reads as one set.<br>
+  • One image per featured type (6 now; +2 for Gala/Yacht when you're ready).<br><br>
+  <b>Not on this page</b> (still available as <code>/venues</code> filters): Meeting, Training, Networking,
+  Engagement, Birthday, Outdoor Event, Other.
+</div>
+
+</body>
+</html>

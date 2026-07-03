@@ -63,6 +63,26 @@ function venue_event_types(PDO $pdo): array
     )->fetchAll();
 }
 
+/**
+ * Published-venue count per active event type: [slug => (int)n]. Only types
+ * with at least one published venue appear (INNER JOINs), so the Event Types
+ * page can gate on presence and show a count.
+ */
+function event_type_published_counts(PDO $pdo): array
+{
+    $rows = $pdo->query(
+        "SELECT et.slug AS slug, COUNT(DISTINCT vet.venue_id) AS n
+         FROM event_types et
+         JOIN venue_event_types vet ON vet.event_type_id = et.id
+         JOIN venues v ON v.id = vet.venue_id AND v.status = 'published'
+         WHERE et.active = 1
+         GROUP BY et.slug"
+    )->fetchAll();
+    $out = [];
+    foreach ($rows as $r) { $out[$r['slug']] = (int)$r['n']; }
+    return $out;
+}
+
 function venue_types_all(PDO $pdo): array
 {
     return $pdo->query(

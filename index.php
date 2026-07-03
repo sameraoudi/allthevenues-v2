@@ -71,10 +71,11 @@ if (preg_match('#^/partners/([a-z0-9-]+)$#', $path, $m)) {
 
 // Static (exact-match) routes.
 $routes = [
-    '/'          => __DIR__ . '/views/home.php',
-    '/venues'    => __DIR__ . '/views/venues.php',
-    '/providers' => __DIR__ . '/views/partners.php',
-    '/enquire'   => __DIR__ . '/views/enquire.php',
+    '/'            => __DIR__ . '/views/home.php',
+    '/venues'      => __DIR__ . '/views/venues.php',
+    '/providers'   => __DIR__ . '/views/partners.php',
+    '/event-types' => __DIR__ . '/views/event-types.php',
+    '/enquire'     => __DIR__ . '/views/enquire.php',
 ];
 
 if (isset($routes[$path])) {
