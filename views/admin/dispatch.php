@@ -37,6 +37,13 @@ if ($sub === 'users' || strncmp($sub, 'users/', 6) === 0) {
     return;
 }
 
+// Provider (partner) management (list / edit) — staff. Own dynamic sub-routes.
+if ($sub === 'partners' || strncmp($sub, 'partners/', 9) === 0) {
+    auth_require_role(['admin', 'editor']);
+    require __DIR__ . '/partners.php';
+    return;
+}
+
 switch ($sub) {
 
     /* ---- Login (public) -------------------------------------------------- */
@@ -87,18 +94,6 @@ switch ($sub) {
         $page_title         = 'Dashboard — Admin';
         $admin_page_title   = 'Dashboard';
         $admin_content_view = __DIR__ . '/dashboard-content.php';
-        require __DIR__ . '/layout.php';
-        break;
-
-    /* ---- Providers (provider content) — staff placeholder --------------- */
-    case 'partners':
-        auth_require_role(['admin', 'editor']);
-        $admin_active       = 'partners';
-        $sectionTitle       = 'Providers';
-        $page_title         = 'Providers — Admin';
-        $admin_page_title   = 'Providers';
-        $admin_notfound     = false;
-        $admin_content_view = __DIR__ . '/placeholder-content.php';
         require __DIR__ . '/layout.php';
         break;
 
