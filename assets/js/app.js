@@ -60,6 +60,18 @@
     }
   });
 
+  // Confirm before submitting a destructive form (e.g. delete image).
+  // Progressive enhancement — without JS the form just submits.
+  document.addEventListener('submit', function (ev) {
+    var form = ev.target;
+    if (form && typeof form.getAttribute === 'function') {
+      var msg = form.getAttribute('data-confirm');
+      if (msg && !window.confirm(msg)) {
+        ev.preventDefault();
+      }
+    }
+  });
+
   // Listing: auto-submit the sort form on change (progressive enhancement;
   // a visible Sort button remains for no-JS).
   document.addEventListener('change', function (ev) {

@@ -17,9 +17,18 @@ require_once __DIR__ . '/../../lib/audit.php';
 require_once __DIR__ . '/../../lib/sanitize.php';
 require_once __DIR__ . '/../../lib/venues.php';
 require_once __DIR__ . '/../../lib/venue_admin.php';
+require_once __DIR__ . '/../../lib/venue_images_admin.php';
 
 $me   = auth_current_user();
-$rest = trim(substr((string)$sub, strlen('venues')), '/');   // '' | 'edit'
+$rest = trim(substr((string)$sub, strlen('venues')), '/');   // '' | 'edit' | 'images/*'
+
+/* ===================== IMAGE MANAGER ACTIONS (U4b) ===================== */
+// POST-only image mutations (upload/primary/reorder/alt/delete). The controller
+// validates CSRF, audits, and redirects back to the venue edit page.
+if (strncmp($rest, 'images/', 7) === 0) {
+    require __DIR__ . '/venue-images.php';
+    return;
+}
 
 /* ============================ LIST ====================================== */
 if ($rest === '') {
@@ -156,6 +165,7 @@ if ($rest === 'edit') {
 
     $venueTypes = venue_types_all($pdo);
     $emirates   = venue_emirates($pdo);
+    $images     = venue_images_admin_list($pdo, $id);   // for the image manager
 
     $admin_active       = 'venues';
     $page_title         = 'Edit venue — Admin';
