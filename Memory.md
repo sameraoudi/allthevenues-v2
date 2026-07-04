@@ -8,9 +8,10 @@ and `VISION.md` (north star).*
 
 ## Current state (as of 3 Jul 2026)
 
-> Latest closeout: **U4d provider management complete + the `/event-types` page shipped**, all verified on
-> prod. Providers now fully editable in admin (Verified/Featured, type, email, about, website, status,
-> single cover image, commission); a new editorial Event Types mosaic replaced the dead navbar link.
+> Latest closeout: **All of U4 complete.** U4c add-venue create + the completed venue edit form (provider,
+> website, map, contact) shipped on top of U4a/b/d — so venues *and* providers are now fully managed in
+> admin. Also this stretch: keyword search, mobile-nav fix, and a warmed-up branded 404. Next: **U5** (SEO
+> landing pages + real Locations page), then **U6** (launch cutover).
 
 **Live on `staging.allthevenues.com`.** The full public shopfront + the admin to run it are built and
 verified on staging. Core loop works end-to-end: browse → enquire → admin inbox → context-aware forward.
@@ -24,6 +25,8 @@ verified on staging. Core loop works end-to-end: browse → enquire → admin in
   emirate), carried through sort/pagination as a removable chip.
 - **Header nav** works on mobile (hamburger → full-width dropdown panel; Shortlist hidden ≤900px; desktop
   unchanged). The dead **Locations** link was removed (a real Locations browse page is planned for U5).
+- **404** is a branded not-found page (Coastal UAE styling, map-pin icon, `.atv-btn` CTAs) — shared across
+  all not-found routes.
 - **Venue Providers:** `/providers` image-led cards (cover = **provider's own cover image if set, else** best
   venue image; type-icon chip; gradient fallback rare) + `/providers/{slug}` cover+avatar header, "Venues by
   this provider", provider info panel, managed enquiry panel. `/partners` → `/providers` 301. No public PII.
@@ -39,7 +42,11 @@ verified on staging. Core loop works end-to-end: browse → enquire → admin in
   gates, `/admin/users` management (create the assistant), audit_log.
 - Lead inbox: list/filter/detail/status, CSV export, notes; **context-aware forwarding** (defaults the
   partner + email from the enquiry's linked venue).
-- **U4a venue edit** (core fields + the new `highlights` field) with audit.
+- **Venue admin (U4a/U4c)** — full edit form + **add-venue create** (`/admin/venues/new`, auto-slug, draft
+  default, then land on edit for images). Fields via a shared `_venue-fields.php` partial: provider
+  assignment (`partner_id`, for routing), classification, capacity/pricing, website, **map_embed** (Google-
+  Maps-iframe guarded, stored raw), rich-text content, and an **internal contact** (name/email/phone, never
+  public). Audit on create + update.
 - **U4b venue image management** (secure upload via `lib/upload`, WebP re-encode of full + thumb,
   set-primary, reorder, alt text, delete). Verified on prod.
 - **U4d provider management** at `/admin/partners` (list + edit): org/slug/status/emirate/city/contact,
@@ -52,18 +59,18 @@ HTML). `venues.website` backfilled 98/98. `venue_event_types` seeded 96/98 from 
 filter now works). Filter logic corrected (guest-band overlap; indoor/outdoor includes "both"). **Schema
 grown for providers:** `partners.is_verified` (real column, replaces the `is_featured` alias),
 `cover_image_path`/`cover_thumb_path`/`cover_image_alt`, `commission_rate DECIMAL(5,2) NULL` (NULL=unknown /
-0=none / >0=rate), and `partner_group` repurposed as the editable type. Migrations 008–010 applied on prod.
-Samer began filling provider emails + adding providers via the new admin.
+0=none / >0=rate), and `partner_group` repurposed as the editable type. **Venues** gained
+`contact_name`/`contact_email`/`contact_phone` (migration 011). Migrations 008–011 applied on prod. Samer
+began filling provider emails + adding providers/venues via the new admin.
 
-**In progress:** none — U4d + Event Types closed. Next up: **U4c** (add-venue) or **U5** (SEO landing pages).
+**In progress:** none — **all of U4 closed** (U4a/b/c/d). Next up: **U5** (SEO landing pages + Locations), then
+**U6** (launch cutover).
 
 ---
 
 ## Open work
 
-**Admin build-out (U4):**
-- **U4c** add-venue (create): reuse the U4b upload path; include the fields Samer flagged missing (images,
-  location/map, website, contact person). New build. *(Only remaining U4 item — U4a/b/d all shipped.)*
+**Admin build-out (U4): ✅ complete** (U4a edit, U4b images, U4c add-venue, U4d provider management).
 
 **Monetization & tiering (Phase 2/3 — see `docs/ATV-TIERS.md`):**
 - Homepage **Featured Venues** driven by `is_featured` (DB) + a **Venue of the Month** editorial slot.
@@ -138,6 +145,12 @@ Samer began filling provider emails + adding providers via the new admin.
   carried through sort+pagination); mobile-nav fix (hamburger → full-width dropdown panel, Shortlist hidden
   ≤900px, desktop unchanged); removed the dead **Locations** nav link (real page deferred to U5); shorter
   hero tagline.
+- **U4c add-venue + completed venue edit** (finishes U4): migration 011 (venues contact columns); exposed
+  the fields the edit form was missing — provider (`partner_id`), website, `map_embed` (guarded, raw),
+  internal contact — via a shared `_venue-fields.php` partial; new `/admin/venues/new` create flow
+  (auto-unique slug, draft default, audit 'create', redirect to edit for images) + "New venue" button.
+- **Branded 404** — Coastal UAE styling, map-pin icon, friendlier copy, `.atv-btn` CTAs (replaces bare
+  Bootstrap).
 
 **Late Jun 2026 (rebuild through U3):**
 - U0 scaffold (front controller, `lib/` ported, tailored CSP, self-hosted assets).
