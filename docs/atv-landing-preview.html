@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>All The Venues — Locations page (design preview)</title>
+<title>All The Venues — Event×City landing page (design preview)</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <style>
@@ -13,8 +13,11 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--pearl);color:var(
 h1,h2,h3,h4,.serif{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600}
 .wrap{max-width:1160px;margin:0 auto;padding:0 24px}
 a{color:inherit;text-decoration:none}
-.btn{display:inline-block;background:var(--action);color:#fff;padding:11px 20px;border-radius:8px;font-weight:600;font-size:14px;border:none;cursor:pointer}
+.btn{display:inline-block;background:var(--action);color:#fff;padding:12px 22px;border-radius:8px;font-weight:600;font-size:14px;border:none;cursor:pointer}
 .btn:hover{background:var(--action-hover)}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--action)}
+.btn-sand{background:var(--sand);color:var(--navy)}
+.btn-sand:hover{background:#b9a688}
 .screenlabel{background:var(--navy);color:var(--sand);font-family:'Cormorant Garamond',serif;font-size:20px;padding:12px 24px}
 .note{max-width:1160px;margin:22px auto 0;padding:16px 20px;font-size:13.5px;color:var(--muted);border-left:3px solid var(--sand);background:#fff;line-height:1.7}
 .note b{color:var(--navy)} .note code{background:#eef1f4;padding:1px 6px;border-radius:4px;font-size:12.5px}
@@ -24,133 +27,173 @@ a{color:inherit;text-decoration:none}
 .nav .wrap{display:flex;align-items:center;justify-content:space-between;height:66px}
 .logo{font-family:'Cormorant Garamond',serif;font-size:22px}.logo .m{color:var(--sand)}
 .nav .r{display:flex;gap:16px;align-items:center;font-size:14px;color:#d7dde3}
-.nav .r a.on{color:#fff;font-weight:600}
+
+/* breadcrumb */
+.crumb{font-size:13px;color:var(--muted);padding:16px 0 4px}
+.crumb a:hover{color:var(--action)} .crumb b{color:var(--navy);font-weight:500}
 
 /* intro */
-.intro{text-align:center;padding:52px 0 12px}
-.intro .eyebrow{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--action);font-weight:600}
-.intro h1{font-size:46px;line-height:1.05;margin:10px 0 12px}
-.intro p{font-size:16px;color:var(--muted);max-width:660px;margin:0 auto}
-/* quick-jump location chips */
-.loc-chips{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 10px;margin-top:20px}
-.loc-chips a{font-size:13px;color:var(--action);background:#fff;border:1px solid var(--line);padding:7px 15px;border-radius:20px}
-.loc-chips a:hover{background:#eef1f4}
+.lp-intro{padding:14px 0 26px;border-bottom:1px solid var(--line)}
+.lp-intro .eyebrow{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--action);font-weight:600}
+.lp-intro h1{font-size:42px;line-height:1.08;margin:8px 0 12px;max-width:18ch}
+.lp-intro p{font-size:16px;color:var(--muted);max-width:70ch}
+.lp-intro .meta{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:18px}
+.lp-intro .cnt{font-size:13px;font-weight:600;color:var(--navy);background:#eef1f4;border:1px solid var(--line);padding:6px 13px;border-radius:20px}
 
-/* mosaic (mirrors Event Types) */
-.mosaic{display:grid;grid-template-columns:repeat(12,1fr);gap:18px;padding:34px 0 10px}
-.tile{position:relative;border-radius:18px;overflow:hidden;display:block;box-shadow:0 8px 24px rgba(14,27,42,.08);border:1px solid var(--line);transition:transform .28s ease,box-shadow .28s ease}
-.tile:hover{transform:translateY(-4px);box-shadow:0 16px 34px rgba(14,27,42,.16)}
-.tile .img{position:absolute;inset:0;background:center/cover no-repeat;transition:transform .5s ease}
-.tile:hover .img{transform:scale(1.06)}
-.tile .scrim{position:absolute;inset:0;background:linear-gradient(to top,rgba(14,27,42,.82) 0%,rgba(14,27,42,.35) 38%,rgba(14,27,42,0) 66%)}
-.tile .label{position:absolute;left:22px;right:22px;bottom:20px;color:#fff;z-index:2}
-.tile .label h3{font-size:30px;line-height:1.05;letter-spacing:.3px}
-.tile .label p{font-size:13.5px;color:#e4ebf1;margin-top:5px;max-width:34ch;opacity:.92}
-.t-quad .label p{max-height:0;opacity:0;overflow:hidden;margin-top:0;transition:opacity .25s ease,max-height .25s ease,margin-top .25s ease}
-.tile.t-quad:hover .label p{max-height:64px;opacity:.92;margin-top:5px}
-.tile .count{position:absolute;top:16px;right:16px;z-index:2;background:rgba(14,27,42,.60);color:#fff;font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px;backdrop-filter:blur(3px);border:1px solid rgba(255,255,255,.18)}
-.t-hero{grid-column:span 8;min-height:420px}
-.t-tall{grid-column:span 4;min-height:420px}
-.t-quad{grid-column:span 3;min-height:250px}
+/* results grid (reuses the venue-card look) */
+.sec{padding:30px 0}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px}
+.sec-head h2{font-size:26px} .sec-head a{font-size:13px;color:var(--action);font-weight:600}
+.vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.vc{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(14,27,42,.06);display:flex;flex-direction:column;transition:transform .25s,box-shadow .25s}
+.vc:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(14,27,42,.14)}
+.vc__img{height:160px;position:relative;background-position:center;background-size:cover}
+.g1{background:linear-gradient(135deg,#3a5a78,#20364c)}.g2{background:linear-gradient(135deg,#4a6b7d,#2b4152)}.g3{background:linear-gradient(135deg,#5a6f86,#33445a)}.g4{background:linear-gradient(135deg,#6a5f74,#3c3550)}.g5{background:linear-gradient(135deg,#417083,#284a5c)}.g6{background:linear-gradient(135deg,#7a6a58,#4a3f36)}
+.vc__badge{position:absolute;top:10px;left:10px;background:var(--sand);color:#5a4a30;font-size:11px;font-weight:600;letter-spacing:.4px;padding:3px 9px;border-radius:6px}
+.vc__badge.verified{background:#e7eef3;color:var(--action)}
+.vc__body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.vc__body h3{font-size:20px;line-height:1.12}
+.vc__tl{font-size:12.5px;color:var(--muted)} .vc__tl i{color:var(--blue);margin-right:4px}
+.vc__meta{display:flex;gap:14px;font-size:12.5px;color:var(--navy);margin-top:2px}
+.vc__foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:10px;margin-top:auto}
+.vc__price{font-size:12.5px;color:var(--muted)}
+.vc__acts{display:inline-flex;align-items:center;gap:10px}
+.vc__lk{font-size:13px;color:var(--action);font-weight:600}
+.vc__lk:hover{color:var(--action-hover)}
+.vc__enq{font-size:12.5px;font-weight:600;color:var(--navy);background:var(--sand);padding:5px 12px;border-radius:6px}
+.vc__enq:hover{background:#b9a688}
 
-/* placeholder standing in for the real venue photo */
-.ph{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:rgba(255,255,255,.85);text-align:center;padding:20px;height:100%}
-.ph .pi{font-size:26px;opacity:.9}
-.ph .spec{font-size:11px;letter-spacing:.6px;text-transform:uppercase;background:rgba(255,255,255,.14);padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.25)}
-.g1{background:linear-gradient(135deg,#3a5a78,#20364c)}.g2{background:linear-gradient(135deg,#4a6b7d,#2b4152)}.g3{background:linear-gradient(135deg,#5a6f86,#33445a)}.g4{background:linear-gradient(135deg,#6a5f74,#3c3550)}.g5{background:linear-gradient(135deg,#417083,#284a5c)}.g6{background:linear-gradient(135deg,#7a6a58,#4a3f36)}.g7{background:linear-gradient(135deg,#4c6a5f,#2b3f38)}
+/* internal links */
+.links{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px}
+.links h2{font-size:22px;margin-bottom:6px}
+.links p{font-size:13.5px;color:var(--muted);margin-bottom:14px}
+.links__group{margin-bottom:16px}
+.links__group b{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:8px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--action);background:#eef1f4;border:1px solid var(--line);padding:7px 13px;border-radius:20px;margin:0 8px 8px 0}
+.pill:hover{background:#e3e9ef}
 
-/* closing CTA */
-.cta{margin:40px 0 60px;background:var(--navy);border-radius:18px;color:#fff;padding:38px 34px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
-.cta h2{font-size:30px;line-height:1.1} .cta p{font-size:14px;color:#c6d0d9;margin-top:6px;max-width:52ch}
-.cta .btn{background:var(--sand);color:var(--navy)}.cta .btn:hover{background:#b9a688}
+/* FAQ */
+.faq{max-width:820px}
+.faq h2{font-size:26px;margin-bottom:14px}
+.faq details{background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.faq summary{cursor:pointer;padding:16px 18px;font-weight:600;font-size:15px;color:var(--navy);list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";color:var(--action);font-size:20px;font-weight:400}
+.faq details[open] summary::after{content:"\2013"}
+.faq details[open] summary{border-bottom:1px solid var(--line)}
+.faq .ans{padding:14px 18px 18px;font-size:14px;color:var(--muted)}
 
-@media(max-width:820px){.mosaic{grid-template-columns:repeat(2,1fr)}.t-hero,.t-tall,.t-quad{grid-column:span 2;min-height:230px}.intro h1{font-size:36px}.t-quad .label p{display:none}}
+/* enquiry CTA */
+.cta{margin:36px 0 56px;background:var(--navy);border-radius:18px;color:#fff;padding:36px 32px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.cta h2{font-size:28px;line-height:1.12} .cta p{font-size:14px;color:#c6d0d9;margin-top:6px;max-width:52ch}
+
+@media(max-width:900px){.vgrid{grid-template-columns:1fr 1fr}.lp-intro h1{font-size:34px}}
+@media(max-width:600px){.vgrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
-<div class="screenlabel">All The Venues — Locations page · design preview (route: /locations · imagery = placeholders)</div>
+<div class="screenlabel">All The Venues — Event×City landing page · design preview (route: /venues/wedding-in-dubai)</div>
 
 <header class="nav"><div class="wrap">
   <div class="logo">All The <span class="m">Venues</span></div>
-  <nav class="r"><a>Venues</a><a>Event Types</a><a>Venue Providers</a><a class="on">Locations</a><a class="btn" style="padding:8px 16px">Enquire now</a></nav>
+  <nav class="r"><a>Venues</a><a>Event Types</a><a>Venue Providers</a><a>Locations</a><a class="btn" style="padding:8px 16px">Enquire now</a></nav>
 </div></header>
 
 <div class="wrap">
 
-  <section class="intro">
-    <div class="eyebrow">Browse UAE venues by location</div>
-    <h1>Where's your event?</h1>
-    <p>Explore venues across the Emirates, from Dubai's waterfront ballrooms and Abu Dhabi's grand halls to
-       beach resorts, mountain retreats, and private coastal settings. Pick a location to see what's available.</p>
-    <div class="loc-chips">
-      <a>Dubai</a><a>Abu Dhabi</a><a>Sharjah</a><a>Ras Al Khaimah</a><a>Ajman</a><a>Fujairah</a>
+  <!-- breadcrumb -->
+  <div class="crumb"><a>Home</a> › <a>Venues</a> › <b>Wedding venues in Dubai</b></div>
+
+  <!-- intro (templated from event × city) -->
+  <section class="lp-intro">
+    <div class="eyebrow">Wedding venues · Dubai</div>
+    <h1>Wedding venues in Dubai</h1>
+    <p>Explore Dubai wedding venues for every style of celebration, from waterfront ballrooms and garden
+       terraces to rooftop settings. Compare capacity, setting, and key details, then send one simple
+       enquiry through All The Venues.</p>
+    <div class="meta">
+      <span class="cnt">32 wedding venues in Dubai</span>
+      <a class="btn btn-sand">Make an enquiry</a>
+      <a class="btn btn-ghost">Browse all venues</a>
     </div>
   </section>
 
-  <section class="mosaic">
-    <!-- Dubai — hero -->
-    <a class="tile t-hero">
-      <div class="img g1"></div><div class="scrim"></div>
-      <span class="count">76 venues</span>
-      <div class="ph"><i class="pi fa-solid fa-city"></i><span class="spec">City image · dubai.webp</span></div>
-      <div class="label"><h3>Dubai</h3><p>From the Marina to Downtown and Palm Jumeirah, Dubai offers the UAE's widest choice of event venues.</p></div>
-    </a>
-    <!-- Abu Dhabi — tall -->
-    <a class="tile t-tall">
-      <div class="img g2"></div><div class="scrim"></div>
-      <span class="count">18 venues</span>
-      <div class="ph"><i class="pi fa-solid fa-landmark-dome"></i><span class="spec">City image · abu-dhabi.webp</span></div>
-      <div class="label"><h3>Abu Dhabi</h3><p>Grand halls, island resorts, and waterfront venues across the capital.</p></div>
-    </a>
-    <!-- quads -->
-    <a class="tile t-quad">
-      <div class="img g3"></div><div class="scrim"></div><span class="count">9 venues</span>
-      <div class="ph"><i class="pi fa-solid fa-mosque"></i><span class="spec">sharjah.webp</span></div>
-      <div class="label"><h3>Sharjah</h3><p>Cultural venues, hotel ballrooms, and banquet halls close to Dubai.</p></div>
-    </a>
-    <a class="tile t-quad">
-      <div class="img g4"></div><div class="scrim"></div><span class="count">Explore venues</span>
-      <div class="ph"><i class="pi fa-solid fa-umbrella-beach"></i><span class="spec">ajman.webp</span></div>
-      <div class="label"><h3>Ajman</h3><p>Beachfront hotels and boutique settings along the northern coast.</p></div>
-    </a>
-    <a class="tile t-quad">
-      <div class="img g5"></div><div class="scrim"></div><span class="count">7 venues</span>
-      <div class="ph"><i class="pi fa-solid fa-mountain-sun"></i><span class="spec">ras-al-khaimah.webp</span></div>
-      <div class="label"><h3>Ras Al Khaimah</h3><p>Mountain, desert, and beach resorts for destination-style events.</p></div>
-    </a>
-    <a class="tile t-quad">
-      <div class="img g6"></div><div class="scrim"></div><span class="count">Explore venues</span>
-      <div class="ph"><i class="pi fa-solid fa-water"></i><span class="spec">fujairah.webp</span></div>
-      <div class="label"><h3>Fujairah</h3><p>East-coast resorts and beachfront venues on the Gulf of Oman.</p></div>
-    </a>
+  <!-- results (reuses the standard venue card partial) -->
+  <section class="sec">
+    <div class="sec-head">
+      <h2>Top wedding venues in Dubai</h2>
+      <a>View all 32 &rarr;</a>
+    </div>
+    <div class="vgrid">
+      <?php /* mock cards — real page renders the venue-card partial for event_type=wedding & emirate=dubai */ ?>
+      <article class="vc"><div class="vc__img g1"></div><div class="vc__body"><h3>The Pearl Ballroom</h3><div class="vc__tl"><i class="fa-solid fa-location-dot"></i>Palm Jumeirah, Dubai</div><div class="vc__meta"><span><i class="fa-solid fa-users"></i> up to 400</span></div><div class="vc__foot"><span class="vc__price">from AED 45,000</span><span class="vc__acts"><a class="vc__lk">View details</a><a class="vc__enq">Enquire</a></span></div></div></article>
+      <article class="vc"><div class="vc__img g2"><span class="vc__badge verified">Verified</span></div><div class="vc__body"><h3>Marina Garden Terrace</h3><div class="vc__tl"><i class="fa-solid fa-location-dot"></i>Dubai Marina</div><div class="vc__meta"><span><i class="fa-solid fa-users"></i> up to 250</span></div><div class="vc__foot"><span class="vc__price">from AED 30,000</span><span class="vc__acts"><a class="vc__lk">View details</a><a class="vc__enq">Enquire</a></span></div></div></article>
+      <article class="vc"><div class="vc__img g3"><span class="vc__badge">Featured</span></div><div class="vc__body"><h3>Downtown Sky Lounge</h3><div class="vc__tl"><i class="fa-solid fa-location-dot"></i>Downtown Dubai</div><div class="vc__meta"><span><i class="fa-solid fa-users"></i> up to 180</span></div><div class="vc__foot"><span class="vc__price">from AED 38,000</span><span class="vc__acts"><a class="vc__lk">View details</a><a class="vc__enq">Enquire</a></span></div></div></article>
+      <article class="vc"><div class="vc__img g4"></div><div class="vc__body"><h3>Jumeirah Beach Pavilion</h3><div class="vc__tl"><i class="fa-solid fa-location-dot"></i>Jumeirah, Dubai</div><div class="vc__meta"><span><i class="fa-solid fa-users"></i> up to 320</span></div><div class="vc__foot"><span class="vc__price">from AED 52,000</span><span class="vc__acts"><a class="vc__lk">View details</a><a class="vc__enq">Enquire</a></span></div></div></article>
+      <article class="vc"><div class="vc__img g5"></div><div class="vc__body"><h3>Creek Banquet Hall</h3><div class="vc__tl"><i class="fa-solid fa-location-dot"></i>Deira, Dubai</div><div class="vc__meta"><span><i class="fa-solid fa-users"></i> up to 500</span></div><div class="vc__foot"><span class="vc__price">from AED 28,000</span><span class="vc__acts"><a class="vc__lk">View details</a><a class="vc__enq">Enquire</a></span></div></div></article>
+      <article class="vc"><div class="vc__img g6"></div><div class="vc__body"><h3>Desert Rose Estate</h3><div class="vc__tl"><i class="fa-solid fa-location-dot"></i>Al Barari, Dubai</div><div class="vc__meta"><span><i class="fa-solid fa-users"></i> up to 220</span></div><div class="vc__foot"><span class="vc__price">from AED 41,000</span><span class="vc__acts"><a class="vc__lk">View details</a><a class="vc__enq">Enquire</a></span></div></div></article>
+    </div>
   </section>
 
+  <!-- internal links (SEO cross-linking, auto-generated) -->
+  <section class="sec">
+    <div class="links">
+      <h2>Explore more</h2>
+      <p>Explore related venue searches across the UAE.</p>
+      <div class="links__group">
+        <b>Wedding venues in other emirates</b>
+        <a class="pill">Abu Dhabi</a><a class="pill">Sharjah</a><a class="pill">Ras Al Khaimah</a><a class="pill">Ajman</a><a class="pill">Fujairah</a>
+      </div>
+      <div class="links__group">
+        <b>Other events in Dubai</b>
+        <a class="pill">Corporate events</a><a class="pill">Conferences</a><a class="pill">Private parties</a><a class="pill">Product launches</a><a class="pill">Exhibitions</a>
+      </div>
+      <div class="links__group">
+        <b>Browse by</b>
+        <a class="pill"><i class="fa-solid fa-shapes"></i> All event types</a><a class="pill"><i class="fa-solid fa-map-location-dot"></i> All locations</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ (templated per event × city, + FAQPage JSON-LD in the real build) -->
+  <section class="sec faq">
+    <h2>Wedding venues in Dubai — FAQs</h2>
+    <details open><summary>How much do wedding venues in Dubai cost?</summary><div class="ans">Wedding venue costs in Dubai vary by guest count, date, package, and venue style. Some venues work with a minimum spend, while others offer packages or custom quotes. Share your event details and we'll help match you with suitable options.</div></details>
+    <details><summary>What size weddings can these venues host?</summary><div class="ans">The venues listed here host anywhere from intimate gatherings of 50 to large celebrations of 500+ guests. Use the guest-count filter on the venues page to narrow to the right capacity.</div></details>
+    <details><summary>Which areas of Dubai have wedding venues?</summary><div class="ans">Popular areas include Palm Jumeirah, Dubai Marina, Downtown, Jumeirah and Al Barari — spanning ballrooms, beachfront, garden and rooftop settings.</div></details>
+    <details><summary>How do I book a wedding venue through All The Venues?</summary><div class="ans">Send one enquiry through the site. We route it to the right venue provider on your behalf — you share your details once and we help you reach the venues that fit.</div></details>
+  </section>
+
+  <!-- enquiry CTA -->
   <section class="cta">
     <div>
-      <h2>Not sure which area fits?</h2>
-      <p>Tell us about your event and we'll suggest venues in the right location.</p>
+      <h2>Planning a wedding in Dubai?</h2>
+      <p>Tell us your date, guest count, and style, and we'll help connect you with suitable Dubai wedding venues.</p>
     </div>
-    <a class="btn">Get help finding a venue</a>
+    <a class="btn btn-sand">Make an enquiry</a>
   </section>
 
 </div>
 
 <div class="note">
   <b>How this page works</b><br>
-  • <b>Route:</b> <code>/locations</code>; the "Locations" nav link (removed earlier) comes back pointing here.<br>
-  • <b>One tile per emirate</b> from the <code>emirates</code> table, rendered only when it has <b>≥1 published
-    venue</b> (empty emirates are hidden). Each tile links to <code>/venues?emirate={slug}</code>. A
-    quick-jump chip row under the intro echoes the tiles.<br>
-  • <b>Cover = a provided city image</b> at <code>assets/img/locations/{emirate-slug}.webp</code> (Samer
-    supplies these). Fallback order: city image → a top venue photo from that emirate → seeded gradient.
-    Placeholders shown here.<br>
-  • <b>Al Ain stays out</b> of the emirate mosaic (it's a city within Abu Dhabi) — reserved for a future
-    "Popular areas / Browse by area" section, not forced into the emirate layout.<br>
-  • <b>Count rule</b> mirrors Event Types: a number when it's reasonably strong, else "Explore venues"
-    (Ajman / Fujairah shown that way here).<br>
-  • Mosaic hierarchy = Dubai hero, Abu Dhabi tall, the rest quads (by venue volume); hover reveals the
-    descriptor on quads (desktop), headings-only on mobile — consistent with the Event Types page.
+  • <b>Route:</b> <code>/venues/{event}-in-{emirate}</code>, e.g. <code>/venues/wedding-in-dubai</code>. The router
+    checks real venue slugs first, then this <code>-in-</code> pattern; the event + emirate slugs are validated
+    against the taxonomy (invalid → 404).<br>
+  • <b>Selective, not exhaustive:</b> we do NOT auto-publish every event×city combo. A landing page renders
+    only when the combo has <b>≥ a threshold of published venues</b>; a below-threshold combo <b>301-redirects
+    to the filtered venue search</b> (<code>/venues?event_type=…&emirate=…</code>) instead of showing a thin
+    page. Only qualifying combos go in the sitemap.<br>
+  • <b>Results:</b> the exact same venue-card partial as <code>/venues</code>, pre-filtered to
+    <code>event_type</code> + <code>emirate</code>; "View all" links to the full filtered listing. Each card
+    carries both <b>View details</b> and <b>Enquire</b>.<br>
+  • <b>Intro + FAQ are templated per event×city</b> from data. The FAQ also emits <b>FAQPage JSON-LD</b>
+    structured data for rich results.<br>
+  • <b>Internal links</b> are auto-generated: same event in sibling emirates, other events in this city, plus
+    All event types / All locations — strong internal linking for SEO.<br>
+  • <b>Head:</b> unique <code>&lt;title&gt;</code> + meta description + canonical (from U5-a). Imagery is the real
+    venue photos (gradients here are placeholders).
 </div>
 
 </body>
