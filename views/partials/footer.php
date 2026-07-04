@@ -32,7 +32,7 @@
       <div class="footer-col">
         <h4>Company</h4>
         <ul>
-          <li><a href="#" title="Coming soon">About us</a></li>
+          <li><a href="<?= e(base_url('about')) ?>">About us</a></li>
           <li><a href="#" title="Coming soon">Contact</a></li>
           <li><a href="#" title="Coming soon">Blog</a></li>
         </ul>
@@ -41,8 +41,9 @@
       <div class="footer-col">
         <h4>Legal</h4>
         <ul>
-          <li><a href="#" title="Coming soon">Privacy</a></li>
-          <li><a href="#" title="Coming soon">Terms</a></li>
+          <li><a href="<?= e(base_url('terms-of-use')) ?>">Terms of Use</a></li>
+          <li><a href="<?= e(base_url('privacy-policy')) ?>">Privacy Policy</a></li>
+          <li><a href="<?= e(base_url('cookie-policy')) ?>">Cookie Notice</a></li>
         </ul>
       </div>
     </div>

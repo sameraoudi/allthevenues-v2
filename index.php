@@ -79,6 +79,10 @@ $routes = [
     '/enquire'     => __DIR__ . '/views/enquire.php',
     '/become-a-venue-partner' => __DIR__ . '/views/become-partner.php',
     '/shortlist'   => __DIR__ . '/views/shortlist.php',
+    '/about'          => __DIR__ . '/views/page.php',
+    '/terms-of-use'   => __DIR__ . '/views/page.php',
+    '/privacy-policy' => __DIR__ . '/views/page.php',
+    '/cookie-policy'  => __DIR__ . '/views/page.php',
     '/sitemap.xml' => __DIR__ . '/views/sitemap.php',
     '/robots.txt'  => __DIR__ . '/views/robots.php',
 ];

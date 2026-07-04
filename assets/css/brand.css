@@ -547,6 +547,27 @@ select:focus-visible,
   .atv-sl-head h1 { font-size: 28px; }
 }
 
+/* ---- Info / legal prose (/about, /terms-of-use, /privacy-policy, …) ------ */
+.atv-legal { max-width: 760px; margin: 8px auto 8px; padding: 36px 0 64px; color: var(--ink); }
+.atv-legal h1 { font-family: var(--font-heading); font-weight: 600; font-size: 40px; line-height: 1.1; margin-bottom: 18px; }
+.atv-legal h2 { font-family: var(--font-heading); font-weight: 600; font-size: 26px; line-height: 1.2; margin: 34px 0 10px; }
+.atv-legal h3 { font-family: var(--font-heading); font-weight: 600; font-size: 20px; line-height: 1.25; margin: 22px 0 8px; }
+.atv-legal p { font-size: 15.5px; line-height: 1.75; margin: 0 0 16px; }
+.atv-legal ul { margin: 0 0 18px; padding-left: 22px; }
+.atv-legal li { font-size: 15.5px; line-height: 1.7; margin-bottom: 7px; }
+.atv-legal a { color: var(--action); text-decoration: underline; text-underline-offset: 2px; }
+.atv-legal a:hover { color: var(--action-hover); }
+.atv-legal strong { font-weight: 600; color: var(--navy); }
+/* The "Last updated" line is the first italic paragraph — render it muted. */
+.atv-legal h1 + p em,
+.atv-legal em { color: var(--muted); font-style: italic; }
+.atv-legal h1 + p { color: var(--muted); font-size: 14px; margin-bottom: 26px; }
+
+@media (max-width: 600px) {
+  .atv-legal { padding: 24px 0 48px; }
+  .atv-legal h1 { font-size: 32px; }
+}
+
 /* ---- Admin shell --------------------------------------------------------- */
 .admin-body { background: var(--pearl); }
 .admin-shell { display: flex; min-height: 100vh; align-items: stretch; }
