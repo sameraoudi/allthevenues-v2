@@ -272,7 +272,7 @@ CREATE TABLE IF NOT EXISTS enquiries (
     notes            TEXT         DEFAULT NULL,
     consent_to_share TINYINT(1)   NOT NULL DEFAULT 0,
     source_page      VARCHAR(255) DEFAULT NULL,
-    mode             ENUM('venue','assisted','partner','general','partner_signup') NOT NULL DEFAULT 'general',
+    mode             ENUM('venue','assisted','partner','general','partner_signup','contact') NOT NULL DEFAULT 'general',
     partner_id       INT UNSIGNED DEFAULT NULL,          -- partner-mode enquiries (?partner=id)
     provider_type    VARCHAR(50)  DEFAULT NULL,          -- partner_signup: provider category
     website          VARCHAR(255) DEFAULT NULL,          -- partner_signup: provider site
