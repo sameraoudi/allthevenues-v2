@@ -75,9 +75,9 @@ grown for providers:** `partners.is_verified` (real column, replaces the `is_fea
 `contact_name`/`contact_email`/`contact_phone` (migration 011). Migrations 008–011 applied on prod. Samer
 began filling provider emails + adding providers/venues via the new admin.
 
-**In progress:** none — U4, U5, and launch-track **#2** (Become-a-Venue-Partner) all complete. Next on the
-launch track: **#6** provider-ownership fields → **#4** multi-venue shortlist → **#7** legal/contact/about →
-U3c historical enquiries → **#5** reporting → **#8/U6** audit + apex cutover.
+**In progress:** none — U4, U5, launch-track **#2** (partner form) and **#6** (provider-ownership) complete.
+Next on the launch track: **#4** multi-venue shortlist → **#7** legal/contact/about → U3c historical
+enquiries → **#5** reporting → **#8/U6** audit + apex cutover.
 
 ---
 
@@ -184,6 +184,11 @@ U3c historical enquiries → **#5** reporting → **#8/U6** audit + apex cutover
   submits as a structured `partner_signup` lead into the inbox (own badge + mode filter + "Partner request"
   detail); nav CTA repointed. Design lock `atv-partner-signup-preview.html`. (Gotcha: a refinements commit
   shipped un-pushed — confirm `git push` reached origin before deploying.)
+- **Launch #6 — provider ownership provenance:** migration 013 added `venues.management_source`
+  (unassigned/admin_assigned/provider_created/provider_claimed/legacy_import) + `provider_assigned_at`/`_by`
+  (backfilled 94 legacy_import / 4 unassigned). Venue save/create now auto-sets source + assigned_at/by when
+  the provider changes (clearing → unassigned; unchanged keeps prior source); edit shows read-only
+  provider-managed status/source/when/who. `managed_by_provider` is derived (`partner_id IS NOT NULL`).
 
 **Late Jun 2026 (rebuild through U3):**
 - U0 scaffold (front controller, `lib/` ported, tailored CSP, self-hosted assets).

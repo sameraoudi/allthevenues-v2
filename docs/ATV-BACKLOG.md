@@ -77,7 +77,11 @@ Enquiry / venue / provider reports with date-range + venue/provider/event/locati
   reporting.
 - **Fits:** report foundation buildable now; "reliable" once U3c lands.
 
-## 6. Provider ownership / "managed by provider" (High — enables #3)
+## 6. Provider ownership / "managed by provider" (High — enables #3) — ✅ DONE (Jul 2026)
+**Shipped:** migration 013 added `management_source` + `provider_assigned_at`/`_by` on venues (backfill 94
+legacy_import / 4 unassigned); save/create auto-set the source + assigned_at/by on provider change; edit shows
+read-only provenance. `managed_by_provider` derived (`partner_id IS NOT NULL`), not stored. Original notes below.
+
 A venue becomes provider-managed via admin assignment, provider creation, provider claim+approval, or a saved
 provider assignment.
 - **Reconcile / CORRECT the field names:** the ownership link is **`venues.partner_id`** (NOT `provider_id`),
