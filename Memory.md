@@ -20,6 +20,10 @@ verified on staging. Core loop works end-to-end: browse → enquire → admin in
 - **Venues:** `/venues` listing (filter sidebar, active-filter chips, horizontal cards, sort, pagination,
   mobile toggle) + `/venues/{slug}` detail (bounded gallery + self-hosted lightbox, sticky tabs, Key Info,
   "What makes it special" from `highlights`, map embed, venue website link, similar venues).
+  **Keyword search (`q`)** in the hero + sidebar matches venue name / provider name / location (area +
+  emirate), carried through sort/pagination as a removable chip.
+- **Header nav** works on mobile (hamburger → full-width dropdown panel; Shortlist hidden ≤900px; desktop
+  unchanged). The dead **Locations** link was removed (a real Locations browse page is planned for U5).
 - **Venue Providers:** `/providers` image-led cards (cover = **provider's own cover image if set, else** best
   venue image; type-icon chip; gradient fallback rare) + `/providers/{slug}` cover+avatar header, "Venues by
   this provider", provider info panel, managed enquiry panel. `/partners` → `/providers` 301. No public PII.
@@ -130,6 +134,10 @@ Samer began filling provider emails + adding providers via the new admin.
   mosaic, 6 gated image tiles → `/venues?event_type` filter, count-threshold soft label, top+bottom enquiry
   bridges, inline-SVG icons (no CDN), real nav wiring (header+footer). Images committed under
   `assets/img/event-types/`.
+- **Public polish:** keyword search (`q`) on hero + `/venues` (name / provider / location; removable chip,
+  carried through sort+pagination); mobile-nav fix (hamburger → full-width dropdown panel, Shortlist hidden
+  ≤900px, desktop unchanged); removed the dead **Locations** nav link (real page deferred to U5); shorter
+  hero tagline.
 
 **Late Jun 2026 (rebuild through U3):**
 - U0 scaffold (front controller, `lib/` ported, tailored CSP, self-hosted assets).
