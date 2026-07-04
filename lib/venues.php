@@ -171,13 +171,21 @@ function venue_filter_sql(array $f): array
     $params = [];
 
     if (isset($f['q'])) {
-        // Distinct placeholders for the same value — MySQL 5.7 + emulation off
-        // won't reuse a named placeholder (HY093 trap).
-        $sql .= ' AND (v.name LIKE :kw_name OR v.area LIKE :kw_area OR v.description LIKE :kw_desc)';
+        // Match venue name, location (area + emirate name) and provider name —
+        // NOT description. Self-contained EXISTS subqueries so COUNT + SELECT
+        // need no extra JOINs. Distinct placeholders for the same value —
+        // MySQL 5.7 + emulation off won't reuse a named placeholder (HY093 trap).
         $like = '%' . $f['q'] . '%';
+        $sql .= ' AND (
+            v.name LIKE :kw_name
+            OR v.area LIKE :kw_area
+            OR EXISTS (SELECT 1 FROM emirates e  WHERE e.id  = v.emirate_id AND e.name     LIKE :kw_em)
+            OR EXISTS (SELECT 1 FROM partners pq WHERE pq.id = v.partner_id AND pq.org_name LIKE :kw_prov)
+        )';
         $params[':kw_name'] = $like;
         $params[':kw_area'] = $like;
-        $params[':kw_desc'] = $like;
+        $params[':kw_em']   = $like;
+        $params[':kw_prov'] = $like;
     }
     if (isset($f['venue_type'])) {
         $sql .= ' AND v.venue_type_id = (SELECT id FROM venue_types WHERE slug = :venue_type)';

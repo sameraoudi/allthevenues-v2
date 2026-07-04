@@ -16,13 +16,12 @@ $venuesUrl = base_url('venues');
   <div class="atv-hero__bg" aria-hidden="true"></div>
   <div class="atv-wrap">
     <h1>Find the right UAE venue for your next event</h1>
-    <p class="sub">Discover curated UAE venues, compare key details, and send one structured enquiry.</p>
+    <p class="sub">Discover beautiful venues and enquire with ease.</p>
 
     <form class="atv-search" method="get" action="<?= e($venuesUrl) ?>">
       <div class="top"><b>Tell us about your event</b></div>
       <div class="atv-field atv-field--wide">
-        <label for="h-q">Keyword</label>
-        <input type="search" id="h-q" name="q" placeholder="Search by venue name or area">
+        <input type="search" id="h-q" name="q" aria-label="Search by venue or venue provider" placeholder="Search by venue or venue provider">
       </div>
       <div class="atv-fields">
         <div class="atv-field">

@@ -92,8 +92,7 @@ $hasFilters = (bool)$chips;
         </div>
 
         <div class="fgroup">
-          <label class="fgroup__t" for="fl-q">Keyword</label>
-          <input type="search" class="fsearch" id="fl-q" name="q" value="<?= e((string)($f['q'] ?? '')) ?>" placeholder="Search by name or area">
+          <input type="search" class="fsearch" id="fl-q" name="q" value="<?= e((string)($f['q'] ?? '')) ?>" aria-label="Search by venue or venue provider" placeholder="Search by venue or venue provider">
         </div>
 
         <div class="fgroup">
