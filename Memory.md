@@ -37,6 +37,11 @@ verified on staging. Core loop works end-to-end: browse → enquire → admin in
 - **Venue Providers:** `/providers` image-led cards (cover = **provider's own cover image if set, else** best
   venue image; type-icon chip; gradient fallback rare) + `/providers/{slug}` cover+avatar header, "Venues by
   this provider", provider info panel, managed enquiry panel. `/partners` → `/providers` 301. No public PII.
+- **Become a Venue Partner:** `/become-a-venue-partner` (nav CTA repointed here from `/enquire`) — hero +
+  value cards + provider form; submits as a `partner_signup` enquiry (structured: `company`/`provider_type`/
+  `website`/`venues_managed`/`city_pref`/`notes`) into the admin inbox with its own badge, mode filter, and a
+  dedicated "Partner request" detail view (no venue/forward panels). Reuses CSRF/honeypot/rate-limit/
+  Turnstile/mail. Terms/Privacy links are stubs until backlog #7 (public go-live waits on them).
 - **Event Types:** `/event-types` editorial mosaic — 6 image-led featured tiles (Wedding hero, Corporate
   tall, + Conference/Product Launch/Private Party/Exhibition) linking to `/venues?event_type={slug}`; top +
   bottom enquiry bridges; each tile gated on ≥1 published venue (Gala/Yacht auto-appear once tagged);
@@ -70,8 +75,9 @@ grown for providers:** `partners.is_verified` (real column, replaces the `is_fea
 `contact_name`/`contact_email`/`contact_phone` (migration 011). Migrations 008–011 applied on prod. Samer
 began filling provider emails + adding providers/venues via the new admin.
 
-**In progress:** none — **U4 and U5 both complete.** Next: the launch track (`docs/ATV-BACKLOG.md`), starting
-with **#2 Become-a-Venue-Partner** form, then **U6** (audit + apex cutover).
+**In progress:** none — U4, U5, and launch-track **#2** (Become-a-Venue-Partner) all complete. Next on the
+launch track: **#6** provider-ownership fields → **#4** multi-venue shortlist → **#7** legal/contact/about →
+U3c historical enquiries → **#5** reporting → **#8/U6** audit + apex cutover.
 
 ---
 
@@ -173,6 +179,11 @@ with **#2 Become-a-Venue-Partner** form, then **U6** (audit + apex cutover).
   (175 URLs) + domain-agnostic robots.txt. Design locks: `atv-landing-preview.html`, `atv-locations-preview.html`.
 - **Planning:** reconciled Samer's 8-item action list into `docs/ATV-BACKLOG.md`; decided **lean launch**
   (portal is first Phase-2 unit).
+- **Launch #2 — Become a Venue Partner** (`/become-a-venue-partner`): migration 012 (enquiries.mode
+  `partner_signup` + `provider_type`/`website`/`venues_managed`); dedicated page (hero + value cards + form),
+  submits as a structured `partner_signup` lead into the inbox (own badge + mode filter + "Partner request"
+  detail); nav CTA repointed. Design lock `atv-partner-signup-preview.html`. (Gotcha: a refinements commit
+  shipped un-pushed — confirm `git push` reached origin before deploying.)
 
 **Late Jun 2026 (rebuild through U3):**
 - U0 scaffold (front controller, `lib/` ported, tailored CSP, self-hosted assets).

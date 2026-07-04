@@ -19,7 +19,12 @@ location / similar / featured / landing cards.
 - **Fits:** polish pass, any time. Low risk. Single CC prompt touching `assets/css/brand.css` (+ ensure each
   card image sits in an overflow-hidden wrapper for the zoom).
 
-## 2. Fix "Become a Venue Partner" link (High — launch-critical)
+## 2. Fix "Become a Venue Partner" link (High — launch-critical) — ✅ DONE (Jul 2026)
+**Shipped:** `/become-a-venue-partner` page + form; submits as a structured `partner_signup` enquiry
+(migration 012 added the mode + `provider_type`/`website`/`venues_managed`); admin inbox badge + mode filter +
+"Partner request" detail; nav CTA repointed; added "Yacht provider"/"Other" types. Terms/Privacy links remain
+stubs pending #7 — hold the public go-live of the CTA until #7 lands. Original notes below for reference.
+
 The nav CTA currently points at the public venue enquiry form (`/enquire`). Needs a real partner-interest
 page + form.
 - **Reconcile:** confirmed — `views/partials/header.php` links "Become a Venue Partner" → `base_url('enquire')`.
