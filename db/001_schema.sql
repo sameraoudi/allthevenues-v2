@@ -278,10 +278,13 @@ CREATE TABLE IF NOT EXISTS enquiries (
     website          VARCHAR(255) DEFAULT NULL,          -- partner_signup: provider site
     venues_managed   INT UNSIGNED DEFAULT NULL,          -- partner_signup: # venues managed
     status           ENUM('new','reviewed','forwarded','accepted','contacted','won','lost','closed','spam') NOT NULL DEFAULT 'new',
+    is_historical    TINYINT(1)   NOT NULL DEFAULT 0,
+    legacy_id        INT UNSIGNED DEFAULT NULL,
     created_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uq_enquiries_reference (reference),
+    UNIQUE KEY uq_enquiries_legacy (legacy_id),
     KEY idx_enquiries_email (email),
     KEY idx_enquiries_status (status),
     KEY idx_enquiries_event_type (event_type_id),
