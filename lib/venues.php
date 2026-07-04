@@ -109,6 +109,10 @@ function venue_normalise_filters(array $in): array
 {
     $out = [];
 
+    // Free-text keyword (name / area / description).
+    $q = trim((string)($in['q'] ?? ''));
+    if ($q !== '') { $out['q'] = mb_substr($q, 0, 100); }
+
     // Single-value slug filters.
     foreach (['event_type', 'venue_type'] as $k) {
         $v = trim((string)($in[$k] ?? ''));
@@ -166,6 +170,15 @@ function venue_filter_sql(array $f): array
     $sql = '';
     $params = [];
 
+    if (isset($f['q'])) {
+        // Distinct placeholders for the same value — MySQL 5.7 + emulation off
+        // won't reuse a named placeholder (HY093 trap).
+        $sql .= ' AND (v.name LIKE :kw_name OR v.area LIKE :kw_area OR v.description LIKE :kw_desc)';
+        $like = '%' . $f['q'] . '%';
+        $params[':kw_name'] = $like;
+        $params[':kw_area'] = $like;
+        $params[':kw_desc'] = $like;
+    }
     if (isset($f['venue_type'])) {
         $sql .= ' AND v.venue_type_id = (SELECT id FROM venue_types WHERE slug = :venue_type)';
         $params[':venue_type'] = $f['venue_type'];
@@ -247,7 +260,7 @@ function venue_sort_options(): array
 function venue_filter_params(array $filters, string $sort = 'recommended', int $page = 1): array
 {
     $p = [];
-    foreach (['event_type', 'venue_type', 'guest_count', 'budget', 'indoor_outdoor', 'partner'] as $k) {
+    foreach (['q', 'event_type', 'venue_type', 'guest_count', 'budget', 'indoor_outdoor', 'partner'] as $k) {
         if (isset($filters[$k])) {
             $p[$k] = $filters[$k];
         }

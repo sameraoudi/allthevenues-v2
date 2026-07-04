@@ -29,6 +29,7 @@ $chipLink = static function (array $mod) use ($listUrl, $sort): string {
 
 // Build the active-filter chips: [label, remove-link].
 $chips = [];
+if (isset($f['q'])) { $m = $f; unset($m['q']); $chips[] = ['“' . $f['q'] . '”', $chipLink($m)]; }
 foreach ((array)$selEmirate as $slug) {
     $mod = $f; $mod['emirate'] = array_values(array_diff((array)$selEmirate, [$slug]));
     if (!$mod['emirate']) unset($mod['emirate']);
@@ -88,6 +89,11 @@ $hasFilters = (bool)$chips;
         <div class="venues-filters__head">
           <b>Refine your search</b>
           <a href="<?= e($listUrl) ?>">Reset all</a>
+        </div>
+
+        <div class="fgroup">
+          <label class="fgroup__t" for="fl-q">Keyword</label>
+          <input type="search" class="fsearch" id="fl-q" name="q" value="<?= e((string)($f['q'] ?? '')) ?>" placeholder="Search by name or area">
         </div>
 
         <div class="fgroup">

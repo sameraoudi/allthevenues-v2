@@ -20,6 +20,10 @@ $venuesUrl = base_url('venues');
 
     <form class="atv-search" method="get" action="<?= e($venuesUrl) ?>">
       <div class="top"><b>Tell us about your event</b></div>
+      <div class="atv-field atv-field--wide">
+        <label for="h-q">Keyword</label>
+        <input type="search" id="h-q" name="q" placeholder="Search by venue name or area">
+      </div>
       <div class="atv-fields">
         <div class="atv-field">
           <label for="h-event">Event type</label>

@@ -147,6 +147,8 @@ select:focus-visible,
 .atv-search .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .atv-search .top b { font-size: 16px; font-family: var(--font-body); }
 .atv-fields { display: grid; grid-template-columns: repeat(4,1fr) auto; gap: 14px; align-items: end; }
+.atv-field--wide { grid-column: 1 / -1; margin-bottom: 14px; }
+.atv-field input[type="search"] { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px; font-size: 14px; color: var(--ink); background: #fbfaf7; font-family: var(--font-body); }
 .atv-field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
 .atv-field select {
   width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px;
@@ -588,6 +590,8 @@ select:focus-visible,
 .fgroup__t { display: block; font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
 .fopt { font-size: 13px; color: var(--muted); padding: 5px 0 0; display: flex; gap: 8px; align-items: center; cursor: pointer; }
 .fopt input { accent-color: var(--action); }
+/* Keyword search input (sidebar) — matches .fsel minus the select chevron. */
+.fsearch { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; font-size: 13px; color: var(--ink); background: #fbfaf7; font-family: var(--font-body); margin-top: 4px; }
 .fsel { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; font-size: 13px; color: var(--ink); background: #fbfaf7; font-family: var(--font-body);
   appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235b6b7a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; margin-top: 4px; }
 .venues-filters__apply { width: 100%; margin-top: 14px; }
