@@ -109,6 +109,9 @@ CREATE TABLE IF NOT EXISTS venues (
     map_embed      TEXT         DEFAULT NULL,
     lat            DECIMAL(10,7) DEFAULT NULL,
     lng            DECIMAL(10,7) DEFAULT NULL,
+    contact_name   VARCHAR(255) DEFAULT NULL,
+    contact_email  VARCHAR(255) DEFAULT NULL,
+    contact_phone  VARCHAR(50)  DEFAULT NULL,
     -- Content (sanitized HTML where rich text)
     description    TEXT         DEFAULT NULL,
     best_for       TEXT         DEFAULT NULL,
