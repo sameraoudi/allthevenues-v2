@@ -8,10 +8,10 @@ and `VISION.md` (north star).*
 
 ## Current state (as of 3 Jul 2026)
 
-> Latest closeout: **All of U4 complete.** U4c add-venue create + the completed venue edit form (provider,
-> website, map, contact) shipped on top of U4a/b/d — so venues *and* providers are now fully managed in
-> admin. Also this stretch: keyword search, mobile-nav fix, and a warmed-up branded 404. Next: **U5** (SEO
-> landing pages + real Locations page), then **U6** (launch cutover).
+> Latest closeout: **All of U5 complete** (SEO). Head infra (meta/canonical/OG), event×city landing pages,
+> the Locations mosaic, and dynamic sitemap.xml + robots.txt are live — on top of a fully-complete U4 (venue
+> + provider admin). Next: the **launch track** in `docs/ATV-BACKLOG.md` — starting with #2 Become-a-Venue-
+> Partner form — then **U6** (audit + apex cutover).
 
 **Live on `staging.allthevenues.com`.** The full public shopfront + the admin to run it are built and
 verified on staging. Core loop works end-to-end: browse → enquire → admin inbox → context-aware forward.
@@ -27,6 +27,13 @@ verified on staging. Core loop works end-to-end: browse → enquire → admin in
   unchanged). The dead **Locations** link was removed (a real Locations browse page is planned for U5).
 - **404** is a branded not-found page (Coastal UAE styling, map-pin icon, `.atv-btn` CTAs) — shared across
   all not-found routes.
+- **SEO (U5):** every page emits a meta description + canonical (path-only, dedupes filtered listings) + OG/
+  Twitter (`views/layout.php`). **Event×city landing pages** at `/venues/{event}-in-{emirate}` (templated
+  intro + filtered results + internal links + FAQ w/ FAQPage JSON-LD + enquiry CTA), gated on ≥
+  `LANDING_MIN_VENUES` (3); thin combos 301 to the filtered search; invalid → 404; resolves after real venue
+  slugs. Venue cards now carry **View details + Enquire**. **Locations** `/locations` (see above). Dynamic
+  **`/sitemap.xml`** (hubs + published venues + approved providers + qualifying landing combos) + domain-
+  agnostic **`/robots.txt`** (disallow `/admin`).
 - **Venue Providers:** `/providers` image-led cards (cover = **provider's own cover image if set, else** best
   venue image; type-icon chip; gradient fallback rare) + `/providers/{slug}` cover+avatar header, "Venues by
   this provider", provider info panel, managed enquiry panel. `/partners` → `/providers` 301. No public PII.
@@ -63,8 +70,8 @@ grown for providers:** `partners.is_verified` (real column, replaces the `is_fea
 `contact_name`/`contact_email`/`contact_phone` (migration 011). Migrations 008–011 applied on prod. Samer
 began filling provider emails + adding providers/venues via the new admin.
 
-**In progress:** none — **all of U4 closed** (U4a/b/c/d). Next up: **U5** (SEO landing pages + Locations), then
-**U6** (launch cutover).
+**In progress:** none — **U4 and U5 both complete.** Next: the launch track (`docs/ATV-BACKLOG.md`), starting
+with **#2 Become-a-Venue-Partner** form, then **U6** (audit + apex cutover).
 
 ---
 
@@ -85,7 +92,10 @@ began filling provider emails + adding providers/venues via the new admin.
   the **partner portal** (self-serve) — Phase 2/3.
 
 **SEO & launch:**
-- **U5** SEO landing pages (event×city, e.g. "Wedding venues in Dubai") + sitemap.
+- **U5 ✅ complete** — SEO head infra, event×city landing pages, Locations, sitemap.xml + robots.txt.
+- **Launch track** (see `docs/ATV-BACKLOG.md`, lean-launch order): #2 partner form → #6 provider-ownership
+  fields → #4 multi-venue shortlist → #7 legal/contact/about → U3c historical enquiries → #5 reporting
+  foundation → #8/U6 audit.
 - **U6** launch hardening: notifications set, GoatCounter events, **301s from legacy URLs**, mobile QA,
   security check, backup + rollback, **cutover** staging → apex domain (retire legacy code, tailored CSP
   replaces any stopgap).
@@ -156,6 +166,13 @@ began filling provider emails + adding providers/venues via the new admin.
   (auto-unique slug, draft default, audit 'create', redirect to edit for images) + "New venue" button.
 - **Branded 404** — Coastal UAE styling, map-pin icon, friendlier copy, `.atv-btn` CTAs (replaces bare
   Bootstrap).
+- **U5 SEO (complete):** U5-a head infra (meta/canonical/OG on layout + per-page); U5-b event×city landing
+  pages (`/venues/{event}-in-{emirate}`, templated intro+FAQ+JSON-LD+internal links, gated ≥3, thin→301,
+  invalid→404, resolves after real venue slugs) + venue-card Enquire action sitewide; U5-c Locations mosaic
+  (`/locations`, city images + venue-photo/gradient fallback, nav link restored); U5-d dynamic sitemap.xml
+  (175 URLs) + domain-agnostic robots.txt. Design locks: `atv-landing-preview.html`, `atv-locations-preview.html`.
+- **Planning:** reconciled Samer's 8-item action list into `docs/ATV-BACKLOG.md`; decided **lean launch**
+  (portal is first Phase-2 unit).
 
 **Late Jun 2026 (rebuild through U3):**
 - U0 scaffold (front controller, `lib/` ported, tailored CSP, self-hosted assets).
