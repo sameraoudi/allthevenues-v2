@@ -88,6 +88,12 @@ function venue_admin_get(PDO $pdo, int $id): ?array
     return $row === false ? null : $row;
 }
 
+/** All providers (any status) for the venue's provider-assignment select. */
+function venue_partner_options(PDO $pdo): array
+{
+    return $pdo->query('SELECT id, org_name FROM partners ORDER BY org_name')->fetchAll();
+}
+
 /** True if $slug is free (optionally excluding a venue id). */
 function venue_slug_available(PDO $pdo, string $slug, int $excludeId): bool
 {

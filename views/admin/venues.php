@@ -127,6 +127,42 @@ if ($rest === 'edit') {
             $st = trim((string)($_POST['status'] ?? ''));
             $clean['status'] = isset(venue_admin_statuses()[$st]) ? $st : $venue['status'];
 
+            // --- provider assignment (nullable; validated if set) ---
+            $pid = (int)($_POST['partner_id'] ?? 0);
+            if ($pid > 0) {
+                $s = $pdo->prepare('SELECT 1 FROM partners WHERE id = :id');
+                $s->execute([':id' => $pid]);
+                $clean['partner_id'] = $s->fetchColumn() !== false ? $pid : null;
+            } else { $clean['partner_id'] = null; }
+
+            // --- website ---
+            $clean['website'] = $plain('website', 255) ?: null;
+
+            // --- map_embed (stored RAW; validated against the SAME guard the
+            //     public detail renders with — never html_sanitize'd) ---
+            $mapEmbed = trim((string)($_POST['map_embed'] ?? ''));
+            if ($mapEmbed === '') {
+                $clean['map_embed'] = null;
+            } elseif (!preg_match('#^<iframe[^>]*\ssrc="https://www\.google\.com/maps/#i', $mapEmbed)) {
+                $errors['map_embed'] = 'Paste a valid Google Maps embed (the <iframe> code from Google Maps).';
+            } else {
+                $clean['map_embed'] = $mapEmbed;
+            }
+
+            // --- venue contact (internal admin-only) ---
+            $clean['contact_name'] = $plain('contact_name', 255) ?: null;
+
+            $cEmail = trim((string)($_POST['contact_email'] ?? ''));
+            if ($cEmail === '') {
+                $clean['contact_email'] = null;
+            } elseif (!filter_var($cEmail, FILTER_VALIDATE_EMAIL) || mb_strlen($cEmail) > 255) {
+                $errors['contact_email'] = 'Enter a valid email address.';
+            } else {
+                $clean['contact_email'] = $cEmail;
+            }
+
+            $clean['contact_phone'] = $plain('contact_phone', 50) ?: null;
+
             // --- rich-text (sanitized) ---
             foreach (venue_richtext_fields() as $rf) {
                 $clean[$rf] = html_sanitize($_POST[$rf] ?? null);   // null if empty
@@ -165,6 +201,7 @@ if ($rest === 'edit') {
 
     $venueTypes = venue_types_all($pdo);
     $emirates   = venue_emirates($pdo);
+    $partners   = venue_partner_options($pdo);           // provider-assignment select
     $images     = venue_images_admin_list($pdo, $id);   // for the image manager
 
     $admin_active       = 'venues';

@@ -68,6 +68,13 @@ $textFields = ['facilities' => 'Facilities', 'food_beverage' => 'Food & beverage
         </select>
       </div>
       <div class="atv-field">
+        <label for="f-partner">Provider</label>
+        <select id="f-partner" name="partner_id">
+          <option value="">— None —</option>
+          <?php foreach ($partners as $pt): ?><option value="<?= e((string)$pt['id']) ?>"<?= $sel('partner_id', $pt['id']) ?>><?= e($pt['org_name']) ?></option><?php endforeach; ?>
+        </select>
+      </div>
+      <div class="atv-field">
         <label for="f-io">Indoor / outdoor</label>
         <select id="f-io" name="indoor_outdoor">
           <?php foreach (venue_indoor_outdoor_options() as $k => $label): ?><option value="<?= e($k) ?>"<?= $sel('indoor_outdoor', $k) ?>><?= e($label) ?></option><?php endforeach; ?>
@@ -75,6 +82,12 @@ $textFields = ['facilities' => 'Facilities', 'food_beverage' => 'Food & beverage
       </div>
       <div class="atv-field"><label for="f-area">Area</label><input type="text" id="f-area" name="area" value="<?= $v('area') ?>" maxlength="150"></div>
       <div class="atv-field atv-field--full"><label for="f-address">Address</label><input type="text" id="f-address" name="address" value="<?= $v('address') ?>" maxlength="255"></div>
+      <div class="atv-field atv-field--full">
+        <label for="f-map">Map embed</label>
+        <textarea id="f-map" name="map_embed" rows="3" class="<?= $has('map_embed') ? 'is-invalid' : '' ?>"><?= e((string)($old['map_embed'] ?? '')) ?></textarea>
+        <p class="lead-hint">Paste the Google Maps embed &lt;iframe&gt;. Only a valid Google Maps iframe is shown publicly; anything else falls back to a Maps search link.</p>
+        <?php $err('map_embed'); ?>
+      </div>
       <div class="atv-field">
         <label class="atv-check"><input type="checkbox" name="is_featured" value="1"<?= !empty($old['is_featured']) ? ' checked' : '' ?>> <span>Featured</span></label>
         <label class="atv-check"><input type="checkbox" name="is_verified" value="1"<?= !empty($old['is_verified']) ? ' checked' : '' ?>> <span>Verified</span></label>
@@ -95,7 +108,22 @@ $textFields = ['facilities' => 'Facilities', 'food_beverage' => 'Food & beverage
           <?php foreach (venue_pricing_levels() as $pl): ?><option value="<?= e($pl) ?>"<?= $sel('pricing_level', $pl) ?>><?= e($pl) ?></option><?php endforeach; ?>
         </select>
       </div>
-      <div class="atv-field atv-field--full"><label for="f-video">Video URL</label><input type="text" id="f-video" name="video_url" value="<?= $v('video_url') ?>" maxlength="255"></div>
+      <div class="atv-field"><label for="f-video">Video URL</label><input type="text" id="f-video" name="video_url" value="<?= $v('video_url') ?>" maxlength="255"></div>
+      <div class="atv-field"><label for="f-website">Website</label><input type="text" id="f-website" name="website" value="<?= $v('website') ?>" maxlength="255"></div>
+    </div>
+  </div>
+
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">Venue contact (internal)</h2>
+    <p class="lead-hint mb-2">Admin-only — never shown publicly.</p>
+    <div class="admin-form__grid">
+      <div class="atv-field"><label for="f-cname">Contact name</label><input type="text" id="f-cname" name="contact_name" value="<?= $v('contact_name') ?>" maxlength="255"></div>
+      <div class="atv-field">
+        <label for="f-cemail">Contact email</label>
+        <input type="email" id="f-cemail" name="contact_email" value="<?= $v('contact_email') ?>" maxlength="255" class="<?= $has('contact_email') ? 'is-invalid' : '' ?>">
+        <?php $err('contact_email'); ?>
+      </div>
+      <div class="atv-field"><label for="f-cphone">Contact phone</label><input type="text" id="f-cphone" name="contact_phone" value="<?= $v('contact_phone') ?>" maxlength="50"></div>
     </div>
   </div>
 
