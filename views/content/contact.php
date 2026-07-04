@@ -12,15 +12,21 @@ $eline = static function (string $k) use ($errors) {
 };
 $reasons = $reasons ?? [];
 ?>
-<div class="atv-wrap atv-bvp-body">
-  <div class="atv-contact-head">
-    <h1>Contact us</h1>
-    <p>Have a question about a venue, your enquiry, listing your venues, or something else?
-      Send us a message and our team will get back to you. Fields marked <span class="atv-bvp-req">*</span> are required.</p>
+<section class="atv-bvp-hero">
+  <div class="atv-bvp-hero__bg" aria-hidden="true"></div>
+  <div class="atv-wrap atv-bvp-hero__wrap">
+    <p class="atv-bvp-hero__eyebrow">We're here to help</p>
+    <h1 class="atv-bvp-hero__title">Contact us</h1>
+    <p class="atv-bvp-hero__lede">Have a question about a venue, your enquiry, listing your venues, or something
+      else? Send us a message and our team will get back to you.</p>
   </div>
+</section>
 
-  <section class="atv-bvp-formsec">
-    <div class="atv-bvp-formwrap">
+<div class="atv-wrap atv-bvp-body">
+  <section class="atv-bvp-formsec atv-contact-formsec">
+    <div class="atv-bvp-formwrap atv-contact-formwrap">
+      <p class="atv-bvp-sub">Fields marked <span class="atv-bvp-req">*</span> are required.</p>
+
       <?php if (!empty($formError)): ?>
         <div class="atv-bvp-formerr" role="alert"><?= e($formError) ?></div>
       <?php endif; ?>

@@ -7,6 +7,9 @@ $flash = $flash ?? null;
 $id    = (int)$enq['id'];
 [$modeLabel, $modeClass] = enquiry_mode_badge((string)$enq['mode'], count($enq['venues']));
 $isPartnerSignup = ($enq['mode'] === 'partner_signup');
+$isContact       = ($enq['mode'] === 'contact');
+// "Simple" leads have no event/venues and are never forwarded to a partner.
+$isSimple        = $isPartnerSignup || $isContact;
 $guests = $enq['guest_count'] ? (venue_guest_bands()[$enq['guest_count']][0] ?? $enq['guest_count']) : '—';
 $io = $enq['indoor_outdoor'] ? (venue_indoor_outdoor_options()[$enq['indoor_outdoor']] ?? $enq['indoor_outdoor']) : '';
 $flexOpts = enquiry_date_flexibility();
@@ -55,6 +58,16 @@ $row = static function (string $label, ?string $value): void {
           $row('Message', $enq['notes']);
           $row('Consent to be contacted', $enq['consent_to_share'] ? 'Yes' : 'No');
         ?>
+      <?php elseif ($isContact): ?>
+        <h3 class="lead-detail__section">Contact message</h3>
+        <?php
+          $row('Name', $enq['name']);
+          $row('Email', $enq['email']);
+          $row('Phone', $enq['phone']);
+          $row('Consent to be contacted', $enq['consent_to_share'] ? 'Yes' : 'No');
+          // notes already holds "Reason: … " + the message.
+          $row('Message', $enq['notes']);
+        ?>
       <?php else: ?>
         <h3 class="lead-detail__section">Contact</h3>
         <?php $row('Name', $enq['name']); $row('Email', $enq['email']); $row('Phone', $enq['phone']); $row('Company', $enq['company']); ?>
@@ -81,16 +94,16 @@ $row = static function (string $label, ?string $value): void {
 
       <h3 class="lead-detail__section">Meta</h3>
       <?php
-        if (!$isPartnerSignup) { $row('Consent to share', $enq['consent_to_share'] ? 'Yes' : 'No'); }
+        if (!$isSimple) { $row('Consent to share', $enq['consent_to_share'] ? 'Yes' : 'No'); }
         $row('Mode', $modeLabel);
-        if (!$isPartnerSignup && !empty($enq['partner_name'])) { $row('About partner', $enq['partner_name']); }
+        if (!$isSimple && !empty($enq['partner_name'])) { $row('About partner', $enq['partner_name']); }
         $row('Source', $enq['source_page']);
         $row('Received', date('j M Y H:i', strtotime((string)$enq['created_at'])));
         $row('Updated', date('j M Y H:i', strtotime((string)$enq['updated_at'])));
       ?>
     </div>
 
-    <?php if (!$isPartnerSignup && $enq['venues']): ?>
+    <?php if (!$isSimple && $enq['venues']): ?>
       <div class="admin-panel">
         <h3 class="lead-detail__section mt-0">Linked venues</h3>
         <ul class="lead-venues">
@@ -149,7 +162,7 @@ $row = static function (string $label, ?string $value): void {
       </form>
     </div>
 
-    <?php if (!$isPartnerSignup): ?>
+    <?php if (!$isSimple): ?>
     <div class="admin-panel">
       <h3 class="lead-detail__section mt-0">Forward to partner</h3>
       <?php if (!$partners): ?>

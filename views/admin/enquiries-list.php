@@ -21,7 +21,7 @@ $carry = array_filter([
 $hasFilters = (bool)$carry;
 $sel = static fn(string $k, $v): string => ((string)($f[$k] ?? '') === (string)$v) ? ' selected' : '';
 $listUrl = base_url('admin/enquiries');
-$modes = ['venue' => 'Venue enquiry', 'assisted' => 'Assisted', 'partner' => 'Partner interest', 'partner_signup' => 'Partner signup', 'general' => 'General'];
+$modes = ['venue' => 'Venue enquiry', 'assisted' => 'Assisted', 'partner' => 'Partner interest', 'partner_signup' => 'Partner signup', 'contact' => 'Contact', 'general' => 'General'];
 ?>
 <div class="lead-toolbar">
   <div class="lead-toolbar__counts">

@@ -386,7 +386,7 @@ function contact_insert(PDO $pdo, array $clean): array
         ':notes'       => $notes !== '' ? $notes : null,
         ':consent'     => $clean['consent_to_share'],
         ':source_page' => mb_substr((string)($clean['source_page'] ?? '/contact'), 0, 255),
-        ':mode'        => 'general',
+        ':mode'        => 'contact',
         ':status'      => 'new',
     ]);
     return ['reference' => $reference, 'id' => (int)$pdo->lastInsertId()];

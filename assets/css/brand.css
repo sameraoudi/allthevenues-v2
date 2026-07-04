@@ -498,13 +498,10 @@ select:focus-visible,
 /* Image-permission statement on the partner form (full-width, muted). */
 .atv-bvp-imgnote { grid-column: 1 / -1; font-size: 12.5px; line-height: 1.6; color: var(--muted); margin: 2px 0 0; }
 
-/* Contact page head (reuses the shared form styles below it). */
-.atv-contact-head { max-width: 760px; margin: 0 auto; padding: 40px 0 4px; }
-.atv-contact-head h1 { font-size: 40px; line-height: 1.1; }
-.atv-contact-head p { font-size: 15px; color: var(--muted); margin-top: 10px; max-width: 60ch; }
-/* Centre the shared form under the contact head (contact page only). */
-.atv-contact-head + .atv-bvp-formsec .atv-bvp-formwrap { margin-left: auto; margin-right: auto; }
-@media (max-width: 600px) { .atv-contact-head h1 { font-size: 32px; } }
+/* Contact page: the form card overlaps the become-partner-style navy hero
+   (same technique as the partner value cards). */
+.atv-contact-formsec { position: relative; z-index: 3; margin-top: -44px; padding-top: 0; }
+.atv-contact-formwrap { margin-left: auto; margin-right: auto; }
 
 @media (max-width: 820px) {
   .atv-bvp-vals { grid-template-columns: 1fr; margin-top: -24px; }
@@ -695,6 +692,7 @@ select:focus-visible,
 .lead-mode--assisted { background: #efe7d8; color: #7a6a45; }
 .lead-mode--partner  { background: #e5e0ef; color: #5b4a86; }
 .lead-mode--partner-signup { background: #d9ede4; color: #2f6b52; }
+.lead-mode--contact  { background: #f0e3d6; color: #8a5a2b; }
 
 .lead-pagination { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
 .lead-page { padding: 6px 11px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; color: var(--action); background: #fff; }
