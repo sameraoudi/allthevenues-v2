@@ -96,10 +96,15 @@ if (preg_match('#^(\d+)$#', $rest, $m)) {
 }
 
 /* ============================ ACTIONS (POST) ============================= */
-if (preg_match('#^(\d+)/(status|note|assign)$#', $rest, $m)) {
+if (preg_match('#^(\d+)/(status|note|assign|delete)$#', $rest, $m)) {
     $id     = (int)$m[1];
     $action = $m[2];
     $detailUrl = 'admin/enquiries/' . $id;
+
+    // Deleting is destructive + admin-only (the inbox itself allows admin+editor).
+    if ($action === 'delete') {
+        auth_require_role(['admin']);
+    }
 
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST' || !csrf_validate()) {
         $_SESSION['admin_flash'] = ['type' => 'error', 'msg' => 'Action could not be processed. Please try again.'];
@@ -195,6 +200,19 @@ if (preg_match('#^(\d+)/(status|note|assign)$#', $rest, $m)) {
         }
 
         $_SESSION['admin_flash'] = ['type' => 'success', 'msg' => 'Forwarded to ' . $partner['org_name'] . '.'];
+        redirect($detailUrl);
+    }
+
+    if ($action === 'delete') {
+        // Audit BEFORE the row is gone (capture identifying fields).
+        audit_log($pdo, $uid, 'delete', 'enquiry', $id,
+            ['reference' => $enq['reference'], 'email' => $enq['email'], 'mode' => $enq['mode']], null);
+
+        if (enquiry_delete($pdo, $id)) {
+            $_SESSION['admin_flash'] = ['type' => 'success', 'msg' => 'Enquiry deleted.'];
+            redirect('admin/enquiries');
+        }
+        $_SESSION['admin_flash'] = ['type' => 'error', 'msg' => 'Could not delete the enquiry. Please try again.'];
         redirect($detailUrl);
     }
 }

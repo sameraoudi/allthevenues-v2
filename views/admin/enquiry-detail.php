@@ -222,5 +222,16 @@ $row = static function (string $label, ?string $value): void {
       <?php endif; ?>
     </div>
     <?php endif; ?>
+
+    <?php if (auth_role() === 'admin'): ?>
+      <div class="admin-panel">
+        <h3 class="lead-detail__section mt-0">Danger zone</h3>
+        <form method="post" action="<?= e(base_url('admin/enquiries/' . $id . '/delete')) ?>"
+              data-confirm="Delete this enquiry permanently? This cannot be undone.">
+          <?php csrf_field(); ?>
+          <button type="submit" class="atv-btn atv-btn--sm atv-btn--danger">Delete enquiry</button>
+        </form>
+      </div>
+    <?php endif; ?>
   </div>
 </div>

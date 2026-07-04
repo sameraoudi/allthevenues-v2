@@ -96,8 +96,9 @@ $modes = ['venue' => 'Venue enquiry', 'assisted' => 'Assisted', 'partner' => 'Pa
             <td data-label="Date"><?= e($r['event_date'] ? date('j M Y', strtotime((string)$r['event_date'])) : '—') ?></td>
             <td data-label="Venue(s)"><?php
               if ($r['venue_names']) { echo e($r['venue_names']); }
-              elseif (!empty($r['partner_name'])) { echo 'Partner: ' . e($r['partner_name']); }
-              else { echo '<span class="text-muted">Assisted / general</span>'; }
+              elseif (!empty($r['partner_name'])) { echo 'Provider: ' . e($r['partner_name']); }
+              elseif (!empty($r['company'])) { echo e($r['company']); }
+              else { echo '<span class="text-muted">—</span>'; }
             ?></td>
             <td data-label="Mode"><span class="lead-mode lead-mode--<?= e($modeClass) ?>"><?= e($modeLabel) ?></span></td>
             <td data-label="Status"><span class="lead-status lead-status--<?= e($r['status']) ?>"><?= e(enquiry_status_label((string)$r['status'])) ?></span></td>

@@ -113,6 +113,7 @@ function _enquiry_admin_select(): string
 {
     return "SELECT e.id, e.reference, e.name, e.email, e.phone, e.event_date,
                    e.guest_count, e.budget_range, e.mode, e.status, e.created_at,
+                   e.company,
                    et.name AS event_type_name,
                    em.name AS emirate_name,
                    pp.org_name AS partner_name,
@@ -221,4 +222,24 @@ function partners_for_assign(PDO $pdo): array
         "SELECT id, org_name, email FROM partners
          WHERE status = 'approved' ORDER BY org_name"
     )->fetchAll();
+}
+
+/**
+ * Hard-delete an enquiry and its dependent rows (lead_routing + enquiry_venues)
+ * in one transaction. Returns true on success. Admin-gated at the controller.
+ */
+function enquiry_delete(PDO $pdo, int $id): bool
+{
+    $pdo->beginTransaction();
+    try {
+        $pdo->prepare('DELETE FROM lead_routing   WHERE enquiry_id = :id')->execute([':id' => $id]);
+        $pdo->prepare('DELETE FROM enquiry_venues WHERE enquiry_id = :id')->execute([':id' => $id]);
+        $pdo->prepare('DELETE FROM enquiries      WHERE id = :id')->execute([':id' => $id]);
+        $pdo->commit();
+        return true;
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        error_log('enquiry_delete failed: ' . $e->getMessage());
+        return false;
+    }
 }
