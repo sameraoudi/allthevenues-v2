@@ -23,8 +23,9 @@
     </ul>
 
     <div class="right">
-      <a class="shortlist" href="<?= e(base_url('venues')) ?>">
-        <?= icon('heart') ?> Shortlist <span class="n">0</span>
+      <a class="shortlist" href="<?= e(base_url('shortlist')) ?>"
+         data-shortlist-link data-shortlist-base="<?= e(base_url('shortlist')) ?>">
+        <?= icon('heart') ?> Shortlist <span class="n" data-shortlist-count>0</span>
       </a>
       <a class="atv-btn atv-btn--sm" href="<?= e(base_url('enquire')) ?>">Enquire now</a>
     </div>

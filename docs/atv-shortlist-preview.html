@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All The Venues — Shortlist page (design preview)</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+:root{--navy:#0E1B2A;--blue:#6C93B7;--action:#426F94;--action-hover:#315B7C;--pearl:#F7F4EF;--sand:#C8B8A0;--ink:#0E1B2A;--muted:#5b6b7a;--line:#e4ded4;--card:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--pearl);color:var(--ink);line-height:1.6}
+h1,h2,h3,h4,.serif{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+a{color:inherit;text-decoration:none}
+.btn{display:inline-block;background:var(--action);color:#fff;padding:12px 22px;border-radius:8px;font-weight:600;font-size:14px;border:none;cursor:pointer}
+.btn:hover{background:var(--action-hover)}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--action)}
+.screenlabel{background:var(--navy);color:var(--sand);font-family:'Cormorant Garamond',serif;font-size:20px;padding:12px 24px}
+.note{max-width:1160px;margin:22px auto 40px;padding:16px 20px;font-size:13.5px;color:var(--muted);border-left:3px solid var(--sand);background:#fff;line-height:1.7}
+.note b{color:var(--navy)} .note code{background:#eef1f4;padding:1px 6px;border-radius:4px;font-size:12.5px}
+
+/* header */
+.nav{background:var(--navy);color:#fff}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:66px}
+.logo{font-family:'Cormorant Garamond',serif;font-size:22px}.logo .m{color:var(--sand)}
+.nav .r{display:flex;gap:18px;align-items:center;font-size:14px;color:#d7dde3}
+/* header shortlist counter (active state) */
+.sl{display:inline-flex;align-items:center;gap:7px;color:#fff}
+.sl i{color:var(--sand)} .sl .n{background:var(--sand);color:var(--navy);font-weight:600;border-radius:20px;padding:1px 9px;font-size:12px}
+
+/* page head */
+.slhead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;padding:28px 0 6px}
+.slhead h1{font-size:34px}
+.slhead .sub{font-size:14px;color:var(--muted);margin-top:4px}
+.slhead .cta{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.clear{font-size:13px;color:var(--muted)} .clear:hover{color:#c0392b}
+.slbar{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:10px 0 22px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.slbar .t{font-size:14px;color:var(--navy)} .slbar .t b{font-weight:600}
+.slbar__acts{display:inline-flex;gap:16px;align-items:center;flex-wrap:wrap}
+.empty__acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+/* transient toast on remove (undo) */
+.toast{display:inline-flex;align-items:center;gap:12px;background:var(--navy);color:#fff;font-size:13.5px;padding:11px 16px;border-radius:10px;box-shadow:0 8px 22px rgba(14,27,42,.22);margin:0 0 30px}
+.toast a{color:var(--sand);font-weight:600;cursor:pointer}
+
+/* grid + cards (reuse venue-card look) */
+.vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding-bottom:20px}
+.vc{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(14,27,42,.06);display:flex;flex-direction:column;transition:transform .25s,box-shadow .25s}
+.vc:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(14,27,42,.14)}
+.vc__img{height:160px;position:relative;background-position:center;background-size:cover}
+.g1{background:linear-gradient(135deg,#3a5a78,#20364c)}.g2{background:linear-gradient(135deg,#4a6b7d,#2b4152)}.g3{background:linear-gradient(135deg,#5a6f86,#33445a)}
+/* active heart = remove from shortlist */
+.vc__heart{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.92);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#c0392b;font-size:15px;box-shadow:0 2px 6px rgba(14,27,42,.18)}
+.vc__heart:hover{background:#fff}
+.vc__body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.vc__body h3{font-size:20px;line-height:1.12}
+.vc__tl{font-size:12.5px;color:var(--muted)} .vc__tl i{color:var(--blue);margin-right:4px}
+.vc__meta{display:flex;gap:14px;font-size:12.5px;color:var(--navy);margin-top:2px}
+.vc__foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:10px;margin-top:auto}
+.vc__price{font-size:12.5px;color:var(--muted)}
+.vc__lk{font-size:13px;color:var(--action);font-weight:600}
+
+/* empty state */
+.empty{text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:48px 24px;margin:20px 0 40px}
+.empty i{font-size:34px;color:var(--sand)} .empty h2{font-size:26px;margin:12px 0 6px}
+.empty p{font-size:14px;color:var(--muted);max-width:44ch;margin:0 auto 18px}
+
+@media(max-width:900px){.vgrid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.vgrid{grid-template-columns:1fr}.slhead h1{font-size:28px}}
+</style>
+</head>
+<body>
+
+<div class="screenlabel">All The Venues — Shortlist page · design preview (route: /shortlist)</div>
+
+<header class="nav"><div class="wrap">
+  <div class="logo">All The <span class="m">Venues</span></div>
+  <nav class="r">
+    <a>Venues</a><a>Event Types</a><a>Locations</a>
+    <a class="sl"><i class="fa-solid fa-heart"></i> Shortlist <span class="n">3</span></a>
+  </nav>
+</div></header>
+
+<div class="wrap">
+
+  <!-- populated state -->
+  <section class="slhead">
+    <div>
+      <h1>Your shortlist</h1>
+      <div class="sub">3 venues saved on this device. Enquire once and we'll route your request to the right providers.</div>
+    </div>
+    <div class="cta">
+      <a class="btn">Enquire about these venues</a>
+    </div>
+  </section>
+
+  <div class="slbar">
+    <span class="t">Comparing <b>3 venues</b>. Remove any venue with the heart, then send one enquiry for the ones you like.</span>
+    <span class="slbar__acts"><a class="btn btn-ghost">Browse more venues</a> <a class="clear">Clear shortlist</a></span>
+  </div>
+
+  <div class="vgrid">
+    <article class="vc"><div class="vc__img g1"><button class="vc__heart" title="Remove from shortlist"><i class="fa-solid fa-heart"></i></button></div><div class="vc__body"><h3>The Pearl Ballroom</h3><div class="vc__tl"><i class="fa-solid fa-location-dot"></i>Palm Jumeirah, Dubai</div><div class="vc__meta"><span><i class="fa-solid fa-users"></i> up to 400</span><span>Ballroom</span></div><div class="vc__foot"><span class="vc__price">From AED 45,000</span><a class="vc__lk">View details &rarr;</a></div></div></article>
+    <article class="vc"><div class="vc__img g2"><button class="vc__heart" title="Remove from shortlist"><i class="fa-solid fa-heart"></i></button></div><div class="vc__body"><h3>Marina Garden Terrace</h3><div class="vc__tl"><i class="fa-solid fa-location-dot"></i>Dubai Marina</div><div class="vc__meta"><span><i class="fa-solid fa-users"></i> up to 250</span><span>Outdoor</span></div><div class="vc__foot"><span class="vc__price">From AED 30,000</span><a class="vc__lk">View details &rarr;</a></div></div></article>
+    <article class="vc"><div class="vc__img g3"><button class="vc__heart" title="Remove from shortlist"><i class="fa-solid fa-heart"></i></button></div><div class="vc__body"><h3>Downtown Sky Lounge</h3><div class="vc__tl"><i class="fa-solid fa-location-dot"></i>Downtown Dubai</div><div class="vc__meta"><span><i class="fa-solid fa-users"></i> up to 180</span><span>Rooftop</span></div><div class="vc__foot"><span class="vc__price">From AED 38,000</span><a class="vc__lk">View details &rarr;</a></div></div></article>
+  </div>
+
+  <!-- transient toast shown on remove (sample — auto-dismisses in the real page) -->
+  <div class="toast"><span>Removed from shortlist.</span> <a>Undo</a></div>
+
+  <!-- empty state (shown when the shortlist has 0 venues) -->
+  <section class="empty">
+    <i class="fa-solid fa-heart"></i>
+    <h2>Your shortlist is empty</h2>
+    <p>Tap the heart on any venue to save it here. When you're ready, send one enquiry for the venues you're comparing.</p>
+    <div class="empty__acts"><a class="btn">Browse venues</a> <a class="btn btn-ghost">Get help finding a venue</a></div>
+  </section>
+
+</div>
+
+<div class="note">
+  <b>How the shortlist works</b><br>
+  • <b>Save (heart):</b> every venue card's heart becomes a real toggle. Tapping it adds/removes the venue in
+    <code>localStorage</code> (persists across visits on the device — no account needed) and updates the
+    header <b>Shortlist N</b> count live. All handled in the self-hosted <code>app.js</code> (CSP-safe, no
+    inline JS).<br>
+  • <b>/shortlist page:</b> the header "Shortlist" link carries the saved ids
+    (<code>/shortlist?ids=1,2,3</code>); the server renders those published venues with the standard venue
+    card. Removing one (heart) drops it from <code>localStorage</code> + the page and updates the Enquire CTA.<br>
+  • <b>One enquiry:</b> "Enquire about these venues" hands off to the EXISTING multi-venue enquiry flow
+    (<code>/enquire?venues=1,2,3</code>) — one enquiry record linked to all selected venues via
+    <code>enquiry_venues</code>; the user gets one confirmation. No schema change needed.<br>
+  • <b>Remove + Undo:</b> removing a venue shows a brief toast — "Removed from shortlist. Undo" — that
+    re-adds it if tapped (auto-dismisses after a few seconds).<br>
+  • <b>Max size:</b> the shortlist caps at <b>12 venues</b>; past that, adding shows a gentle "Shortlist full"
+    hint instead of saving.<br>
+  • <b>Graceful handling:</b> the server renders only <b>published</b> venues from validated ids; any saved
+    venue that's since unpublished/archived/deleted is skipped and pruned from <code>localStorage</code> (with
+    a small "some saved venues are no longer available" note). When the shortlist is empty, the
+    "Enquire about these venues" CTA is hidden and the empty state shows.<br>
+  • <b>Continuity:</b> the multi-venue enquiry form (<code>/enquire?venues=…</code>) lists the selected venue
+    names before submission, so the user sees exactly what they're enquiring about.<br>
+  • <b>Clear shortlist</b> is a soft, separated text link (not beside the primary CTA) to avoid accidental
+    clearing. Empty state offers <b>Browse venues</b> + <b>Get help finding a venue</b>.<br>
+  • This preview shows the populated + empty states + a toast stacked; the real page shows one at a time.
+    Cards reuse the standard venue-card partial (gradients here are placeholders).
+</div>
+
+</body>
+</html>

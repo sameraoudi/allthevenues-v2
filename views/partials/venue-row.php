@@ -40,7 +40,9 @@ $snip = snippet($venue['description'] ?? '', 150);
     <?php if (!empty($venue['is_featured'])): ?><span class="atv-badge venue-row__badge">Featured</span><?php endif; ?>
   </a>
   <div class="venue-row__body">
-    <button type="button" class="venue-row__heart" aria-label="Add to shortlist"><?= icon('heart') ?></button>
+    <button type="button" class="venue-row__heart" data-shortlist-toggle
+            data-venue-id="<?= (int)($venue['id'] ?? 0) ?>" aria-pressed="false"
+            aria-label="Save to shortlist"><?= icon('heart') ?></button>
     <h3 class="venue-row__title"><a href="<?= e($detailUrl) ?>"><?= e($venue['name'] ?? 'Venue') ?></a></h3>
     <?php if ($address !== ''): ?><div class="venue-row__addr"><?= e($address) ?></div><?php endif; ?>
 

@@ -185,15 +185,26 @@ select:focus-visible,
   background: var(--card); border: 1px solid var(--line); border-radius: 14px;
   overflow: hidden; box-shadow: 0 10px 26px rgba(14,27,42,.08);
   display: flex; flex-direction: column; height: 100%;
+  position: relative;   /* anchors the heart toggle (a sibling of the img link) */
 }
 .atv-card__img { height: 220px; background: var(--navy) center/cover no-repeat; position: relative; display: block; }
 .atv-card__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.atv-card__badges { position: absolute; top: 12px; left: 12px; display: flex; gap: 8px; }
+.atv-card__badges { position: absolute; top: 12px; left: 12px; display: flex; gap: 8px; z-index: 2; }
+/* Heart is a real toggle button (add/remove shortlist). Button reset + circular. */
 .atv-card__heart {
   position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border-radius: 50%;
-  background: rgba(255,255,255,.92); display: flex; align-items: center; justify-content: center; color: var(--navy);
+  background: rgba(255,255,255,.92); border: 0; padding: 0; cursor: pointer; z-index: 2;
+  display: flex; align-items: center; justify-content: center; color: var(--navy);
+  -webkit-appearance: none; appearance: none; transition: color .15s, background .15s;
 }
+.atv-card__heart:hover { background: #fff; }
 .atv-card__heart svg { width: 16px; height: 16px; }
+.atv-card__heart.is-saved { color: #c0392b; }
+.atv-card__heart.is-saved svg { fill: currentColor; }
+
+/* Venue-detail "Save to shortlist" ghost button saved state. */
+.atv-save.is-saved { color: #c0392b; border-color: #e2b6ad; }
+.atv-save.is-saved svg { fill: currentColor; }
 .atv-card__body { padding: 16px 18px; display: flex; flex-direction: column; flex: 1 1 auto; }
 .atv-card__body h3 { font-size: 22px; margin-bottom: 2px; }
 .atv-card__body h3 a { color: var(--ink); }
@@ -492,6 +503,50 @@ select:focus-visible,
   .atv-bvp-formwrap { padding: 24px 18px; }
 }
 
+/* ---- Shortlist (/shortlist) --------------------------------------------- */
+.atv-sl { background: var(--pearl); padding: 8px 0 56px; }
+.atv-sl-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; padding: 28px 0 6px; }
+.atv-sl-head h1 { font-size: 34px; }
+.atv-sl-sub { font-size: 14px; color: var(--muted); margin-top: 4px; max-width: 56ch; }
+.atv-sl-head__cta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.atv-sl-bar {
+  background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px;
+  margin: 10px 0 22px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.atv-sl-bar__t { font-size: 14px; color: var(--navy); }
+.atv-sl-bar__t b { font-weight: 600; }
+.atv-sl-bar__acts { display: inline-flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.atv-sl-clear { font-size: 13px; color: var(--muted); cursor: pointer; align-self: center; }
+.atv-sl-clear:hover { color: #c0392b; }
+.atv-sl-note { font-size: 13px; color: var(--muted); margin: -8px 0 16px; }
+.atv-sl-grid { padding-bottom: 8px; }
+.atv-sl-item { display: flex; flex-direction: column; }   /* let the card fill the grid cell */
+.atv-sl-item > .atv-card { flex: 1 1 auto; }
+
+/* Empty state */
+.atv-sl-empty { text-align: center; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 48px 24px; margin: 20px 0 40px; }
+.atv-sl-empty__icon { display: inline-flex; color: var(--sand); }
+.atv-sl-empty__icon svg { width: 34px; height: 34px; }
+.atv-sl-empty h2 { font-size: 26px; margin: 12px 0 6px; }
+.atv-sl-empty p { font-size: 14px; color: var(--muted); max-width: 44ch; margin: 0 auto 18px; }
+.atv-sl-empty__acts { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+/* Toast (remove + undo, shortlist full) — fixed bottom-center, self-managed by JS. */
+.atv-toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 16px);
+  display: inline-flex; align-items: center; gap: 12px; max-width: calc(100vw - 32px);
+  background: var(--navy); color: #fff; font-size: 13.5px; padding: 11px 16px; border-radius: 10px;
+  box-shadow: 0 8px 22px rgba(14,27,42,.28); opacity: 0; pointer-events: none;
+  transition: opacity .2s, transform .2s; z-index: 1000;
+}
+.atv-toast.is-visible { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.atv-toast__undo { color: var(--sand); font-weight: 600; cursor: pointer; }
+.atv-toast__undo:hover { color: #fff; }
+
+@media (max-width: 600px) {
+  .atv-sl-head h1 { font-size: 28px; }
+}
+
 /* ---- Admin shell --------------------------------------------------------- */
 .admin-body { background: var(--pearl); }
 .admin-shell { display: flex; min-height: 100vh; align-items: stretch; }
@@ -698,6 +753,8 @@ select:focus-visible,
 .venue-row__heart { position: absolute; top: 14px; right: 14px; background: none; border: 0; color: var(--muted); cursor: pointer; padding: 2px; }
 .venue-row__heart svg { width: 20px; height: 20px; }
 .venue-row__heart:hover { color: var(--action); }
+.venue-row__heart.is-saved { color: #c0392b; }
+.venue-row__heart.is-saved svg { fill: currentColor; }
 .venue-row__title { font-size: 23px; margin-bottom: 1px; }
 .venue-row__title a { color: var(--ink); }
 .venue-row__title a:hover { color: var(--action); }

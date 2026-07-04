@@ -96,7 +96,9 @@ $mapsLinkUrl = 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode
       <a href="<?= e(base_url('venues')) ?>">Venues</a> &rsaquo; <b><?= e($name) ?></b>
     </div>
     <div class="vd-top__acts">
-      <button type="button" class="atv-btn atv-btn--sm atv-btn--ghost" aria-label="Add to shortlist"><?= icon('heart') ?> Shortlist</button>
+      <button type="button" class="atv-btn atv-btn--sm atv-btn--ghost atv-save"
+              data-shortlist-toggle data-venue-id="<?= (int)$venue['id'] ?>" aria-pressed="false"
+              aria-label="Save to shortlist"><?= icon('heart') ?> Save to shortlist</button>
       <a class="atv-btn atv-btn--sm" href="<?= e($enquireUrl) ?>">Enquire now</a>
     </div>
   </div>

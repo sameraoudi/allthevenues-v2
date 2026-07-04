@@ -227,3 +227,189 @@
   if (document.readyState !== 'loading') initStepper();
   else document.addEventListener('DOMContentLoaded', initStepper);
 })();
+
+/* ---------------------------------------------------------------------------
+   Shortlist — localStorage-backed, no account. Functional heart toggle on
+   venue cards + venue detail, live header count, /shortlist hand-off to the
+   existing /enquire?venues= multi flow. CSP-safe: all here in app.js, no inline.
+   --------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  var KEY = 'atv_shortlist';
+  var CAP = 12;
+
+  function read() {
+    try {
+      var raw = window.localStorage.getItem(KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return [];
+      var out = [], seen = {};
+      for (var i = 0; i < arr.length; i++) {
+        var n = parseInt(arr[i], 10);
+        if (n > 0 && !seen[n]) { seen[n] = 1; out.push(n); }
+      }
+      return out;
+    } catch (e) { return []; }
+  }
+
+  function write(arr) {
+    var out = [], seen = {};
+    for (var i = 0; i < arr.length && out.length < CAP; i++) {
+      var n = parseInt(arr[i], 10);
+      if (n > 0 && !seen[n]) { seen[n] = 1; out.push(n); }
+    }
+    try { window.localStorage.setItem(KEY, JSON.stringify(out)); } catch (e) { /* private mode */ }
+    return out;
+  }
+
+  function has(id) { return read().indexOf(parseInt(id, 10)) !== -1; }
+  function count() { return read().length; }
+
+  function toggle(id) {
+    id = parseInt(id, 10);
+    if (!(id > 0)) return 'removed';
+    var list = read();
+    var idx = list.indexOf(id);
+    if (idx !== -1) { list.splice(idx, 1); write(list); return 'removed'; }
+    if (list.length >= CAP) return 'full';
+    list.push(id); write(list); return 'added';
+  }
+
+  function basePath(el) {
+    // Prefer an explicit data-shortlist-base; else the element's own href path.
+    var b = el.getAttribute('data-shortlist-base');
+    if (b) return b;
+    var href = el.getAttribute('href') || '';
+    var q = href.indexOf('?');
+    return q === -1 ? href : href.slice(0, q);
+  }
+
+  function syncUI() {
+    var ids = read();
+    var n = ids.length;
+    var joined = ids.join(',');
+
+    var counters = document.querySelectorAll('[data-shortlist-count]');
+    for (var i = 0; i < counters.length; i++) { counters[i].textContent = String(n); }
+
+    var links = document.querySelectorAll('[data-shortlist-link]');
+    for (var j = 0; j < links.length; j++) {
+      var base = basePath(links[j]);
+      links[j].setAttribute('href', n ? (base + '?ids=' + joined) : base);
+    }
+
+    var toggles = document.querySelectorAll('[data-shortlist-toggle][data-venue-id]');
+    for (var k = 0; k < toggles.length; k++) {
+      var saved = has(toggles[k].getAttribute('data-venue-id'));
+      toggles[k].classList.toggle('is-saved', saved);
+      toggles[k].setAttribute('aria-pressed', saved ? 'true' : 'false');
+    }
+
+    // Enquire CTA on /shortlist.
+    var enq = document.querySelectorAll('[data-shortlist-enquire]');
+    for (var m = 0; m < enq.length; m++) {
+      var eb = basePath(enq[m]);
+      enq[m].setAttribute('href', eb + '?venues=' + joined);
+      enq[m].style.display = n ? '' : 'none';
+    }
+  }
+
+  // --- toast (single reusable element; CSP-safe DOM, no innerHTML) ---
+  var toastEl = null, toastTimer = null;
+  function showToast(message, undoFn) {
+    if (!toastEl) {
+      toastEl = document.createElement('div');
+      toastEl.className = 'atv-toast';
+      toastEl.setAttribute('role', 'status');
+      document.body.appendChild(toastEl);
+    }
+    while (toastEl.firstChild) { toastEl.removeChild(toastEl.firstChild); }
+    var span = document.createElement('span');
+    span.textContent = message;
+    toastEl.appendChild(span);
+    if (undoFn) {
+      var a = document.createElement('a');
+      a.className = 'atv-toast__undo';
+      a.setAttribute('role', 'button');
+      a.setAttribute('tabindex', '0');
+      a.textContent = 'Undo';
+      a.addEventListener('click', function (e) { e.preventDefault(); hideToast(); undoFn(); });
+      toastEl.appendChild(a);
+    }
+    toastEl.classList.add('is-visible');
+    if (toastTimer) { window.clearTimeout(toastTimer); }
+    toastTimer = window.setTimeout(hideToast, 5000);
+  }
+  function hideToast() { if (toastEl) toastEl.classList.remove('is-visible'); }
+
+  function onShortlistPage() { return !!document.querySelector('[data-shortlist-requested]'); }
+
+  function showEmptyState() {
+    var pop = document.querySelector('[data-shortlist-populated]');
+    var empty = document.querySelector('[data-shortlist-empty]');
+    if (pop) pop.setAttribute('hidden', 'hidden');
+    if (empty) empty.removeAttribute('hidden');
+  }
+
+  // --- delegated clicks ---
+  document.addEventListener('click', function (ev) {
+    var tgl = ev.target.closest('[data-shortlist-toggle]');
+    if (tgl) {
+      ev.preventDefault();
+      var id = tgl.getAttribute('data-venue-id');
+      var r = toggle(id);
+      syncUI();
+      if (r === 'full') {
+        showToast('Shortlist full — up to 12 venues.', null);
+      } else if (r === 'removed' && onShortlistPage()) {
+        var card = document.querySelector('[data-shortlist-item][data-venue-id="' + id + '"]');
+        if (card && card.parentNode) card.parentNode.removeChild(card);
+        if (count() === 0) showEmptyState();
+        showToast('Removed from shortlist.', function () {
+          var list = read(); list.push(parseInt(id, 10)); write(list);
+          if (onShortlistPage()) window.location.reload(); else syncUI();
+        });
+      }
+      return;
+    }
+
+    var clr = ev.target.closest('[data-shortlist-clear]');
+    if (clr) {
+      ev.preventDefault();
+      if (window.confirm('Clear your whole shortlist?')) {
+        write([]); syncUI();
+        if (onShortlistPage()) showEmptyState();
+      }
+      return;
+    }
+
+    var undoInToast = ev.target.closest('.atv-toast__undo');
+    if (undoInToast) { return; } // handled by its own listener
+  });
+
+  // Prune stale ids on /shortlist: any requested id NOT resolved (unpublished /
+  // deleted) is dropped from localStorage so the count reflects reality.
+  function reconcile() {
+    var host = document.querySelector('[data-shortlist-requested]');
+    if (!host) return;
+    var requested = (host.getAttribute('data-shortlist-requested') || '').split(',');
+    var resolvedStr = host.getAttribute('data-shortlist-resolved') || '';
+    var resolved = {};
+    resolvedStr.split(',').forEach(function (s) { var n = parseInt(s, 10); if (n > 0) resolved[n] = 1; });
+    var list = read(), changed = false, kept = [];
+    for (var i = 0; i < list.length; i++) {
+      var id = list[i];
+      // Only prune ids the server was ASKED to resolve but couldn't.
+      if (requested.indexOf(String(id)) !== -1 && !resolved[id]) { changed = true; continue; }
+      kept.push(id);
+    }
+    if (changed) write(kept);
+  }
+
+  function initShortlist() { reconcile(); syncUI(); }
+
+  if (document.readyState !== 'loading') initShortlist();
+  else document.addEventListener('DOMContentLoaded', initShortlist);
+})();

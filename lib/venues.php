@@ -422,6 +422,56 @@ function venue_list(PDO $pdo, array $filters, int $page, int $perPage, string $s
 }
 
 /**
+ * Venue-card rows for a set of ids (the shortlist), PUBLISHED only, returned in
+ * the given id order (FIELD()) so the shortlist keeps the user's order. Same
+ * card column shape as venue_list(). Unpublished/missing ids are simply absent
+ * from the result (the caller reconciles). Prepared + bound.
+ */
+function venue_cards_by_ids(PDO $pdo, array $ids): array
+{
+    $clean = [];
+    foreach ($ids as $id) {
+        $n = (int)$id;
+        if ($n > 0 && !in_array($n, $clean, true)) { $clean[] = $n; }
+    }
+    if (!$clean) { return []; }
+
+    // Distinct placeholder names per occurrence — the same value is bound to
+    // both the IN(...) list and FIELD(...) ordering, and native prepares reject
+    // a reused name (HY093).
+    $inPh = $ordPh = [];
+    foreach ($clean as $i => $n) { $inPh[] = ':in' . $i; $ordPh[] = ':ord' . $i; }
+    $inList    = implode(',', $inPh);
+    $orderArgs = implode(',', $ordPh);
+
+    $sql = "SELECT
+                v.id, v.slug, v.name, v.pricing_level, v.minimum_spend,
+                v.capacity_max, v.capacity_min, v.is_featured, v.is_verified,
+                v.indoor_outdoor, v.best_for, v.description, v.partner_id,
+                vt.name AS venue_type_name,
+                e.name  AS emirate_name, v.area,
+                p.org_name AS partner_name,
+                (SELECT vi.file_path FROM venue_images vi
+                   WHERE vi.venue_id = v.id AND vi.status = 'active'
+                   ORDER BY vi.is_primary DESC, vi.sort_order ASC, vi.id ASC
+                   LIMIT 1) AS primary_image
+            FROM venues v
+            LEFT JOIN venue_types vt ON vt.id = v.venue_type_id
+            LEFT JOIN emirates    e  ON e.id  = v.emirate_id
+            LEFT JOIN partners    p  ON p.id  = v.partner_id
+            WHERE v.status = 'published' AND v.id IN ($inList)
+            ORDER BY FIELD(v.id, $orderArgs)";
+
+    $stmt = $pdo->prepare($sql);
+    foreach ($clean as $i => $n) {
+        $stmt->bindValue(':in' . $i,  $n, PDO::PARAM_INT);
+        $stmt->bindValue(':ord' . $i, $n, PDO::PARAM_INT);
+    }
+    $stmt->execute();
+    return $stmt->fetchAll();
+}
+
+/**
  * Featured published venues for the homepage. Falls back to newest published
  * when fewer than $limit are flagged featured. Prepared + bound.
  */
