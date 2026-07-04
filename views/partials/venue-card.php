@@ -64,7 +64,10 @@ $snip = snippet($venue['description'] ?? '', 110);
 
     <div class="atv-card__foot">
       <span class="spend"><?= e($spend) ?></span>
-      <a class="link" href="<?= e($detailUrl) ?>">View details <?= icon('arrow-right', '', null) ?></a>
+      <span class="atv-card__acts">
+        <a class="link" href="<?= e($detailUrl) ?>">View details <?= icon('arrow-right', '', null) ?></a>
+        <a class="atv-card__enq" href="<?= e($enquireUrl) ?>">Enquire</a>
+      </span>
     </div>
   </div>
 </article>

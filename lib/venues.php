@@ -102,6 +102,27 @@ function emirate_published_counts(PDO $pdo): array
 }
 
 /**
+ * Published-venue count per event×emirate combo: ["eventSlug|emirateSlug" => n].
+ * Powers the SEO landing pages (/venues/{event}-in-{emirate}) — gate, counts,
+ * and internal-link discovery.
+ */
+function event_emirate_counts(PDO $pdo): array
+{
+    $rows = $pdo->query(
+        "SELECT et.slug AS ev, e.slug AS em, COUNT(DISTINCT v.id) AS n
+         FROM venues v
+         JOIN venue_event_types vet ON vet.venue_id = v.id
+         JOIN event_types et ON et.id = vet.event_type_id
+         JOIN emirates e ON e.id = v.emirate_id
+         WHERE v.status = 'published'
+         GROUP BY et.slug, e.slug"
+    )->fetchAll();
+    $out = [];
+    foreach ($rows as $r) { $out[$r['ev'] . '|' . $r['em']] = (int)$r['n']; }
+    return $out;
+}
+
+/**
  * A representative published-venue image per emirate: [slug => file_path|null].
  * Used as the Locations tile cover fallback when no city image is provided.
  */

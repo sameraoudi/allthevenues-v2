@@ -19,6 +19,14 @@ $pdo   = db_pdo();
 $venue = venue_by_slug($pdo, $slug);
 
 if ($venue === null) {
+    // No real venue by this slug. An "{event}-in-{emirate}" slug is an SEO
+    // landing page (real venues always win; no event/emirate slug contains
+    // '-in-', so a first-split is safe). landing.php renders / redirects / 404s.
+    if (strpos($slug, '-in-') !== false) {
+        [$evSlug, $emSlug] = explode('-in-', $slug, 2);
+        require __DIR__ . '/landing.php';
+        exit;
+    }
     http_response_code(404);
     require __DIR__ . '/404.php';
     exit;
