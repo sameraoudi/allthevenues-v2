@@ -436,8 +436,10 @@ select:focus-visible,
 
 .atv-bvp-body { padding-bottom: 56px; }
 
-/* Value cards — overlap the hero. */
-.atv-bvp-vals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: -32px 0 8px; }
+/* Value cards — overlap the hero. position/z-index keep them fully on top of
+   the hero's gradient (they are DOM siblings after the hero, so raising their
+   stacking context lifts them above it without clipped tops). */
+.atv-bvp-vals { position: relative; z-index: 3; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: -32px 0 8px; }
 .atv-bvp-val {
   background: #fff; border: 1px solid var(--line); border-radius: 14px;
   padding: 22px 20px; box-shadow: 0 8px 22px rgba(14,27,42,.07);

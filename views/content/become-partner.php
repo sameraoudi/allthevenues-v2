@@ -129,8 +129,8 @@ $locationLabels = $locationLabels ?? [];
         <label class="atv-bvp-check<?= $has('consent') ? ' atv-bvp-check--err' : '' ?>">
           <input type="checkbox" name="consent" value="1"<?= (($old['consent'] ?? '') !== '') ? ' checked' : '' ?>>
           <span>I agree to be contacted by All The Venues about partnership, and to the
-            <a href="<?= e(base_url('venue-provider-terms')) ?>">Venue Provider Terms</a> and
-            <a href="<?= e(base_url('privacy-policy')) ?>">Privacy Policy</a>. <span class="atv-bvp-req">*</span></span>
+            <a href="<?= e(base_url('venue-provider-terms')) ?>" target="_blank" rel="noopener">Venue Provider Terms</a> and
+            <a href="<?= e(base_url('privacy-policy')) ?>" target="_blank" rel="noopener">Privacy Policy</a>. <span class="atv-bvp-req">*</span></span>
         </label>
         <?php if ($has('consent')): ?><div class="atv-bvp-full"><?= $eline('consent') ?></div><?php endif; ?>
 

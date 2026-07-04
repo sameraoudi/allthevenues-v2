@@ -9,7 +9,7 @@ declare(strict_types=1);
     <div class="atv-enq__card atv-enq__success">
       <span class="atv-enq__tick" aria-hidden="true"><?= icon('check-circle') ?></span>
       <h1>Thank you — your partner request is in</h1>
-      <p class="atv-enq__intro">Our team will review your venues and follow up shortly.</p>
+      <p class="atv-enq__intro">We've received your partnership request. Our team will review it and be in touch shortly.</p>
       <p class="atv-enq__ref">Your reference<br><strong><?= e($reference) ?></strong></p>
       <p class="atv-enq__reassure">We've emailed you a copy for your records. Your contact details stay private —
         we never publish them.</p>

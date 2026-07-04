@@ -145,8 +145,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     }
 
                     $userBody = '<p>Thank you for your interest in partnering with All The Venues.</p>'
-                        . '<p>We\'ve received your request. Your reference is <strong>' . e($saved['reference']) . '</strong>. '
-                        . 'Our team will review your venues and follow up shortly.</p>';
+                        . '<p>We\'ve received your request (ref <strong>' . e($saved['reference']) . '</strong>) and '
+                        . 'our team will review it and be in touch shortly.</p>';
                     if ($clean['email'] !== '' && !send_mail($clean['email'], 'Your partner request ' . $saved['reference'] . ' — All The Venues', $userBody)) {
                         error_log('partner ' . $saved['reference'] . ': user email failed');
                     }

@@ -6,6 +6,7 @@ declare(strict_types=1);
 $flash = $flash ?? null;
 $id    = (int)$enq['id'];
 [$modeLabel, $modeClass] = enquiry_mode_badge((string)$enq['mode'], count($enq['venues']));
+$isPartnerSignup = ($enq['mode'] === 'partner_signup');
 $guests = $enq['guest_count'] ? (venue_guest_bands()[$enq['guest_count']][0] ?? $enq['guest_count']) : '—';
 $io = $enq['indoor_outdoor'] ? (venue_indoor_outdoor_options()[$enq['indoor_outdoor']] ?? $enq['indoor_outdoor']) : '';
 $flexOpts = enquiry_date_flexibility();
@@ -34,40 +35,62 @@ $row = static function (string $label, ?string $value): void {
         </div>
       </div>
 
-      <h3 class="lead-detail__section">Contact</h3>
-      <?php $row('Name', $enq['name']); $row('Email', $enq['email']); $row('Phone', $enq['phone']); $row('Company', $enq['company']); ?>
+      <?php if ($isPartnerSignup): ?>
+        <h3 class="lead-detail__section">Partner request</h3>
+        <?php
+          $row('Organization', $enq['company']);
+          $row('Contact', $enq['name']);
+          $row('Email', $enq['email']);
+          $row('Phone', $enq['phone']);
+          $row('Primary location', $enq['city_pref'] ?? '');
+          $row('Provider type', $enq['provider_type'] ?? '');
+          $web = trim((string)($enq['website'] ?? ''));
+          if ($web !== '' && preg_match('~^https?://~i', $web)):
+        ?>
+          <div class="lead-detail__row"><span class="lead-detail__k">Website</span><span class="lead-detail__v"><a href="<?= e($web) ?>" target="_blank" rel="noopener nofollow"><?= e($web) ?></a></span></div>
+        <?php elseif ($web !== ''): $row('Website', $web); endif; ?>
+        <?php
+          $vm = $enq['venues_managed'] ?? null;
+          $row('Venues managed', ($vm === null || $vm === '') ? '' : (string)$vm);
+          $row('Message', $enq['notes']);
+          $row('Consent to be contacted', $enq['consent_to_share'] ? 'Yes' : 'No');
+        ?>
+      <?php else: ?>
+        <h3 class="lead-detail__section">Contact</h3>
+        <?php $row('Name', $enq['name']); $row('Email', $enq['email']); $row('Phone', $enq['phone']); $row('Company', $enq['company']); ?>
 
-      <h3 class="lead-detail__section">Event</h3>
-      <?php
-        $row('Event type', $enq['event_type_name']);
-        $row('Event date', $enq['event_date'] ? date('j M Y', strtotime((string)$enq['event_date'])) : '');
-        $row('Date flexibility', $enq['date_flexibility'] ? ($flexOpts[$enq['date_flexibility']] ?? $enq['date_flexibility']) : '');
-        $row('Location', $enq['emirate_name']);
-        $row('Guests', $enq['guest_count'] ? $guests : '');
-        $row('Budget', $enq['budget_range']);
-      ?>
+        <h3 class="lead-detail__section">Event</h3>
+        <?php
+          $row('Event type', $enq['event_type_name']);
+          $row('Event date', $enq['event_date'] ? date('j M Y', strtotime((string)$enq['event_date'])) : '');
+          $row('Date flexibility', $enq['date_flexibility'] ? ($flexOpts[$enq['date_flexibility']] ?? $enq['date_flexibility']) : '');
+          $row('Location', $enq['emirate_name']);
+          $row('Guests', $enq['guest_count'] ? $guests : '');
+          $row('Budget', $enq['budget_range']);
+        ?>
 
-      <h3 class="lead-detail__section">Requirements</h3>
-      <?php
-        $row('Venue preference', $enq['venue_preference']);
-        $row('Indoor / outdoor', $io);
-        $row('Food & beverage', $enq['fb_requirements']);
-        $row('AV & technical', $enq['av_requirements']);
-        $row('Notes', $enq['notes']);
-      ?>
+        <h3 class="lead-detail__section">Requirements</h3>
+        <?php
+          $row('Venue preference', $enq['venue_preference']);
+          $row('Indoor / outdoor', $io);
+          $row('Food & beverage', $enq['fb_requirements']);
+          $row('AV & technical', $enq['av_requirements']);
+          $row('Notes', $enq['notes']);
+        ?>
+      <?php endif; ?>
 
       <h3 class="lead-detail__section">Meta</h3>
       <?php
-        $row('Consent to share', $enq['consent_to_share'] ? 'Yes' : 'No');
+        if (!$isPartnerSignup) { $row('Consent to share', $enq['consent_to_share'] ? 'Yes' : 'No'); }
         $row('Mode', $modeLabel);
-        if (!empty($enq['partner_name'])) { $row('About partner', $enq['partner_name']); }
+        if (!$isPartnerSignup && !empty($enq['partner_name'])) { $row('About partner', $enq['partner_name']); }
         $row('Source', $enq['source_page']);
         $row('Received', date('j M Y H:i', strtotime((string)$enq['created_at'])));
         $row('Updated', date('j M Y H:i', strtotime((string)$enq['updated_at'])));
       ?>
     </div>
 
-    <?php if ($enq['venues']): ?>
+    <?php if (!$isPartnerSignup && $enq['venues']): ?>
       <div class="admin-panel">
         <h3 class="lead-detail__section mt-0">Linked venues</h3>
         <ul class="lead-venues">
@@ -126,6 +149,7 @@ $row = static function (string $label, ?string $value): void {
       </form>
     </div>
 
+    <?php if (!$isPartnerSignup): ?>
     <div class="admin-panel">
       <h3 class="lead-detail__section mt-0">Forward to partner</h3>
       <?php if (!$partners): ?>
@@ -184,5 +208,6 @@ $row = static function (string $label, ?string $value): void {
         </form>
       <?php endif; ?>
     </div>
+    <?php endif; ?>
   </div>
 </div>
