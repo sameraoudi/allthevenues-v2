@@ -83,10 +83,10 @@ grown for providers:** `partners.is_verified` (real column, replaces the `is_fea
 `contact_name`/`contact_email`/`contact_phone` (migration 011). Migrations 008–011 applied on prod. Samer
 began filling provider emails + adding providers/venues via the new admin.
 
-**In progress:** none — U4, U5, and launch-track **#2, #4, #6, #7** all complete (+ the docs-exposure
-security fix). Next: **U3c** historical enquiries → **#5** reporting → **#8/U6** audit + apex cutover. Also
-open: **#9** image rights/provenance (schema + admin), **#3** provider portal (Phase 2), **#1** card-hover
-polish. See `docs/ATV-BACKLOG.md`.
+**In progress:** none — U4, U5, and launch-track **#2, #4, #6, #7, U3c** all complete (+ the docs-exposure
+security fix). Next: **#5** reporting → **#8/U6** audit + apex cutover. Also open: **#9** image
+rights/provenance (schema + admin), **#3** provider portal (Phase 2), **#1** card-hover polish. See
+`docs/ATV-BACKLOG.md`.
 
 ---
 
@@ -198,6 +198,15 @@ polish. See `docs/ATV-BACKLOG.md`.
   detail/badge/filter, no forwarding; partner-form image consent + live Terms/Privacy links). Admin inbox:
   mode filter, admin-only delete (confirm+audit), tidied Venue(s) column, `app.js` loaded in admin layout.
   Legal drafts saved to `docs/legal/`; **#9 image-rights plan** captured in the backlog.
+- **U3c — historical enquiries imported.** Legacy `inquiry` (~2,311 rows) was NOT sqlmap-junk after all —
+  mostly real (2017→2026). Migration 015 added `enquiries.is_historical` + `legacy_id` (unique).
+  `db/backfill_legacy_enquiries.php` (CLI-only, dry-run-by-default, idempotent via `legacy_id`, legacy DB
+  creds supplied at runtime — placeholder in repo) imported all: field-mapped, `inquiry_date`→`created_at`
+  preserved, guest→band + event-type→slug mapped, **1,971 best-effort venue links** (legacy name→slug), spam
+  scored → `status='spam'` (116), real → `closed` (2,195), `is_historical=1`. **Samer then deleted the 116
+  spam rows** (+ their `enquiry_venues`/`lead_routing`). NB: re-running the backfill would re-import them.
+- **Admin enquiries pager** is now windowed (First/Prev/… /Next/Last + "Page X of Y") via reusable
+  `views/partials/admin-pager.php` — the 2.3k import had ballooned it to 93 links.
 - **SECURITY fix:** `docs/` + root `*.md` (CLAUDE/Memory/VISION/backlog/previews) were deploying to the
   docroot and **publicly served** (leaked infra: DB name, `/home1/...` paths, repo, deploy-key alias). Now
   **`.htaccess` denies `/docs/*` + any `.md`** (403); legal pages unaffected (they read `docs/legal/*.md` via
