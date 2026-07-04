@@ -33,6 +33,13 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
     Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://gc.zgo.at https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data: https://allthevenues.goatcounter.com; font-src 'self'; connect-src 'self' https://allthevenues.goatcounter.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://www.google.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
 </IfModule>
 
+# --- Deny web access to internal docs + markdown source (served files only;
+#     PHP filesystem reads for the legal pages are unaffected) ---
+RedirectMatch 403 ^/docs(/|$)
+<FilesMatch "\.md$">
+    Require all denied
+</FilesMatch>
+
 # === Front-controller routing ===
 # Serve real files/directories directly; route everything else to index.php.
 RewriteCond %{REQUEST_FILENAME} -f [OR]
