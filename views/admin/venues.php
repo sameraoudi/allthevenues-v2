@@ -161,6 +161,15 @@ if ($rest === 'new') {
                 $clean[$rf] = html_sanitize($_POST[$rf] ?? null);
             }
 
+            // --- provider-ownership provenance (#6-2): a provider chosen at
+            //     creation is an admin assignment. No provider → the DB default
+            //     'unassigned' applies (don't set the keys). ---
+            if (!empty($clean['partner_id'])) {
+                $clean['management_source']    = 'admin_assigned';
+                $clean['provider_assigned_at'] = date('Y-m-d H:i:s');
+                $clean['provider_assigned_by'] = (int)($me['id'] ?? 0) ?: null;
+            }
+
             if (!$errors) {
                 try {
                     $newId = venue_admin_create($pdo, $clean);
@@ -302,6 +311,23 @@ if ($rest === 'edit') {
             // --- rich-text (sanitized) ---
             foreach (venue_richtext_fields() as $rf) {
                 $clean[$rf] = html_sanitize($_POST[$rf] ?? null);   // null if empty
+            }
+
+            // --- provider-ownership provenance (#6-2): only when the provider
+            //     actually changes. Unchanged providers keep their existing
+            //     management_source (e.g. a legacy_import venue stays that). ---
+            $oldPid = ($venue['partner_id'] ?? null) !== null ? (int)$venue['partner_id'] : null;
+            $newPid = $clean['partner_id'];            // int or null
+            if ($newPid !== $oldPid) {
+                if ($newPid) {
+                    $clean['management_source']    = 'admin_assigned';
+                    $clean['provider_assigned_at'] = date('Y-m-d H:i:s');
+                    $clean['provider_assigned_by'] = (int)($me['id'] ?? 0) ?: null;
+                } else {
+                    $clean['management_source']    = 'unassigned';
+                    $clean['provider_assigned_at'] = null;
+                    $clean['provider_assigned_by'] = null;
+                }
             }
 
             if (!$errors) {

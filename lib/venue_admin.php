@@ -27,6 +27,18 @@ function venue_admin_status_label(string $s): string
     return venue_admin_statuses()[$s][0] ?? ucfirst(str_replace('_', ' ', $s));
 }
 
+/** Provenance label for venues.management_source (#6-1). */
+function venue_management_source_label(string $s): string
+{
+    return [
+        'unassigned'       => 'Not provider-managed',
+        'admin_assigned'   => 'Admin-assigned',
+        'provider_created' => 'Provider-created',
+        'provider_claimed' => 'Provider-claimed',
+        'legacy_import'    => 'Legacy import',
+    ][$s] ?? ucfirst(str_replace('_', ' ', $s));
+}
+
 /** Normalise list filters from $_GET. */
 function venue_admin_filters(array $in): array
 {
@@ -79,10 +91,15 @@ function venue_admin_list(PDO $pdo, array $filters, int $page, int $perPage): ar
     return ['rows' => $stmt->fetchAll(), 'total' => $total];
 }
 
-/** Full venue row for editing (any status), or null. */
+/** Full venue row for editing (any status), or null. Joins the assigner's name
+ *  (provider_assigned_by → users.id) for the read-only provenance display. */
 function venue_admin_get(PDO $pdo, int $id): ?array
 {
-    $stmt = $pdo->prepare('SELECT * FROM venues WHERE id = :id LIMIT 1');
+    $stmt = $pdo->prepare(
+        'SELECT v.*, u.name AS assigned_by_name
+         FROM venues v LEFT JOIN users u ON u.id = v.provider_assigned_by
+         WHERE v.id = :id LIMIT 1'
+    );
     $stmt->execute([':id' => $id]);
     $row = $stmt->fetch();
     return $row === false ? null : $row;

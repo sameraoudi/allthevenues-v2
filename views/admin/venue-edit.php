@@ -21,6 +21,24 @@ $flash = $flash ?? null;
 
   <?php require __DIR__ . '/_venue-fields.php'; ?>
 
+  <?php
+    /* Provider-ownership provenance (#6-2) — read-only; set automatically by the
+       save logic when the Provider above changes. managed_by_provider is derived. */
+    $mgManaged    = !empty($old['partner_id']);
+    $mgSource     = venue_management_source_label((string)($old['management_source'] ?? 'unassigned'));
+    $mgAssignedAt = $old['provider_assigned_at'] ?? null;
+    $mgAssignedBy = trim((string)($old['assigned_by_name'] ?? ''));
+  ?>
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">Management</h2>
+    <p class="lead-hint mb-0">
+      Provider-managed: <strong><?= $mgManaged ? 'Yes' : 'No' ?></strong>
+      &middot; Source: <strong><?= e($mgSource) ?></strong><?php if (!empty($mgAssignedAt)): ?>
+      &middot; Assigned <?= e(date('j M Y', strtotime((string)$mgAssignedAt))) ?><?php if ($mgAssignedBy !== ''): ?> by <?= e($mgAssignedBy) ?><?php endif; ?><?php endif; ?>
+    </p>
+    <p class="lead-hint mb-0">Set automatically when you change the Provider above.</p>
+  </div>
+
   <div class="admin-form__actions">
     <button type="submit" class="atv-btn">Save venue</button>
     <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('admin/venues')) ?>">Cancel</a>
