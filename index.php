@@ -75,6 +75,7 @@ $routes = [
     '/venues'      => __DIR__ . '/views/venues.php',
     '/providers'   => __DIR__ . '/views/partners.php',
     '/event-types' => __DIR__ . '/views/event-types.php',
+    '/locations'   => __DIR__ . '/views/locations.php',
     '/enquire'     => __DIR__ . '/views/enquire.php',
 ];
 

@@ -83,6 +83,44 @@ function event_type_published_counts(PDO $pdo): array
     return $out;
 }
 
+/**
+ * Published-venue count per emirate: [slug => (int)n]. Only emirates with at
+ * least one published venue appear (INNER JOIN) — the Locations page gates on
+ * presence and shows a count.
+ */
+function emirate_published_counts(PDO $pdo): array
+{
+    $rows = $pdo->query(
+        "SELECT e.slug, COUNT(*) AS n
+         FROM venues v JOIN emirates e ON e.id = v.emirate_id
+         WHERE v.status = 'published'
+         GROUP BY e.slug"
+    )->fetchAll();
+    $out = [];
+    foreach ($rows as $r) { $out[$r['slug']] = (int)$r['n']; }
+    return $out;
+}
+
+/**
+ * A representative published-venue image per emirate: [slug => file_path|null].
+ * Used as the Locations tile cover fallback when no city image is provided.
+ */
+function emirate_cover_images(PDO $pdo): array
+{
+    $rows = $pdo->query(
+        "SELECT e.slug AS slug, (
+            SELECT vi.file_path FROM venues v2
+              JOIN venue_images vi ON vi.venue_id = v2.id AND vi.status = 'active'
+             WHERE v2.emirate_id = e.id AND v2.status = 'published'
+             ORDER BY v2.is_featured DESC, vi.is_primary DESC, v2.name ASC, vi.sort_order ASC, vi.id ASC
+             LIMIT 1) AS cover
+         FROM emirates e"
+    )->fetchAll();
+    $out = [];
+    foreach ($rows as $r) { $out[$r['slug']] = $r['cover'] !== null ? (string)$r['cover'] : null; }
+    return $out;
+}
+
 function venue_types_all(PDO $pdo): array
 {
     return $pdo->query(

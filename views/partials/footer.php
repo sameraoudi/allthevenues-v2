@@ -16,6 +16,7 @@
           <li><a href="<?= e(base_url('venues')) ?>">Venues</a></li>
           <li><a href="<?= e(base_url('providers')) ?>">Venue Providers</a></li>
           <li><a href="<?= e(base_url('event-types')) ?>">Event types</a></li>
+          <li><a href="<?= e(base_url('locations')) ?>">Locations</a></li>
           <li><a href="#" title="Coming soon">Inspiration</a></li>
         </ul>
       </div>
