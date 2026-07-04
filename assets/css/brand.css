@@ -123,7 +123,8 @@ select:focus-visible,
 .site-header .right { display: flex; align-items: center; gap: 16px; }
 .shortlist { font-size: 14px; color: #fff; display: inline-flex; gap: 7px; align-items: center; cursor: pointer; }
 .shortlist .n { background: var(--sand); color: var(--navy); font-weight: 600; border-radius: 20px; padding: 1px 9px; font-size: 12px; }
-.nav-toggle { display: none; background: none; border: 0; color: #fff; cursor: pointer; }
+.nav-toggle { display: none; background: none; border: 0; color: #fff; cursor: pointer; padding: 8px; line-height: 0; }
+.nav-toggle svg { width: 26px; height: 26px; }
 
 /* ---- Hero ---------------------------------------------------------------- */
 .atv-hero { position: relative; color: #fff; background: var(--navy); }
@@ -276,9 +277,21 @@ select:focus-visible,
 
 /* ---- Responsive (mirrors the preview breakpoints) ------------------------ */
 @media (max-width: 900px) {
+  /* Bar: brand pinned left; Enquire then the hamburger grouped at the right. */
+  .site-header .atv-wrap { gap: 12px; }
+  .brand-lockup { margin-right: auto; }
+  .site-header .right { order: 1; gap: 10px; }
+  .nav-toggle { display: inline-flex; align-items: center; order: 2; }
+  .shortlist { display: none; }              /* declutter — non-functional on mobile */
+  /* Links hidden until the toggle opens a full-width panel below the bar. */
   .main-nav { display: none; }
-  .main-nav.open { display: flex; flex-direction: column; gap: 12px; width: 100%; padding: 8px 0 4px; }
-  .nav-toggle { display: inline-flex; }
+  .main-nav.open {
+    display: flex; flex-direction: column; order: 3; width: 100%;
+    gap: 0; margin: 6px 0 2px; padding: 4px 12px; border-radius: 12px;
+    background: rgba(255, 255, 255, .05);
+  }
+  .main-nav.open li + li { border-top: 1px solid rgba(255, 255, 255, .09); }
+  .main-nav.open a { display: block; padding: 13px 4px; font-size: 15px; color: #eef2f6; }
   .atv-hero h1 { font-size: 40px; }
   .atv-fields { grid-template-columns: 1fr 1fr; }
   .atv-fields .atv-btn { grid-column: 1 / -1; }
