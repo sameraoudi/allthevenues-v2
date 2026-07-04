@@ -29,5 +29,7 @@ $layouts = venue_layout_capacity($pdo, (int)$venue['id']);
 $similar = venue_similar($pdo, $venue, 3);
 
 $page_title   = ($venue['name'] ?? 'Venue') . ' — All The Venues';
+$og_title     = ($venue['name'] ?? 'Venue') . ' — All The Venues';
+$meta_description = 'Enquire about ' . ($venue['name'] ?? 'this venue') . ' on All The Venues — view capacity, highlights, photos and location, and send one simple enquiry.';
 $content_view = __DIR__ . '/content/venue-detail.php';
 require __DIR__ . '/layout.php';

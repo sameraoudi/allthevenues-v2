@@ -18,5 +18,6 @@ $emirates     = venue_emirates($pdo);               // hero "Location" select
 $featured     = venue_featured($pdo, 3);            // featured (fallback newest)
 
 $page_title   = 'All The Venues — Find the right UAE venue for your next event';
+$meta_description = 'Discover and compare curated UAE venues for weddings, corporate events, conferences and parties — then send one simple enquiry through All The Venues.';
 $content_view = __DIR__ . '/content/home_content.php';
 require __DIR__ . '/layout.php';

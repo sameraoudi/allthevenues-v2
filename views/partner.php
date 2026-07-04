@@ -26,5 +26,6 @@ $partnerVenues = partner_published_venues($pdo, (int)$partner['id']);
 $bestFor       = partner_best_for($pdo, (int)$partner['id']);
 
 $page_title   = ($partner['org_name'] ?? 'Provider') . ' — All The Venues';
+$meta_description = 'Enquire about ' . ($partner['org_name'] ?? 'this provider') . ', a venue provider on All The Venues — view their venues and send one managed enquiry.';
 $content_view = __DIR__ . '/content/partner-detail.php';
 require __DIR__ . '/layout.php';

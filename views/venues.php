@@ -61,5 +61,6 @@ if ($partnerName === null && count($selectedEmirateSlugs) === 1) {
 }
 
 $page_title   = 'Browse Venues — All The Venues';
+$meta_description = 'Browse curated UAE event venues. Filter by event type, location, guest count and budget, and enquire in one step through All The Venues.';
 $content_view = __DIR__ . '/content/venues-list.php';
 require __DIR__ . '/layout.php';

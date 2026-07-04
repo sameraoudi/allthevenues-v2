@@ -21,6 +21,27 @@ require_once __DIR__ . '/../lib/icons.php';
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($page_title) ?></title>
+    <?php
+      $meta_description = $meta_description ?? 'Discover and enquire about curated UAE event venues — weddings, corporate events, conferences and celebrations — through one simple, managed enquiry.';
+      $canonical        = $canonical ?? base_url(ltrim((string)(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/'), '/'));
+      $robots           = $robots ?? 'index, follow';
+      $og_title         = $og_title ?? $page_title;
+      $og_description   = $og_description ?? $meta_description;
+      $og_image         = $og_image ?? base_url('assets/brand/og_social/atv_og_deep_navy_1200x630.png');
+    ?>
+    <meta name="description" content="<?= e($meta_description) ?>">
+    <meta name="robots" content="<?= e($robots) ?>">
+    <link rel="canonical" href="<?= e($canonical) ?>">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="All The Venues">
+    <meta property="og:title" content="<?= e($og_title) ?>">
+    <meta property="og:description" content="<?= e($og_description) ?>">
+    <meta property="og:url" content="<?= e($canonical) ?>">
+    <meta property="og:image" content="<?= e($og_image) ?>">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= e($og_title) ?>">
+    <meta name="twitter:description" content="<?= e($og_description) ?>">
+    <meta name="twitter:image" content="<?= e($og_image) ?>">
     <link rel="icon" href="<?= e(base_url('assets/brand/favicon_app_icon/favicon.ico')) ?>" sizes="any">
     <link rel="icon" type="image/png" href="<?= e(base_url('assets/brand/favicon_app_icon/atv_app_icon_deep_navy_32x32.png')) ?>" sizes="32x32">
     <link rel="apple-touch-icon" href="<?= e(base_url('assets/brand/favicon_app_icon/atv_app_icon_deep_navy_180x180.png')) ?>">

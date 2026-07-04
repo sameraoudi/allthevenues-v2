@@ -34,5 +34,6 @@ $mosaic = [
 ];
 
 $page_title   = 'Event Types — All The Venues';
+$meta_description = 'Find UAE venues by event type — weddings, corporate events, conferences, launches, parties and exhibitions — on All The Venues.';
 $content_view = __DIR__ . '/content/event-types.php';
 require __DIR__ . '/layout.php';
