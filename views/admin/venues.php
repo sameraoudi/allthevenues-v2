@@ -51,6 +51,142 @@ if ($rest === '') {
     return;
 }
 
+/* ============================ NEW / CREATE ============================= */
+if ($rest === 'new') {
+    $errors = [];
+    $old    = [];
+
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+        $old = $_POST;   // re-fill on error
+
+        if (!csrf_validate()) {
+            $errors['_form'] = 'Your session expired. Please review and save again.';
+        } else {
+            $plain = static fn(string $k, int $max) => mb_substr(trim(strip_tags((string)($_POST[$k] ?? ''))), 0, $max);
+
+            $clean = [];
+            // --- name (required) ---
+            $clean['name'] = $plain('name', 255);
+            if ($clean['name'] === '') { $errors['name'] = 'Name is required.'; }
+
+            // --- slug (explicit → validate; blank → auto-generate unique) ---
+            $slug = strtolower(trim((string)($_POST['slug'] ?? '')));
+            if ($slug !== '') {
+                if (!preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug) || mb_strlen($slug) > 191) {
+                    $errors['slug'] = 'Use lowercase letters, numbers and hyphens only.';
+                } elseif (!venue_slug_available($pdo, $slug, 0)) {
+                    $errors['slug'] = 'That slug is already in use by another venue.';
+                }
+                $clean['slug'] = $slug;
+            } else {
+                $base = slugify($clean['name']) ?: 'venue';
+                $try  = $base; $n = 2;
+                while (!venue_slug_available($pdo, $try, 0)) { $try = $base . '-' . $n; $n++; }
+                $clean['slug'] = $try;
+            }
+
+            // --- taxonomy FKs (nullable; validated if set) ---
+            $vt = (int)($_POST['venue_type_id'] ?? 0);
+            if ($vt > 0) {
+                $s = $pdo->prepare('SELECT 1 FROM venue_types WHERE id = :id');
+                $s->execute([':id' => $vt]);
+                $clean['venue_type_id'] = $s->fetchColumn() !== false ? $vt : null;
+            } else { $clean['venue_type_id'] = null; }
+
+            $em = (int)($_POST['emirate_id'] ?? 0);
+            if ($em > 0) {
+                $s = $pdo->prepare('SELECT 1 FROM emirates WHERE id = :id');
+                $s->execute([':id' => $em]);
+                $clean['emirate_id'] = $s->fetchColumn() !== false ? $em : null;
+            } else { $clean['emirate_id'] = null; }
+
+            // --- scalars ---
+            $clean['area']      = $plain('area', 150) ?: null;
+            $clean['address']   = $plain('address', 255) ?: null;
+            $clean['video_url'] = $plain('video_url', 255) ?: null;
+
+            $io = trim((string)($_POST['indoor_outdoor'] ?? 'indoor'));
+            $clean['indoor_outdoor'] = isset(venue_indoor_outdoor_options()[$io]) ? $io : 'indoor';
+
+            $clean['capacity_min']  = ($_POST['capacity_min'] ?? '') !== '' ? max(0, (int)$_POST['capacity_min']) : null;
+            $clean['capacity_max']  = ($_POST['capacity_max'] ?? '') !== '' ? max(0, (int)$_POST['capacity_max']) : null;
+            $clean['minimum_spend'] = ($_POST['minimum_spend'] ?? '') !== '' ? max(0, (float)$_POST['minimum_spend']) : null;
+
+            $pl = trim((string)($_POST['pricing_level'] ?? ''));
+            $clean['pricing_level'] = in_array($pl, venue_pricing_levels(), true) ? $pl : null;
+
+            $clean['is_featured'] = !empty($_POST['is_featured']) ? 1 : 0;
+            $clean['is_verified'] = !empty($_POST['is_verified']) ? 1 : 0;
+
+            $st = trim((string)($_POST['status'] ?? ''));
+            $clean['status'] = isset(venue_admin_statuses()[$st]) ? $st : 'draft';
+
+            // --- provider assignment (nullable; validated if set) ---
+            $pid = (int)($_POST['partner_id'] ?? 0);
+            if ($pid > 0) {
+                $s = $pdo->prepare('SELECT 1 FROM partners WHERE id = :id');
+                $s->execute([':id' => $pid]);
+                $clean['partner_id'] = $s->fetchColumn() !== false ? $pid : null;
+            } else { $clean['partner_id'] = null; }
+
+            // --- website ---
+            $clean['website'] = $plain('website', 255) ?: null;
+
+            // --- map_embed (stored RAW; same Google-Maps-iframe guard as render) ---
+            $mapEmbed = trim((string)($_POST['map_embed'] ?? ''));
+            if ($mapEmbed === '') {
+                $clean['map_embed'] = null;
+            } elseif (!preg_match('#^<iframe[^>]*\ssrc="https://www\.google\.com/maps/#i', $mapEmbed)) {
+                $errors['map_embed'] = 'Paste a valid Google Maps embed (the <iframe> code from Google Maps).';
+            } else {
+                $clean['map_embed'] = $mapEmbed;
+            }
+
+            // --- venue contact (internal admin-only) ---
+            $clean['contact_name'] = $plain('contact_name', 255) ?: null;
+
+            $cEmail = trim((string)($_POST['contact_email'] ?? ''));
+            if ($cEmail === '') {
+                $clean['contact_email'] = null;
+            } elseif (!filter_var($cEmail, FILTER_VALIDATE_EMAIL) || mb_strlen($cEmail) > 255) {
+                $errors['contact_email'] = 'Enter a valid email address.';
+            } else {
+                $clean['contact_email'] = $cEmail;
+            }
+
+            $clean['contact_phone'] = $plain('contact_phone', 50) ?: null;
+
+            // --- rich-text (sanitized) ---
+            foreach (venue_richtext_fields() as $rf) {
+                $clean[$rf] = html_sanitize($_POST[$rf] ?? null);
+            }
+
+            if (!$errors) {
+                try {
+                    $newId = venue_admin_create($pdo, $clean);
+                    audit_log($pdo, (int)($me['id'] ?? 0) ?: null, 'create', 'venue', $newId, null, $clean);
+                    $_SESSION['admin_flash'] = ['type' => 'success', 'msg' => 'Venue created — add images and finish the details below.'];
+                    redirect('admin/venues/edit?id=' . $newId);
+                } catch (Throwable $e) {
+                    error_log('venue create failed: ' . $e->getMessage());
+                    $errors['_form'] = 'Something went wrong creating the venue. Please try again.';
+                }
+            }
+        }
+    }
+
+    $venueTypes = venue_types_all($pdo);
+    $emirates   = venue_emirates($pdo);
+    $partners   = venue_partner_options($pdo);
+
+    $admin_active       = 'venues';
+    $page_title         = 'Add venue — Admin';
+    $admin_page_title   = 'Add venue';
+    $admin_content_view = __DIR__ . '/venue-new.php';
+    require __DIR__ . '/layout.php';
+    return;
+}
+
 /* ============================ EDIT / SAVE =============================== */
 if ($rest === 'edit') {
     $id    = (int)($_POST['id'] ?? $_GET['id'] ?? 0);

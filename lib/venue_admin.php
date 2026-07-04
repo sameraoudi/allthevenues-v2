@@ -94,6 +94,23 @@ function venue_partner_options(PDO $pdo): array
     return $pdo->query('SELECT id, org_name FROM partners ORDER BY org_name')->fetchAll();
 }
 
+/**
+ * INSERT a venue from a validated $data map (col => value) and return the new
+ * id. Columns/placeholders are built from array_keys($data) — the caller
+ * guarantees a valid 'status' and clean values. Prepared/bound.
+ */
+function venue_admin_create(PDO $pdo, array $data): int
+{
+    $cols = array_keys($data);
+    $ph   = array_map(static fn($c) => ':' . $c, $cols);
+    $stmt = $pdo->prepare(
+        'INSERT INTO venues (' . implode(', ', $cols) . ') VALUES (' . implode(', ', $ph) . ')'
+    );
+    foreach ($data as $col => $val) { $stmt->bindValue(':' . $col, $val); }
+    $stmt->execute();
+    return (int)$pdo->lastInsertId();
+}
+
 /** True if $slug is free (optionally excluding a venue id). */
 function venue_slug_available(PDO $pdo, string $slug, int $excludeId): bool
 {

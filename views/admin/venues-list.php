@@ -20,6 +20,7 @@ $listUrl = base_url('admin/venues');
 ?>
 <div class="lead-toolbar">
   <div class="lead-toolbar__counts"><strong><?= e(number_format($total)) ?></strong> venue<?= $total === 1 ? '' : 's' ?></div>
+  <a class="atv-btn atv-btn--sm" href="<?= e(base_url('admin/venues/new')) ?>">New venue</a>
 </div>
 
 <form class="lead-filters" method="get" action="<?= e($listUrl) ?>">
