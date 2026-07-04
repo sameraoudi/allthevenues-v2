@@ -697,6 +697,10 @@ select:focus-visible,
 .lead-pagination { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
 .lead-page { padding: 6px 11px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; color: var(--action); background: #fff; }
 .lead-page.is-active { background: var(--action); color: #fff; border-color: var(--action); }
+.lead-page--nav { font-weight: 600; }
+.lead-pagination { align-items: center; }
+.lead-pagination__gap { padding: 6px 4px; color: var(--muted); font-size: 13px; }
+.lead-pagination__info { margin-left: auto; color: var(--muted); font-size: 12.5px; }
 
 /* Detail */
 .lead-back { color: var(--action); font-weight: 600; font-size: 14px; }

@@ -109,12 +109,9 @@ $modes = ['venue' => 'Venue enquiry', 'assisted' => 'Assisted', 'partner' => 'Pa
     </table>
   </div>
 
-  <?php if ($totalPages > 1): ?>
-    <nav class="lead-pagination" aria-label="Pages">
-      <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-        <a class="lead-page<?= $i === $page ? ' is-active' : '' ?>"
-           href="<?= e($listUrl . query_string($carry + ['page' => $i])) ?>"><?= e((string)$i) ?></a>
-      <?php endfor; ?>
-    </nav>
-  <?php endif; ?>
+  <?php
+    $pg_page = $page; $pg_total = $totalPages;
+    $pg_href = static fn(int $i): string => $listUrl . query_string($carry + ['page' => $i]);
+    require __DIR__ . '/../partials/admin-pager.php';
+  ?>
 <?php endif; ?>
