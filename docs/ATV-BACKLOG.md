@@ -94,6 +94,13 @@ provider assignment.
 - **Fits:** small schema unit; do it right before / with #3.
 
 ## 7. Contact, About, Legal pages (Medium; legal before provider registration)
+**Drafts provided (Jul 2026):** Samer supplied full **Terms of Use** + **Privacy Policy** drafts (strong,
+UAE/Bianca Event Styling framing, cover lead-routing/shortlist/Featured-Verified/provider submissions).
+Build the legal pages from these (save the source text into the repo, e.g. `docs/legal/`, so it persists).
+Fill placeholders (last-updated date, privacy/contact email, UAE registered address). **Not legal advice —
+get a UAE-qualified legal review before publishing** (licence grant, liability/indemnity, UAE PDPL). Fold in
+the strengthened image clause from #9 (Terms §10). Original notes below.
+
 About, Contact (+ general contact form with reason dropdown), Privacy, Terms, Cookie notice, Disclaimer, and
 Venue Provider Terms.
 - **Reconcile:** none exist yet; footer has no About/Contact/legal links. Contact form can reuse the enquiry/
@@ -108,6 +115,51 @@ rollback + launch checklist + legacy 301s + cutover to the apex domain.
 - **Reconcile:** this *is* **U6 — Launch hardening** in the plan, expanded into a full audit checklist. Adopt
   Samer's checklist as the U6 acceptance criteria. Includes GoatCounter events, legacy-URL 301s, mobile QA,
   security review, backup/rollback, and staging→apex cutover.
+
+---
+
+## 9. Image rights & provenance (High — compliance; do before/at launch)
+Ensure ATV only uses images it has the right to use, and track provenance per image. Raised by Samer (Jul
+2026): not all current images are owned/consented (some pulled from provider public sites), so word the
+legal docs carefully and build a tracking + review process.
+
+**Allowed image categories (production policy):** (1) provider-approved (uploaded/sent with permission);
+(2) ATV-owned (taken/commissioned by Bianca/ATV, with rights); (3) licensed (commercial-use licence);
+(4) temporary placeholders (until approved, tracked). Phase out images taken from provider public websites
+unless written permission is obtained.
+
+**Schema — add to `venue_images` (+ the provider cover on `partners`):**
+`permission_status` ENUM (default **`legacy_needs_review`**), `image_source`, `source_url`,
+`provider_approved_by`, `approval_date` (DATE), `usage_notes` (TEXT), `expires_at` (DATE, for licences).
+Status values: `approved_by_provider`, `owned_by_atv`, `licensed_stock`, `legacy_needs_review`,
+`public_website_needs_permission`, `remove_replace`. **Backfill all existing images → `legacy_needs_review`**
+(nothing assumed approved).
+
+**Admin:** per-image controls in the image manager to set status/source/approval; a **"needs review" filter/
+report** to work the backlog down. (Note: consider a public gate later — only show images with an approved
+status — but that would hide most current imagery until reviewed, so gate *after* the classification pass,
+not before.)
+
+**Classification actions (content track — Samer/Bianca):** approved/owned → keep; unclear-but-important →
+request permission; from public website → replace or request permission; identifiable people → review
+carefully; weak/low-quality → replace; unknown source → remove or mark for replacement.
+
+**Onboarding consent (add to #2 partner form + #3 portal upload):**
+> By uploading or submitting images to All The Venues, you confirm that you own the images or have the
+> necessary rights, licences, and permissions to allow All The Venues and Bianca Event Styling to display,
+> crop, resize, edit for formatting, and use the images on allthevenues.com and related promotional
+> materials for the purpose of promoting your venues.
+
+**Terms §10 clause (strengthened licence grant — fold into #7):** non-exclusive, royalty-free licence to
+display/reproduce/resize/crop/format/use submitted content for operating + promoting the platform; provider
+responsible for rights; withdrawal on written request → remove/replace in reasonable time.
+
+**Permission-request email (Samer/Bianca send):** polite request to confirm permission to display/crop/resize
+selected venue images, or to send official images. (Template held by Samer.)
+
+**Sequencing:** legal clause + onboarding consent land with #7 / #2 (copy only). The provenance schema + admin
+is its own small unit. The classification pass is content-track, ongoing. Not a hard launch-blocker for the
+*site*, but the legal wording + onboarding consent should be live before public provider registration.
 
 ---
 
