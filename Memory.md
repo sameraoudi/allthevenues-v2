@@ -70,6 +70,11 @@ began filling provider emails + adding providers/venues via the new admin.
 
 ## Open work
 
+> **Post-launch backlog:** Samer's 8-item action list (partner portal, multi-venue shortlist, reporting,
+> provider ownership, Become-a-Venue-Partner form, contact/legal pages, card-hover polish, launch audit) is
+> reconciled against current state + sequenced in **`docs/ATV-BACKLOG.md`**. Decided (Jul 2026): **lean
+> launch** on the Phase-1 track, provider portal ships as the first Phase-2 unit.
+
 **Admin build-out (U4): ✅ complete** (U4a edit, U4b images, U4c add-venue, U4d provider management).
 
 **Monetization & tiering (Phase 2/3 — see `docs/ATV-TIERS.md`):**
