@@ -33,7 +33,7 @@
         <h4>Company</h4>
         <ul>
           <li><a href="<?= e(base_url('about')) ?>">About us</a></li>
-          <li><a href="#" title="Coming soon">Contact</a></li>
+          <li><a href="<?= e(base_url('contact')) ?>">Contact</a></li>
           <li><a href="#" title="Coming soon">Blog</a></li>
         </ul>
       </div>

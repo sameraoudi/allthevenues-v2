@@ -357,6 +357,42 @@ function partner_signup_insert(PDO $pdo, array $clean): array
 }
 
 /**
+ * Save a general contact message (#7b) as a 'general' enquiry so it lands in the
+ * admin inbox. The chosen reason label is prefixed into notes so admins see it.
+ * Expects $clean: name, email, phone, message, reason_label, consent_to_share,
+ * source_page. Returns ['reference'=>…, 'id'=>…].
+ */
+function contact_insert(PDO $pdo, array $clean): array
+{
+    $reference = enquiry_generate_reference($pdo);
+
+    $reasonLabel = trim((string)($clean['reason_label'] ?? ''));
+    $message     = (string)($clean['message'] ?? '');
+    $notes       = ($reasonLabel !== '' ? 'Reason: ' . $reasonLabel . "\n\n" : '') . $message;
+
+    $stmt = $pdo->prepare(
+        'INSERT INTO enquiries
+            (reference, name, email, phone, notes, consent_to_share,
+             source_page, mode, status)
+         VALUES
+            (:reference, :name, :email, :phone, :notes, :consent,
+             :source_page, :mode, :status)'
+    );
+    $stmt->execute([
+        ':reference'   => $reference,
+        ':name'        => $clean['name'] ?: null,
+        ':email'       => $clean['email'] ?: null,
+        ':phone'       => $clean['phone'] ?: null,
+        ':notes'       => $notes !== '' ? $notes : null,
+        ':consent'     => $clean['consent_to_share'],
+        ':source_page' => mb_substr((string)($clean['source_page'] ?? '/contact'), 0, 255),
+        ':mode'        => 'general',
+        ':status'      => 'new',
+    ]);
+    return ['reference' => $reference, 'id' => (int)$pdo->lastInsertId()];
+}
+
+/**
  * Human-readable summary rows for emails (label => value), from clean input.
  */
 function enquiry_summary_rows(PDO $pdo, array $clean, array $venues): array

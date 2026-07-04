@@ -126,10 +126,15 @@ $locationLabels = $locationLabels ?? [];
                     placeholder="Tell us about your venues, capacities and what you're looking for."><?= $val('notes') ?></textarea>
         </div>
 
+        <p class="atv-bvp-imgnote">By uploading or submitting images to All The Venues, you confirm that you own the
+          images or have the necessary rights, licences, and permissions to allow All The Venues and Bianca Event
+          Styling to display, crop, resize, edit for formatting, and use the images on allthevenues.com and related
+          promotional materials for the purpose of promoting your venues.</p>
+
         <label class="atv-bvp-check<?= $has('consent') ? ' atv-bvp-check--err' : '' ?>">
           <input type="checkbox" name="consent" value="1"<?= (($old['consent'] ?? '') !== '') ? ' checked' : '' ?>>
           <span>I agree to be contacted by All The Venues about partnership, and to the
-            <a href="<?= e(base_url('venue-provider-terms')) ?>" target="_blank" rel="noopener">Venue Provider Terms</a> and
+            <a href="<?= e(base_url('terms-of-use')) ?>" target="_blank" rel="noopener">Terms of Use</a> and
             <a href="<?= e(base_url('privacy-policy')) ?>" target="_blank" rel="noopener">Privacy Policy</a>. <span class="atv-bvp-req">*</span></span>
         </label>
         <?php if ($has('consent')): ?><div class="atv-bvp-full"><?= $eline('consent') ?></div><?php endif; ?>
