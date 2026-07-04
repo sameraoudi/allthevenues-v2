@@ -27,6 +27,14 @@ verified on staging. Core loop works end-to-end: browse → enquire → admin in
   unchanged). The dead **Locations** link was removed (a real Locations browse page is planned for U5).
 - **404** is a branded not-found page (Coastal UAE styling, map-pin icon, `.atv-btn` CTAs) — shared across
   all not-found routes.
+- **Info/legal (#7):** `/about`, `/terms-of-use`, `/privacy-policy`, `/cookie-policy` (rendered from
+  `docs/legal/*.md` via `views/page.php` + `.atv-legal` prose; Terms §10 strengthened image licence) +
+  **`/contact`** (become-partner-style hero + overlapping form card; own `mode='contact'` enquiry with a
+  reason dropdown → admin inbox with a "Contact" badge/filter + dedicated detail view, no forwarding). Partner
+  form now links the live Terms/Privacy + states the image-permission consent. Placeholders + **UAE legal
+  review** still pending.
+- **Admin inbox** gained a mode filter (all modes), admin-only **delete** (transaction + CSRF + confirm +
+  audit; `app.js` now loaded in the admin layout so `data-confirm` fires), and a tidied Venue(s) column.
 - **SEO (U5):** every page emits a meta description + canonical (path-only, dedupes filtered listings) + OG/
   Twitter (`views/layout.php`). **Event×city landing pages** at `/venues/{event}-in-{emirate}` (templated
   intro + filtered results + internal links + FAQ w/ FAQPage JSON-LD + enquiry CTA), gated on ≥
@@ -75,9 +83,10 @@ grown for providers:** `partners.is_verified` (real column, replaces the `is_fea
 `contact_name`/`contact_email`/`contact_phone` (migration 011). Migrations 008–011 applied on prod. Samer
 began filling provider emails + adding providers/venues via the new admin.
 
-**In progress:** none — U4, U5, launch-track **#2** (partner form) and **#6** (provider-ownership) complete.
-Next on the launch track: **#4** multi-venue shortlist → **#7** legal/contact/about → U3c historical
-enquiries → **#5** reporting → **#8/U6** audit + apex cutover.
+**In progress:** none — U4, U5, and launch-track **#2, #4, #6, #7** all complete (+ the docs-exposure
+security fix). Next: **U3c** historical enquiries → **#5** reporting → **#8/U6** audit + apex cutover. Also
+open: **#9** image rights/provenance (schema + admin), **#3** provider portal (Phase 2), **#1** card-hover
+polish. See `docs/ATV-BACKLOG.md`.
 
 ---
 
@@ -184,6 +193,16 @@ enquiries → **#5** reporting → **#8/U6** audit + apex cutover.
   submits as a structured `partner_signup` lead into the inbox (own badge + mode filter + "Partner request"
   detail); nav CTA repointed. Design lock `atv-partner-signup-preview.html`. (Gotcha: a refinements commit
   shipped un-pushed — confirm `git push` reached origin before deploying.)
+- **Launch #7 — info/legal/contact** (`/about`, `/terms-of-use`, `/privacy-policy`, `/cookie-policy` from
+  `docs/legal/*.md`; strengthened Terms §10; `/contact` with `mode='contact'` + reason dropdown + admin
+  detail/badge/filter, no forwarding; partner-form image consent + live Terms/Privacy links). Admin inbox:
+  mode filter, admin-only delete (confirm+audit), tidied Venue(s) column, `app.js` loaded in admin layout.
+  Legal drafts saved to `docs/legal/`; **#9 image-rights plan** captured in the backlog.
+- **SECURITY fix:** `docs/` + root `*.md` (CLAUDE/Memory/VISION/backlog/previews) were deploying to the
+  docroot and **publicly served** (leaked infra: DB name, `/home1/...` paths, repo, deploy-key alias). Now
+  **`.htaccess` denies `/docs/*` + any `.md`** (403); legal pages unaffected (they read `docs/legal/*.md` via
+  the PHP filesystem, not HTTP). *Still TODO: manually delete the already-deployed `docs/` + root `.md` from
+  the staging docroot (rsync doesn't remove them); optional hardening — exclude them in `.cpanel.yml`.*
 - **Launch #6 — provider ownership provenance:** migration 013 added `venues.management_source`
   (unassigned/admin_assigned/provider_created/provider_claimed/legacy_import) + `provider_assigned_at`/`_by`
   (backfilled 94 legacy_import / 4 unassigned). Venue save/create now auto-sets source + assigned_at/by when
