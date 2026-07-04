@@ -24,7 +24,7 @@
       <div class="footer-col">
         <h4>For partners</h4>
         <ul>
-          <li><a href="<?= e(base_url('enquire') . '?mode=partner') ?>">Become a Venue Partner</a></li>
+          <li><a href="<?= e(base_url('become-a-venue-partner')) ?>">Become a Venue Partner</a></li>
           <li><a href="#" title="Coming soon">Partner login</a></li>
         </ul>
       </div>

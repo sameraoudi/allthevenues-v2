@@ -33,6 +33,9 @@ function enquiry_status_label(string $s): string
 /** Mode badge from stored mode + whether venues are linked. */
 function enquiry_mode_badge(string $mode, int $venueCount): array
 {
+    if ($mode === 'partner_signup') {
+        return ['Partner signup', 'partner-signup'];
+    }
     if ($venueCount > 0 || $mode === 'venue') {
         return ['Venue enquiry', 'venue'];
     }
@@ -57,7 +60,7 @@ function enquiry_admin_filters(array $in): array
         $out['emirate'] = $em;
     }
     $mode = trim((string)($in['mode'] ?? ''));
-    if (in_array($mode, ['venue', 'assisted', 'partner', 'general'], true)) {
+    if (in_array($mode, ['venue', 'assisted', 'partner', 'general', 'partner_signup'], true)) {
         $out['mode'] = $mode;
     }
     foreach (['date_from', 'date_to'] as $k) {

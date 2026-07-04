@@ -318,6 +318,45 @@ function enquiry_insert(PDO $pdo, array $clean, array $venueIds, string $sourceP
 }
 
 /**
+ * Insert a Become-a-Venue-Partner submission as a partner_signup enquiry.
+ * Reuses the enquiry reference scheme; stores structured partner columns
+ * (provider_type / website / venues_managed) rather than packing into notes.
+ * @return array{reference:string, id:int}
+ */
+function partner_signup_insert(PDO $pdo, array $clean): array
+{
+    $reference = enquiry_generate_reference($pdo);
+
+    $stmt = $pdo->prepare(
+        'INSERT INTO enquiries
+            (reference, name, email, phone, company, city_pref, notes,
+             consent_to_share, source_page, mode, provider_type, website,
+             venues_managed, status)
+         VALUES
+            (:reference, :name, :email, :phone, :company, :city_pref, :notes,
+             :consent, :source_page, :mode, :provider_type, :website,
+             :venues_managed, :status)'
+    );
+    $stmt->execute([
+        ':reference'      => $reference,
+        ':name'           => $clean['name'] ?: null,
+        ':email'          => $clean['email'] ?: null,
+        ':phone'          => $clean['phone'] ?: null,
+        ':company'        => $clean['company'] ?: null,
+        ':city_pref'      => $clean['city_pref'] ?: null,
+        ':notes'          => $clean['notes'] ?: null,
+        ':consent'        => $clean['consent_to_share'],
+        ':source_page'    => mb_substr((string)($clean['source_page'] ?? '/become-a-venue-partner'), 0, 255),
+        ':mode'           => 'partner_signup',
+        ':provider_type'  => $clean['provider_type'] ?: null,
+        ':website'        => $clean['website'] ?: null,
+        ':venues_managed' => $clean['venues_managed'],   // int or null
+        ':status'         => 'new',
+    ]);
+    return ['reference' => $reference, 'id' => (int)$pdo->lastInsertId()];
+}
+
+/**
  * Human-readable summary rows for emails (label => value), from clean input.
  */
 function enquiry_summary_rows(PDO $pdo, array $clean, array $venues): array
