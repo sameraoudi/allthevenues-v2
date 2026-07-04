@@ -11,6 +11,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/db.php';
 
+/** Minimum published venues for an event×city landing page to render (vs 301).
+ *  Shared by views/landing.php and the sitemap so both agree exactly. */
+const LANDING_MIN_VENUES = 3;
+
 /* ===========================================================================
  * Fixed enums (kept in app config per docs/ATV-SCHEMA.md §1 — not in tables)
  * =========================================================================== */
@@ -119,6 +123,22 @@ function event_emirate_counts(PDO $pdo): array
     )->fetchAll();
     $out = [];
     foreach ($rows as $r) { $out[$r['ev'] . '|' . $r['em']] = (int)$r['n']; }
+    return $out;
+}
+
+/**
+ * Event×emirate combos that qualify for a landing page (>= LANDING_MIN_VENUES).
+ * @return list<array{ev:string, em:string}>
+ */
+function qualifying_landing_combos(PDO $pdo): array
+{
+    $out = [];
+    foreach (event_emirate_counts($pdo) as $key => $n) {
+        if ($n >= LANDING_MIN_VENUES) {
+            [$ev, $em] = explode('|', $key, 2);
+            $out[] = ['ev' => $ev, 'em' => $em];
+        }
+    }
     return $out;
 }
 

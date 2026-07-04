@@ -9,7 +9,7 @@ declare(strict_types=1);
  * $slug in scope. Prepared statements; canonical auto-resolves via U5-a.
  */
 
-const LANDING_MIN_VENUES = 3;   // below this, redirect to the filtered search
+// LANDING_MIN_VENUES is defined in lib/venues.php (shared with the sitemap).
 
 // --- validate event + emirate (active only) ---
 $es = $pdo->prepare('SELECT name FROM event_types WHERE slug = :s AND active = 1');
