@@ -271,6 +271,9 @@ CREATE TABLE IF NOT EXISTS enquiries (
     source_page      VARCHAR(255) DEFAULT NULL,
     mode             ENUM('venue','assisted','partner','general','partner_signup') NOT NULL DEFAULT 'general',
     partner_id       INT UNSIGNED DEFAULT NULL,          -- partner-mode enquiries (?partner=id)
+    provider_type    VARCHAR(50)  DEFAULT NULL,          -- partner_signup: provider category
+    website          VARCHAR(255) DEFAULT NULL,          -- partner_signup: provider site
+    venues_managed   INT UNSIGNED DEFAULT NULL,          -- partner_signup: # venues managed
     status           ENUM('new','reviewed','forwarded','accepted','contacted','won','lost','closed','spam') NOT NULL DEFAULT 'new',
     created_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
