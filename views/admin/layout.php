@@ -88,5 +88,6 @@ $nav = array_filter($nav, static fn($item) => empty($item['cap']) || auth_can($i
       </main>
     </div>
   </div>
+  <script src="<?= e(base_url('assets/js/app.js')) ?>"></script>
 </body>
 </html>
