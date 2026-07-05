@@ -110,7 +110,8 @@ GSC sitemap submitted + read Success (174 pages); GoatCounter live. **GoatCounte
 toggle exists — GC records full path incl. `?...` by DEFAULT (stripping is opt-in via `window.goatcounter={path:...}`,
 which we did NOT set), so `?submitted=1` conversions are already counted as distinct paths. Nothing to configure.
 **Remaining = passive:** keep legacy (`/public_html/allthevenues` + DB `sameraou_atv`) as rollback a few weeks;
-72h watch (error_log, GSC coverage, leads). **ATV v2 is LIVE.** Next = Phase-2 (#3 provider portal).
+72h watch (error_log, GSC coverage, leads). **ATV v2 is LIVE.** Next = Phase-2: #3 provider portal + **#10 slug-history 301 redirects** (new, scoped in
+`docs/ATV-BACKLOG.md` — small standalone SEO unit, makes slug renames auto-301 old→current instead of 404).
 
 **⚠️ Deploy now hits PROD directly.** Apex serves from `/atv-staging`, so a cPanel `allthevenues-v2` repo
 Deploy-HEAD updates the LIVE apex (no separate staging buffer). Workflow unchanged otherwise: local dev
@@ -180,6 +181,15 @@ remain.
 ---
 
 ## Dated history
+
+**5 Jul 2026 (post-launch)**
+- **Venue Layouts & Capacity editor + floor area** (first post-launch feature, shipped live to apex):
+  migration 017 (`venues.floor_area` DECIMAL + `floor_area_unit` ENUM sqm/sqft). Admin venue editor now edits
+  the 8 fixed layout types (Reception/Theatre/Banquet/Classroom/Cabaret/H-shape/U-shape/Boardroom) via
+  `venue_layout_capacity_save()` upsert (blank = delete row); floor-area field with unit. Public detail:
+  per-layout icons + floor area in Key Info with a client-side sqm↔sqft toggle (app.js, 1 m²=10.7639 ft²).
+  Layouts tab still auto-hides when empty. Icons added to `lib/icons.php` (8 layout + area). Deployed + tested
+  on prod, works. NB: confirmed the new prod-apply flow (migration on prod DB first, then deploy = live).
 
 **5 Jul 2026**
 - **Venue listing card polish:** provider now shows on the location line as `Provider | City`

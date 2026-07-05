@@ -163,6 +163,36 @@ is its own small unit. The classification pass is content-track, ongoing. Not a 
 
 ---
 
+## 10. Slug-history 301 redirects (Medium — SEO; Phase 2)
+Make venue/provider **slug changes SEO-safe**: when a slug changes, the old public URL
+(`/venues/{old-slug}` or `/providers/{old-slug}`) should **301 to the current URL** automatically instead of
+404ing. Raised by Samer (Jul 2026) after launch: renames/rebrands happen (e.g. Caesars Palace Dubai →
+Banyan Tree Dubai), and today changing a slug silently breaks the old indexed URL and loses its SEO equity
+(the admin edit form even warns "old links will stop working").
+
+- **Why it's needed:** the dynamic sitemap self-heals (drops old slug, lists new) and legacy `venue.php?venueid=`/
+  `provider.php?pid=` links already follow renames (they resolve by `legacy_id` → current slug). The ONLY gap
+  is the *pretty* `/venues/{old-slug}` URLs — no automatic redirect, so Google-indexed old slugs 404 and their
+  ranking/links are lost.
+- **Schema:** one table `slug_redirects` — `id`, `entity_type` ENUM('venue','provider'), `old_slug`
+  VARCHAR(191), `entity_id` INT (points at `venues.id`/`partners.id`), `created_at`; **UNIQUE(entity_type,
+  old_slug)**. Rows point at the entity ID (not the next slug) so chained renames A→B→C resolve in one hop.
+- **Capture (admin save):** in the venue + provider save handlers (`views/admin/venues.php`,
+  `views/admin/partners.php`), when the slug changes, INSERT `(entity_type, old_slug=previous, entity_id)`.
+  On save, DELETE any history row whose `old_slug` == the NEW slug being adopted (prevents a redirect loop /
+  stale shadowed row when a slug is reused or reverted).
+- **Resolve (public):** in the `/venues/{slug}` + `/providers/{slug}` detail path, on "not found by current
+  slug," look up `slug_redirects`; if it maps to an entity that is **currently published/approved**, 301 to
+  that entity's current slug — else branded 404 (never 301 to an unpublished page; same rule as the legacy
+  map). Independent of `lib/legacy_redirect.php` (that keys on `legacy_id`; this keys on old pretty slug).
+- **Admin UX:** flip the edit-form warning from "old links will stop working" to "old links auto-redirect";
+  optionally list an entity's past slugs.
+- **Effort/fit:** small, standalone unit (1 migration + 2 save hooks + 1 resolver hook + copy). Schema-before-
+  code. No dependency on #3, but pairs naturally with the portal (providers may request slug changes). Could
+  even ship *before* #3 as a quick SEO win if renames start happening.
+
+---
+
 ## Proposed sequencing (respecting VISION phasing + Samer's priorities)
 
 **Finish Phase-1 launch track first** (what VISION calls the MVP):
@@ -179,6 +209,7 @@ is its own small unit. The classification pass is content-track, ongoing. Not a 
 **Phase 2 (post-launch, per VISION):**
 - **#3** Provider portal + change-request approval workflow (the big one) — after #6 lands and providers
   actually have assigned venues.
+- **#10** Slug-history 301 redirects (small SEO unit; standalone — can ship before #3 if renames start).
 - Remaining reporting enhancements; provider notifications/metrics.
 
 ### ✅ Sequencing decision (Jul 2026): **lean launch, portal first Phase-2 unit**
