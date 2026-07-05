@@ -17,6 +17,10 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/helpers.php';
 require_once __DIR__ . '/lib/csrf.php';
 
+// App-wide Gulf time (UAE has no DST). Keeps PHP date() strings consistent with
+// the MySQL session zone pinned in config/db.php, so writes/reads/filters agree.
+date_default_timezone_set('Asia/Dubai');
+
 /* ---- Hardened session ---------------------------------------------------- */
 
 $is_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
