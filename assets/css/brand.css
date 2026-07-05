@@ -1210,3 +1210,16 @@ select:focus-visible,
 
 @media (max-width: 1080px) { .rep-kpis { grid-template-columns: repeat(3, 1fr); } .rep-grid, .lenswrap { grid-template-columns: 1fr; } }
 @media (max-width: 820px)  { .rep-kpis { grid-template-columns: 1fr 1fr; } .rep-actions { margin-left: 0; } }
+
+/* ---- Venue layouts + floor-area (detail) & layout editor ----------------- */
+.vd-layout-name { display: flex; align-items: center; gap: 8px; }
+.vd-layout-ico { width: 18px; height: 18px; flex: 0 0 auto; color: var(--action); }
+.vd-area { display: inline-flex; align-items: center; gap: 8px; }
+.vd-area-toggle {
+  border: 1px solid var(--line); background: #fff; color: var(--action);
+  border-radius: 6px; font-size: 11px; font-weight: 600; padding: 1px 7px; cursor: pointer;
+}
+.vd-area-toggle:hover { background: #eef1f4; }
+/* Admin layout-capacity editor */
+.layout-label { display: flex; align-items: center; gap: 6px; }
+.layout-ico { width: 18px; height: 18px; flex: 0 0 auto; color: var(--action); }

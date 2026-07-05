@@ -19,6 +19,16 @@ function _icon_paths(string $name): ?string
             'menu'         => '<path d="M4 7h16M4 12h16M4 17h16"/>',
             'chart'        => '<path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/>',
             'download'     => '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>',
+            // Venue layout glyphs (simple, distinct hints — refine later).
+            'layout-reception' => '<circle cx="6" cy="7" r="1.2"/><circle cx="12" cy="5" r="1.2"/><circle cx="18" cy="8" r="1.2"/><circle cx="8" cy="13" r="1.2"/><circle cx="15" cy="12" r="1.2"/><circle cx="5" cy="18" r="1.2"/><circle cx="12" cy="18" r="1.2"/><circle cx="18" cy="17" r="1.2"/>',
+            'layout-theatre'   => '<path d="M4 5h16"/><circle cx="7" cy="10" r="1"/><circle cx="12" cy="10" r="1"/><circle cx="17" cy="10" r="1"/><circle cx="7" cy="14" r="1"/><circle cx="12" cy="14" r="1"/><circle cx="17" cy="14" r="1"/><circle cx="7" cy="18" r="1"/><circle cx="12" cy="18" r="1"/><circle cx="17" cy="18" r="1"/>',
+            'layout-banquet'   => '<circle cx="7" cy="7" r="3"/><circle cx="16.5" cy="8" r="3"/><circle cx="8.5" cy="16.5" r="3"/><circle cx="17" cy="16.5" r="3"/>',
+            'layout-classroom' => '<path d="M4 8h6M14 8h6M4 13h6M14 13h6M4 18h6M14 18h6"/><circle cx="7" cy="5.5" r=".8"/><circle cx="17" cy="5.5" r=".8"/>',
+            'layout-cabaret'   => '<path d="M4 10a3 3 0 0 1 6 0"/><path d="M14 10a3 3 0 0 1 6 0"/><path d="M9 18a3 3 0 0 1 6 0"/>',
+            'layout-hshape'    => '<path d="M6 4v16M18 4v16M6 12h12"/>',
+            'layout-ushape'    => '<path d="M6 4v9a6 6 0 0 0 12 0V4"/>',
+            'layout-boardroom' => '<rect x="6" y="8" width="12" height="8" rx="2"/><circle cx="9" cy="5" r=".8"/><circle cx="15" cy="5" r=".8"/><circle cx="9" cy="19" r=".8"/><circle cx="15" cy="19" r=".8"/><circle cx="3.5" cy="12" r=".8"/><circle cx="20.5" cy="12" r=".8"/>',
+            'area'             => '<path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/>',
             'heart'        => '<path d="M12 20S3.5 14.7 3.5 9.4C3.5 6.9 5.4 5 7.9 5c1.6 0 3 .8 4.1 2.1C13 5.8 14.4 5 16 5c2.5 0 4.4 1.9 4.4 4.4C20.4 14.7 12 20 12 20z"/>',
             'users'        => '<circle cx="9" cy="8" r="3"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16 5.5a3 3 0 0 1 0 6"/><path d="M18.5 20a5.5 5.5 0 0 0-2.7-4.8"/>',
             // Trust

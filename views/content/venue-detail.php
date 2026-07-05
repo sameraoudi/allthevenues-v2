@@ -180,8 +180,15 @@ $mapsLinkUrl = 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode
           <table class="vd-layouts">
             <thead><tr><th>Layout</th><th class="ta-r">Capacity</th></tr></thead>
             <tbody>
+              <?php $ltypeIcons = venue_layout_types(); ?>
               <?php foreach ($layouts as $l): ?>
-                <tr><td><?= e($l['layout_type']) ?></td><td class="ta-r"><?= e(number_format((int)$l['capacity'])) ?></td></tr>
+                <tr>
+                  <td class="vd-layout-name">
+                    <?php $lk = $ltypeIcons[$l['layout_type']] ?? ''; if ($lk !== '') echo icon($lk, 'vd-layout-ico'); ?>
+                    <?= e($l['layout_type']) ?>
+                  </td>
+                  <td class="ta-r"><?= e(number_format((int)$l['capacity'])) ?></td>
+                </tr>
               <?php endforeach; ?>
             </tbody>
           </table>
@@ -242,6 +249,27 @@ $mapsLinkUrl = 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode
           $krow('Minimum spend', ($venue['minimum_spend'] ?? null) && (float)$venue['minimum_spend'] > 0 ? 'AED ' . number_format((float)$venue['minimum_spend']) : '');
           $krow('Managed by', $venue['partner_name'] ?? '');
         ?>
+        <?php
+          // Floor area with a sqm/sqft toggle. Both values are computed server-side
+          // (1 m² = 10.7639 ft²) so the JS only swaps the displayed text.
+          $fa     = $venue['floor_area'] ?? null;
+          $faUnit = (string)($venue['floor_area_unit'] ?? '');
+          if ($fa !== null && (float)$fa > 0 && in_array($faUnit, ['sqm', 'sqft'], true)):
+              $faVal = (float)$fa;
+              $sqm   = $faUnit === 'sqm' ? $faVal : $faVal / 10.7639;
+              $sqft  = $faUnit === 'sqft' ? $faVal : $faVal * 10.7639;
+              $sqmR  = (int)round($sqm);
+              $sqftR = (int)round($sqft);
+              $shownVal = $faUnit === 'sqm' ? $sqmR : $sqftR;
+        ?>
+          <div class="vd-krow">
+            <span class="k">Floor area</span>
+            <span class="v vd-area">
+              <span data-area-toggle data-sqm="<?= e((string)$sqmR) ?>" data-sqft="<?= e((string)$sqftR) ?>" data-unit="<?= e($faUnit) ?>"><?= e(number_format($shownVal)) ?> <?= $faUnit === 'sqm' ? 'm²' : 'ft²' ?></span>
+              <button type="button" class="vd-area-toggle" data-area-toggle-btn aria-label="Switch floor-area unit"><?= $faUnit === 'sqm' ? 'ft²' : 'm²' ?></button>
+            </span>
+          </div>
+        <?php endif; ?>
         <?php if ($website !== ''): ?>
           <div class="vd-krow vd-krow--link">
             <a href="<?= e($website) ?>" target="_blank" rel="noopener nofollow">Visit venue website <?= icon('arrow-right') ?></a>

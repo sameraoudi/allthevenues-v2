@@ -115,6 +115,11 @@ if ($rest === 'new') {
             $pl = trim((string)($_POST['pricing_level'] ?? ''));
             $clean['pricing_level'] = in_array($pl, venue_pricing_levels(), true) ? $pl : null;
 
+            // --- floor area (nullable; number + sqm/sqft unit) ---
+            $clean['floor_area'] = ($_POST['floor_area'] ?? '') !== '' ? max(0, (float)$_POST['floor_area']) : null;
+            $fau = trim((string)($_POST['floor_area_unit'] ?? ''));
+            $clean['floor_area_unit'] = in_array($fau, ['sqm', 'sqft'], true) ? $fau : null;
+
             $clean['is_featured'] = !empty($_POST['is_featured']) ? 1 : 0;
             $clean['is_verified'] = !empty($_POST['is_verified']) ? 1 : 0;
 
@@ -173,6 +178,7 @@ if ($rest === 'new') {
             if (!$errors) {
                 try {
                     $newId = venue_admin_create($pdo, $clean);
+                    venue_layout_capacity_save($pdo, $newId, (array)($_POST['layout'] ?? []));
                     audit_log($pdo, (int)($me['id'] ?? 0) ?: null, 'create', 'venue', $newId, null, $clean);
                     $_SESSION['admin_flash'] = ['type' => 'success', 'msg' => 'Venue created — add images and finish the details below.'];
                     redirect('admin/venues/edit?id=' . $newId);
@@ -266,6 +272,11 @@ if ($rest === 'edit') {
             $pl = trim((string)($_POST['pricing_level'] ?? ''));
             $clean['pricing_level'] = in_array($pl, venue_pricing_levels(), true) ? $pl : null;
 
+            // --- floor area (nullable; number + sqm/sqft unit) ---
+            $clean['floor_area'] = ($_POST['floor_area'] ?? '') !== '' ? max(0, (float)$_POST['floor_area']) : null;
+            $fau = trim((string)($_POST['floor_area_unit'] ?? ''));
+            $clean['floor_area_unit'] = in_array($fau, ['sqm', 'sqft'], true) ? $fau : null;
+
             $clean['is_featured'] = !empty($_POST['is_featured']) ? 1 : 0;
             $clean['is_verified'] = !empty($_POST['is_verified']) ? 1 : 0;
 
@@ -348,6 +359,8 @@ if ($rest === 'edit') {
                     $upd->bindValue(':id', $id, PDO::PARAM_INT);
                     $upd->execute();
 
+                    venue_layout_capacity_save($pdo, $id, (array)($_POST['layout'] ?? []));
+
                     if ($changedNew) {
                         audit_log($pdo, (int)($me['id'] ?? 0) ?: null, 'update', 'venue', $id, $changedOld, $changedNew);
                     }
@@ -365,6 +378,9 @@ if ($rest === 'edit') {
     $emirates   = venue_emirates($pdo);
     $partners   = venue_partner_options($pdo);           // provider-assignment select
     $images     = venue_images_admin_list($pdo, $id);   // for the image manager
+    // Layout capacities for the form prefill (layout_type => capacity).
+    $layoutValues = [];
+    foreach (venue_layout_capacity($pdo, $id) as $lr) { $layoutValues[(string)$lr['layout_type']] = (int)$lr['capacity']; }
 
     $admin_active       = 'venues';
     $page_title         = 'Edit venue — Admin';

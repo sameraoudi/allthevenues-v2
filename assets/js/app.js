@@ -436,3 +436,26 @@
   if (document.readyState !== 'loading') sizeReportBars();
   else document.addEventListener('DOMContentLoaded', sizeReportBars);
 })();
+
+/* ---------------------------------------------------------------------------
+   Venue detail — floor-area sqm/sqft toggle. Both values are precomputed
+   server-side into data-sqm / data-sqft; this just swaps the shown text.
+   CSP-safe (self-hosted; no inline handler).
+   --------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+  function fmt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  document.addEventListener('click', function (ev) {
+    var btn = ev.target.closest('[data-area-toggle-btn]');
+    if (!btn) return;
+    ev.preventDefault();
+    var wrap = btn.closest('.vd-area');
+    var span = wrap && wrap.querySelector('[data-area-toggle]');
+    if (!span) return;
+    var next = span.getAttribute('data-unit') === 'sqm' ? 'sqft' : 'sqm';
+    var val  = parseInt(span.getAttribute(next === 'sqm' ? 'data-sqm' : 'data-sqft'), 10) || 0;
+    span.textContent = fmt(val) + ' ' + (next === 'sqm' ? 'm²' : 'ft²');
+    span.setAttribute('data-unit', next);
+    btn.textContent = next === 'sqm' ? 'ft²' : 'm²';   // button shows the OTHER unit
+  });
+})();

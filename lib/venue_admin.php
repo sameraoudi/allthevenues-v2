@@ -136,6 +136,43 @@ function venue_slug_available(PDO $pdo, string $slug, int $excludeId): bool
     return $stmt->fetchColumn() === false;
 }
 
+/**
+ * Upsert/prune a venue's layout-capacity rows in one transaction.
+ * $input = [layout_type => raw capacity string]. For each of the 8 canonical
+ * venue_layout_types(): a positive int → INSERT … ON DUPLICATE KEY UPDATE (the
+ * table has UNIQUE (venue_id, layout_type)); blank/0/invalid → DELETE that row.
+ * Only the 8 known layout_types are accepted; anything else is ignored.
+ */
+function venue_layout_capacity_save(PDO $pdo, int $venueId, array $input): void
+{
+    $ins = $pdo->prepare(
+        'INSERT INTO venue_layout_capacity (venue_id, layout_type, capacity)
+         VALUES (:v, :t, :c)
+         ON DUPLICATE KEY UPDATE capacity = VALUES(capacity)'
+    );
+    $del = $pdo->prepare(
+        'DELETE FROM venue_layout_capacity WHERE venue_id = :v AND layout_type = :t'
+    );
+
+    $pdo->beginTransaction();
+    try {
+        foreach (array_keys(venue_layout_types()) as $type) {
+            $raw = trim((string)($input[$type] ?? ''));
+            $cap = ($raw !== '' && ctype_digit($raw)) ? (int)$raw : 0;
+            if ($cap > 0) {
+                $ins->execute([':v' => $venueId, ':t' => $type, ':c' => $cap]);
+            } else {
+                $del->execute([':v' => $venueId, ':t' => $type]);
+            }
+        }
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) { $pdo->rollBack(); }
+        error_log('venue_layout_capacity_save failed (venue=' . $venueId . '): ' . $e->getMessage());
+        throw $e;
+    }
+}
+
 /** Rich-text fields that must pass through html_sanitize() before save. */
 function venue_richtext_fields(): array
 {

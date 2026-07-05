@@ -22,6 +22,7 @@ $ta  = static fn(string $k): string => e((string)($old[$k] ?? ''));   // textare
 $textFields = ['facilities' => 'Facilities', 'food_beverage' => 'Food & beverage', 'av_support' => 'AV & technical',
                'restrictions' => 'Notes & restrictions', 'packages' => 'Packages', 'special_offer' => 'Special offer'];
 $venue = $venue ?? null;
+$layoutValues = $layoutValues ?? [];   // layout_type => capacity (edit prefill; empty on new)
 ?>
   <div class="admin-panel">
     <div class="lead-detail__head">
@@ -105,6 +106,30 @@ $venue = $venue ?? null;
       </div>
       <div class="atv-field"><label for="f-video">Video URL</label><input type="text" id="f-video" name="video_url" value="<?= $v('video_url') ?>" maxlength="255"></div>
       <div class="atv-field"><label for="f-website">Website</label><input type="text" id="f-website" name="website" value="<?= $v('website') ?>" maxlength="255"></div>
+    </div>
+  </div>
+
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">Layouts &amp; capacity</h2>
+    <div class="admin-form__grid">
+      <div class="atv-field"><label for="f-floor">Floor area</label><input type="number" id="f-floor" name="floor_area" value="<?= $v('floor_area') ?>" min="0" step="0.01"></div>
+      <div class="atv-field">
+        <label for="f-floor-unit">Floor area unit</label>
+        <select id="f-floor-unit" name="floor_area_unit">
+          <option value="">—</option>
+          <option value="sqm"<?= $sel('floor_area_unit', 'sqm') ?>>m² (sqm)</option>
+          <option value="sqft"<?= $sel('floor_area_unit', 'sqft') ?>>ft² (sqft)</option>
+        </select>
+      </div>
+    </div>
+    <p class="lead-hint mb-2">Seated/standing capacity per layout. Leave blank for layouts this venue doesn't offer — the public tab hides when none are set.</p>
+    <div class="admin-form__grid layout-grid">
+      <?php foreach (venue_layout_types() as $ltype => $liconKey): ?>
+        <div class="atv-field">
+          <label class="layout-label" for="f-layout-<?= e($ltype) ?>"><?= icon($liconKey, 'layout-ico') ?> <?= e($ltype) ?></label>
+          <input type="number" id="f-layout-<?= e($ltype) ?>" name="layout[<?= e($ltype) ?>]" value="<?= e((string)($layoutValues[$ltype] ?? '')) ?>" min="0">
+        </div>
+      <?php endforeach; ?>
     </div>
   </div>
 

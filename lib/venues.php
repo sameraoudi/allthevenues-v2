@@ -535,6 +535,25 @@ function venue_images(PDO $pdo, int $venueId): array
     return $stmt->fetchAll();
 }
 
+/**
+ * Canonical layout types in display order → icon key. The layout_type strings
+ * MUST match the venue_layout_capacity.layout_type ENUM exactly.
+ * @return array<string,string>
+ */
+function venue_layout_types(): array
+{
+    return [
+        'Reception' => 'layout-reception',
+        'Theatre'   => 'layout-theatre',
+        'Banquet'   => 'layout-banquet',
+        'Classroom' => 'layout-classroom',
+        'Cabaret'   => 'layout-cabaret',
+        'H-shape'   => 'layout-hshape',
+        'U-shape'   => 'layout-ushape',
+        'Boardroom' => 'layout-boardroom',
+    ];
+}
+
 function venue_layout_capacity(PDO $pdo, int $venueId): array
 {
     $stmt = $pdo->prepare(
