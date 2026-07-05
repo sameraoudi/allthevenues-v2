@@ -68,5 +68,17 @@ require_once __DIR__ . '/../lib/icons.php';
 
     <script src="<?= e(base_url('assets/js/bootstrap.bundle.min.js')) ?>"></script>
     <script src="<?= e(base_url('assets/js/app.js')) ?>"></script>
+    <?php
+    // GoatCounter analytics — production apex ONLY (not staging/localhost) so
+    // pre-launch traffic isn't recorded. External script + data-attribute only
+    // (CSP-clean: script-src 'self' https://gc.zgo.at, no inline). Conversions are
+    // read from the distinct success pageviews (/enquire|/contact|
+    // /become-a-venue-partner ?submitted=1) — no extra event needed.
+    $gcHost = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
+    if ($gcHost === 'allthevenues.com' || $gcHost === 'www.allthevenues.com'):
+    ?>
+    <script data-goatcounter="https://allthevenues.goatcounter.com/count"
+            async src="//gc.zgo.at/count.js"></script>
+    <?php endif; ?>
 </body>
 </html>
