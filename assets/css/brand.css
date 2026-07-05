@@ -794,8 +794,7 @@ select:focus-visible,
 .venue-row__title { font-size: 23px; margin-bottom: 1px; }
 .venue-row__title a { color: var(--ink); }
 .venue-row__title a:hover { color: var(--action); }
-.venue-row__provider { font-size: 13px; color: var(--muted); margin-top: 2px; }
-.venue-row__addr { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.venue-row__addr { font-size: 13px; color: var(--muted); margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .venue-row__chips { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 10px; }
 .venue-row__chips svg { width: 13px; height: 13px; }
 .venue-row__desc { font-size: 13.5px; color: #40525f; margin-bottom: 12px; max-width: 600px; }

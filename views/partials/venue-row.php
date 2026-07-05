@@ -16,12 +16,21 @@ $imgSrc     = venue_img_src($venue['primary_image'] ?? null);
 $capacity   = ($venue['capacity_max'] ?? null) !== null ? (int)$venue['capacity_max'] : null;
 $ioLabels   = venue_indoor_outdoor_options();
 $ioLabel    = !empty($venue['indoor_outdoor']) ? ($ioLabels[$venue['indoor_outdoor']] ?? $venue['indoor_outdoor']) : '';
-// Area + emirate only — the provider now has its own line under the title, so
-// no partner_name fallback here (it would duplicate the attribution).
+// Location = area + emirate (no partner_name fallback — provider has its own part).
 $address    = trim(implode(', ', array_filter([
     trim((string)($venue['area'] ?? '')),
     trim((string)($venue['emirate_name'] ?? '')),
 ])));
+
+// Provider label: drop a leading "The", then hard-cap so the meta line can't wrap.
+$providerName = trim((string)($venue['partner_name'] ?? ''));
+$providerName = (string)preg_replace('/^the\s+/i', '', $providerName);
+if ($providerName !== '') {
+    $providerName = mb_strimwidth($providerName, 0, 24, '…');
+}
+
+// One meta line: "Provider | City", each part only when present.
+$meta = trim(implode(' | ', array_filter([$providerName, $address])));
 
 $min = $venue['minimum_spend'] ?? null;
 if ($min !== null && (float)$min > 0) {
@@ -43,10 +52,7 @@ $snip = snippet($venue['description'] ?? '', 150);
             data-venue-id="<?= (int)($venue['id'] ?? 0) ?>" aria-pressed="false"
             aria-label="Save to shortlist"><?= icon('heart') ?></button>
     <h3 class="venue-row__title"><a href="<?= e($detailUrl) ?>"><?= e($venue['name'] ?? 'Venue') ?></a></h3>
-    <?php if (!empty($venue['partner_name'])): ?>
-      <div class="venue-row__provider">by <?= e($venue['partner_name']) ?></div>
-    <?php endif; ?>
-    <?php if ($address !== ''): ?><div class="venue-row__addr"><?= e($address) ?></div><?php endif; ?>
+    <?php if ($meta !== ''): ?><div class="venue-row__addr"><?= e($meta) ?></div><?php endif; ?>
 
     <div class="venue-row__chips">
       <?php if ($capacity !== null): ?><span class="atv-chip"><?= icon('users') ?> <?= e(number_format($capacity)) ?></span><?php endif; ?>
