@@ -44,6 +44,13 @@ if ($sub === 'partners' || strncmp($sub, 'partners/', 9) === 0) {
     return;
 }
 
+// Reporting (aggregations + per-section CSV) — staff. Own sub-routes/params.
+if ($sub === 'reports' || strncmp($sub, 'reports/', 8) === 0) {
+    auth_require_role(['admin', 'editor']);
+    require __DIR__ . '/reports.php';
+    return;
+}
+
 switch ($sub) {
 
     /* ---- Login (public) -------------------------------------------------- */

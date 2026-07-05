@@ -413,3 +413,26 @@
   if (document.readyState !== 'loading') initShortlist();
   else document.addEventListener('DOMContentLoaded', initShortlist);
 })();
+
+/* ---------------------------------------------------------------------------
+   Admin reports — size CSS bars/columns from data-pct. Setting element.style
+   from our own self-hosted script is CSP-allowed; inline style attributes in
+   HTML are not (that's why widths/heights come from here).
+   --------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+  function sizeReportBars() {
+    var bars = document.querySelectorAll('.bar[data-pct]');
+    for (var i = 0; i < bars.length; i++) {
+      var p = parseFloat(bars[i].getAttribute('data-pct'));
+      if (!isNaN(p)) bars[i].style.width = Math.max(0, Math.min(100, p)) + '%';
+    }
+    var cols = document.querySelectorAll('.spark__col[data-pct]');
+    for (var j = 0; j < cols.length; j++) {
+      var h = parseFloat(cols[j].getAttribute('data-pct'));
+      if (!isNaN(h)) cols[j].style.height = Math.max(0, Math.min(100, h)) + '%';
+    }
+  }
+  if (document.readyState !== 'loading') sizeReportBars();
+  else document.addEventListener('DOMContentLoaded', sizeReportBars);
+})();

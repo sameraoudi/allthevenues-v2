@@ -32,6 +32,7 @@ $nav = [
     'enquiries' => ['label' => 'Enquiries', 'url' => base_url('admin/enquiries'), 'icon' => 'inbox',    'cap' => 'enquiries.manage', 'badge' => $newCount],
     'venues'    => ['label' => 'Venues',    'url' => base_url('admin/venues'),    'icon' => 'building', 'cap' => 'venues.manage'],
     'partners'  => ['label' => 'Providers', 'url' => base_url('admin/partners'),  'icon' => 'users',    'cap' => 'providers.manage'],
+    'reports'   => ['label' => 'Reports',   'url' => base_url('admin/reports'),   'icon' => 'chart',    'cap' => 'enquiries.manage'],
     'users'     => ['label' => 'Users',     'url' => base_url('admin/users'),     'icon' => 'shield',   'cap' => 'users.manage'],
     'settings'  => ['label' => 'Settings',  'url' => base_url('admin/settings'),  'icon' => 'settings', 'cap' => 'settings.manage'],
 ];

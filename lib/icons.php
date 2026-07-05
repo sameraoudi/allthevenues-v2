@@ -17,6 +17,8 @@ function _icon_paths(string $name): ?string
             'chevron-down' => '<path d="M6 9l6 6 6-6"/>',
             'arrow-right'  => '<path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>',
             'menu'         => '<path d="M4 7h16M4 12h16M4 17h16"/>',
+            'chart'        => '<path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/>',
+            'download'     => '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>',
             'heart'        => '<path d="M12 20S3.5 14.7 3.5 9.4C3.5 6.9 5.4 5 7.9 5c1.6 0 3 .8 4.1 2.1C13 5.8 14.4 5 16 5c2.5 0 4.4 1.9 4.4 4.4C20.4 14.7 12 20 12 20z"/>',
             'users'        => '<circle cx="9" cy="8" r="3"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16 5.5a3 3 0 0 1 0 6"/><path d="M18.5 20a5.5 5.5 0 0 0-2.7-4.8"/>',
             // Trust

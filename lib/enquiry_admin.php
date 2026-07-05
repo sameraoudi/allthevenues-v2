@@ -80,6 +80,10 @@ function enquiry_admin_filters(array $in): array
     if (($em = (int)($in['emirate'] ?? 0)) > 0) {
         $out['emirate'] = $em;
     }
+    // Optional provider filter (reports use it; the inbox simply won't send it).
+    if (($pr = (int)($in['provider'] ?? 0)) > 0) {
+        $out['provider'] = $pr;
+    }
     $mode = trim((string)($in['mode'] ?? ''));
     if (in_array($mode, ['venue', 'assisted', 'partner', 'general', 'partner_signup', 'contact'], true)) {
         $out['mode'] = $mode;
@@ -120,6 +124,15 @@ function enquiry_admin_where(array $f): array
     }
     if (isset($f['date_from'])) { $sql .= ' AND e.created_at >= :dfrom';                 $p[':dfrom'] = $f['date_from'] . ' 00:00:00'; }
     if (isset($f['date_to']))   { $sql .= ' AND e.created_at <= :dto';                   $p[':dto']   = $f['date_to'] . ' 23:59:59'; }
+    if (isset($f['provider'])) {
+        // Enquiry addressed to the provider, OR touching one of its venues.
+        // Distinct placeholders — native prepares reject a reused name (HY093).
+        $sql .= ' AND (e.partner_id = :prov OR EXISTS (SELECT 1 FROM enquiry_venues evp'
+              . ' JOIN venues vp ON vp.id = evp.venue_id'
+              . ' WHERE evp.enquiry_id = e.id AND vp.partner_id = :prov2))';
+        $p[':prov']  = $f['provider'];
+        $p[':prov2'] = $f['provider'];
+    }
     if (isset($f['q'])) {
         // Distinct placeholders — native prepares don't allow reusing one name.
         $like = '%' . $f['q'] . '%';
