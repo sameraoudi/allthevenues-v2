@@ -184,14 +184,34 @@ if (preg_match('#^(\d+)/(status|note|assign|delete)$#', $rest, $m)) {
         if (($_POST['send_email'] ?? '') === '1') {
             $esc = static fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
             $venueNames = implode(', ', array_map(static fn($v) => (string)$v['name'], $enq['venues']));
+
+            // Label lookups for coded fields.
+            $flexOpts  = enquiry_date_flexibility();
+            $flexLabel = $enq['date_flexibility'] ? ($flexOpts[$enq['date_flexibility']] ?? $enq['date_flexibility']) : '';
+            $ioOpts    = venue_indoor_outdoor_options();
+            $ioLabel   = $enq['indoor_outdoor'] ? ($ioOpts[$enq['indoor_outdoor']] ?? $enq['indoor_outdoor']) : '';
+            $guests    = $enq['guest_count'] ? (venue_guest_bands()[$enq['guest_count']][0] ?? $enq['guest_count']) : '';
+            $location  = trim(implode(', ', array_filter([
+                trim((string)($enq['emirate_name'] ?? '')),
+                trim((string)($enq['city_pref'] ?? '')),
+            ])));
+
             $body = '<div style="font-family:Arial,sans-serif;color:#0E1B2A;">'
                 . '<h2>New lead from All The Venues — ' . $esc($enq['reference']) . '</h2>'
                 . '<p><strong>Contact:</strong> ' . $esc($enq['name']) . ' &lt;' . $esc($enq['email']) . '&gt;'
                 . ($enq['phone'] ? ' · ' . $esc($enq['phone']) : '') . '</p>'
+                . ($enq['company'] ? '<p><strong>Company:</strong> ' . $esc($enq['company']) . '</p>' : '')
                 . ($venueNames ? '<p><strong>Venue(s):</strong> ' . $esc($venueNames) . '</p>' : '')
-                . ($enq['event_type_name'] ? '<p><strong>Event:</strong> ' . $esc($enq['event_type_name']) . '</p>' : '')
+                . ($enq['event_type_name'] ? '<p><strong>Event type:</strong> ' . $esc($enq['event_type_name']) . '</p>' : '')
                 . ($enq['event_date'] ? '<p><strong>Date:</strong> ' . $esc($enq['event_date']) . '</p>' : '')
-                . ($enq['guest_count'] ? '<p><strong>Guests:</strong> ' . $esc(venue_guest_bands()[$enq['guest_count']][0] ?? $enq['guest_count']) . '</p>' : '')
+                . ($flexLabel ? '<p><strong>Date flexibility:</strong> ' . $esc($flexLabel) . '</p>' : '')
+                . ($guests ? '<p><strong>Guests:</strong> ' . $esc($guests) . '</p>' : '')
+                . ($enq['budget_range'] ? '<p><strong>Budget:</strong> ' . $esc($enq['budget_range']) . '</p>' : '')
+                . ($location ? '<p><strong>Location:</strong> ' . $esc($location) . '</p>' : '')
+                . ($ioLabel ? '<p><strong>Indoor / outdoor:</strong> ' . $esc($ioLabel) . '</p>' : '')
+                . ($enq['venue_preference'] ? '<p><strong>Venue preference:</strong><br>' . nl2br($esc($enq['venue_preference'])) . '</p>' : '')
+                . ($enq['fb_requirements'] ? '<p><strong>Food &amp; beverage:</strong><br>' . nl2br($esc($enq['fb_requirements'])) . '</p>' : '')
+                . ($enq['av_requirements'] ? '<p><strong>AV &amp; technical:</strong><br>' . nl2br($esc($enq['av_requirements'])) . '</p>' : '')
                 . ($enq['notes'] ? '<p><strong>Notes:</strong><br>' . nl2br($esc($enq['notes'])) . '</p>' : '')
                 . '</div>';
             if (!send_mail($routedEmail, 'New lead ' . $enq['reference'] . ' — All The Venues', $body)) {
