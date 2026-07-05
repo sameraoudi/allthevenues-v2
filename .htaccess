@@ -43,6 +43,18 @@ RedirectMatch 403 ^/docs(/|$)
     Require all denied
 </FilesMatch>
 
+# === Legacy 301s (fixed paths) — U6 Phase-4 ===
+# Preserve the old site's indexed URLs. The trailing "?" on each target DROPS the
+# old query string. Per-record paths (venue.php?venueid=, provider.php?pid=) are
+# intentionally NOT here — they fall through to index.php and 301 by legacy_id in
+# lib/legacy_redirect.php.
+RewriteRule ^venues\.php$     /venues?        [R=301,L]
+RewriteRule ^providers\.php$  /providers?     [R=301,L]
+RewriteRule ^about\.php$      /about?         [R=301,L]
+RewriteRule ^legal\.php$      /terms-of-use?  [R=301,L]
+RewriteRule ^help\.php$       /contact?       [R=301,L]
+RewriteRule ^whydubai\.php$   /about?         [R=301,L]
+
 # === Front-controller routing ===
 # Serve real files/directories directly; route everything else to index.php.
 RewriteCond %{REQUEST_FILENAME} -f [OR]

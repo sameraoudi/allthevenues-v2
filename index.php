@@ -17,6 +17,15 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/helpers.php';
 require_once __DIR__ . '/lib/csrf.php';
 
+// Legacy URL 301s (U6): the two per-record legacy paths need a DB lookup by
+// legacy_id. Cheap guard — two string compares — so normal requests skip it.
+// (Fixed legacy paths are handled in .htaccess.)
+$reqPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
+if ($reqPath === '/venue.php' || $reqPath === '/provider.php') {
+    require __DIR__ . '/lib/legacy_redirect.php';
+    legacy_redirect_dispatch($reqPath, $_GET);   // 301s + exits, or falls through
+}
+
 // App-wide Gulf time (UAE has no DST). Keeps PHP date() strings consistent with
 // the MySQL session zone pinned in config/db.php, so writes/reads/filters agree.
 date_default_timezone_set('Asia/Dubai');
