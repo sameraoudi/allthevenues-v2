@@ -6,12 +6,16 @@ and `VISION.md` (north star).*
 
 ---
 
-## Current state (as of 3 Jul 2026)
+## Current state (as of 5 Jul 2026)
 
-> Latest closeout: **All of U5 complete** (SEO). Head infra (meta/canonical/OG), event×city landing pages,
-> the Locations mosaic, and dynamic sitemap.xml + robots.txt are live — on top of a fully-complete U4 (venue
-> + provider admin). Next: the **launch track** in `docs/ATV-BACKLOG.md` — starting with #2 Become-a-Venue-
-> Partner form — then **U6** (audit + apex cutover).
+> Latest closeout: **add-provider create flow (U4d-4)** — deployed + verified on prod (mirrors the U4c
+> add-venue pattern: `/admin/partners/new`, auto-slug, draft default, audit, redirect-to-edit). Reporting
+> **#5 design lock approved** (`docs/atv-reports-preview.html`) — build order next. **Timezone bug FIXED +
+> verified on prod** (commit `4282a31`): app now runs on Gulf time (Asia/Dubai / +04:00); inbox date filter
+> returns Gulf "today" correctly; Received column reads Gulf. **Sortable Event Date / Received columns** shipped + verified on prod (commit
+> `9d64542`; allowlist-safe ORDER BY, NULL event-dates last, sort carries through pager/filter/CSV).
+> **#5 admin reporting foundation SHIPPED + verified on prod** (commit `417c566`) — `/admin/reports`. Next:
+> **#8/U6** launch audit + apex cutover (plus #9 image rights, #1 card-hover polish).
 
 **Live on `staging.allthevenues.com`.** The full public shopfront + the admin to run it are built and
 verified on staging. Core loop works end-to-end: browse → enquire → admin inbox → context-aware forward.
@@ -108,9 +112,10 @@ rights/provenance (schema + admin), **#3** provider portal (Phase 2), **#1** car
 
 **SEO & launch:**
 - **U5 ✅ complete** — SEO head infra, event×city landing pages, Locations, sitemap.xml + robots.txt.
-- **Launch track** (see `docs/ATV-BACKLOG.md`, lean-launch order): #2 partner form → #6 provider-ownership
-  fields → #4 multi-venue shortlist → #7 legal/contact/about → U3c historical enquiries → #5 reporting
-  foundation → #8/U6 audit.
+- **Launch track** (see `docs/ATV-BACKLOG.md`, lean-launch order): #2 partner form ✅ → #6 provider-ownership
+  fields ✅ → #4 multi-venue shortlist ✅ → #7 legal/contact/about ✅ → U3c historical enquiries ✅ → #5
+  reporting foundation ✅ → **#8/U6 audit + apex cutover = the only remaining launch-track item.** Also open,
+  not launch-blocking: #9 image rights/provenance, #1 card-hover polish; #3 provider portal = first Phase-2.
 - **U6** launch hardening: notifications set, GoatCounter events, **301s from legacy URLs**, mobile QA,
   security check, backup + rollback, **cutover** staging → apex domain (retire legacy code, tailored CSP
   replaces any stopgap).
@@ -134,6 +139,78 @@ rights/provenance (schema + admin), **#3** provider portal (Phase 2), **#1** car
 ---
 
 ## Dated history
+
+**5 Jul 2026**
+- **Venue listing card polish:** provider now shows on the location line as `Provider | City`
+  (`views/partials/venue-row.php`) — same size as the city, leading "The" stripped, `mb_strimwidth` 24-char
+  cap + `.venue-row__addr` nowrap/ellipsis guard so it never wraps. Disambiguates same-named venues (three
+  "Diamond Ballroom"s). Plain text, listing-only. Deployed + verified on prod.
+- **U6 launch audit started** — working checklist at `docs/ATV-U6-AUDIT.md` (the #8/U6 runway). Legal review
+  decided **not blocking**. **Phase 6 (security) ✅ swept + deployed** (commit `589785e`): CSP already
+  tight/domain-agnostic + added a defensive `unset` for the apex parent-docroot guard; CSRF/rate-limit/
+  Turnstile on all public forms, RBAC fail-closed, uploads non-exec, error hygiene, `html_sanitize` XSS all
+  verified. Apex-header confirmation deferred to cutover (Phase 9). **Phase 4 legacy 301 map BUILT** (commit `a7ea3c9`),
+  **pending prod apply**: migration 016 (`legacy_id` on venues+partners), `db/backfill_legacy_ids.php`
+  (name+owning-provider match, dry-run default, reports matched/ambiguous/unmatched), `lib/legacy_redirect.php`
+  (early index.php hook, real 301 by legacy_id, hub fallback), `.htaccess` fixed-path 301s (venues/providers/
+  about/legal→terms/help→contact/whydubai→about). Legacy PK=URL id confirmed (`venueid`→legacy `venues.id`,
+  `pid`→`providers.pid`, owner = text `venues.provider`). **Phase 4 DONE + verified on staging** (5 Jul 2026):
+  016 applied, backfill --commit (168/169 auto: venues 98/98, providers 70/71, 0 ambiguous); straggler legacy
+  #62 (Caesars Palace Dubai → renamed **Banyan Tree Dubai** `banyan-tree-dubai`, partner id 60, `status=draft`)
+  hand-set `legacy_id=62`. curl proved all 6 cases single-hop 301; `pid=62`→`/providers` hub because Banyan is
+  draft (correct — never 301 to an unpublished page; also not in the legacy indexed set). *Open content decision:
+  approve Banyan Tree Dubai if it should be public.* **Phase 3 SEO/indexability ✅ verified on staging** (commit `4a0f81b`): host-gated noindex — staging
+  (`staging.` host) returns `X-Robots-Tag: noindex,nofollow` + meta noindex; apex/other hosts index,follow (no
+  hardcoded noindex, so apex indexes day one); per-page overrides preserved on prod; robots.txt left crawlable.
+  Meta/canonical/OG/sitemap/robots/FAQ-JSON-LD all present. **Cutover-time SEO steps (Phase 9):** apex
+  `config/config.php` must set `BASE_URL=https://allthevenues.com` (else canonicals point at noindex staging =
+  apex won't index); keep the GSC `google….html` verification file on the apex; submit apex sitemap (never
+  staging's) post-cutover. **U6 remaining:** Phase 1 functional QA, 2 content, 5 analytics, 7 perf, 8 mobile,
+  9 cutover, 10 watch.
+  NB: `Memory.md` + `docs/ATV-U6-AUDIT.md` uncommitted in working copy — fold into a docs commit at a checkpoint.
+- **#5 admin reporting foundation** (commit `417c566`, shipped + verified on prod): new
+  `/admin/reports` (controller `views/admin/reports.php` + `reports-content.php`), `lib/report_admin.php`
+  (9 aggregation fns over `enquiry_admin_where` + optional `AND e.is_historical=0`), built to the approved
+  `docs/atv-reports-preview.html` lock. Filter bar reuses the inbox parser + a NEW optional **`provider`**
+  filter added to `enquiry_admin_filters`/`enquiry_admin_where` (distinct `:prov`/`:prov2`, HY093-safe,
+  backward-compatible; inbox doesn't send it). Historical toggle default live-only (banner + excluded-count).
+  KPIs, over-time, by status/event/emirate/venue, provider two-lens (touching vs forwarded), per-section CSV.
+  Bars sized by `assets/js/app.js` from `data-pct` (CSP-safe — 0 inline styles/scripts). Nav item reuses
+  `enquiries.manage` cap (admin+editor); added `chart`+`download` icons. Report JOIN aliases (`evx/evk/vt/lr`)
+  don't collide with where-clause subquery aliases (`ev/evp/vp`).
+- **Known future item (not a bug):** `PDO::MYSQL_ATTR_INIT_COMMAND` (Gulf-time fix, `config/db.php`) throws a
+  deprecation notice on **PHP 8.5** (local only). Prod is **PHP 8.3** where it's correct — do NOT change (the
+  `Pdo\Mysql::` replacement doesn't exist on 8.3). Revisit only if/when prod moves to PHP 8.5+.
+- **Add-provider create flow (U4d-4):** new `admin/partners/new` route in `views/admin/partners.php` (between
+  list + edit), `partner_admin_create()` in `lib/partner_admin.php` (mirrors `venue_admin_create`),
+  self-contained `views/admin/partner-new.php` (Basics + About; no cover panel — needs an id first, like
+  venue-new), "New provider" button in `partners-list.php`. Auto-slug from name (blank → slugify, `-2` on
+  clash), status default `draft`, audit `create`/`partner`, redirect to edit. `created_at` covered by its
+  `DEFAULT CURRENT_TIMESTAMP`; only `slug`+`org_name` are NOT NULL-without-default (both set). Verified on
+  prod, test rows cleaned. Commit `94a5fba`.
+- **#5 reporting design lock approved** — `docs/atv-reports-preview.html` (Coastal UAE admin shell; filter
+  bar reusing the inbox filter set; historical toggle default live-only; tables + CSS bars; KPI cards; over-
+  time; by status/event/emirate/venue; by provider two lenses; per-section CSV). Build order pending the
+  date-filter fix.
+- **Bug found:** enquiry inbox **date-range filter** returns EMPTY on prod. CC proved the code correct at
+  every layer locally (form field names, `$_GET` parse, `enquiry_admin_where()` bounds `00:00:00`/`23:59:59`,
+  param binding, direct SQL, full controller render — incl. inclusive single-day boundary + only-From/only-To
+  + same-day NOW() row). Date lines unchanged since `aef069a` (U3b-2). **No code fix made** (would risk
+  breaking correct code). Prod-specific — leading hypothesis: **session-timezone / stored-value** offset
+  (local tz is consistent end-to-end so can't reproduce). Next: run 4 read-only queries on prod DB
+  (`sameraou_atv2`: NOW()+time_zone; MIN/MAX/COUNT(created_at); a COUNT over a "should-have-rows" window;
+  raw created_at of recent rows). If prod COUNT>0 but UI empty → request/session issue (instrument live
+  controller); if COUNT=0 → tz/stored-value fix (e.g. pin PDO session `time_zone`, or normalize on read).
+  Fix (if any) is environmental/shared → #5 reporting inherits it. Not blocking the #5 build.
+  **ROOT CAUSE CONFIRMED (prod evidence):** prod MySQL runs on **UTC** (`NOW()=2026-07-04 22:50`, tz=SYSTEM),
+  ~4h behind Gulf; `created_at` is `TIMESTAMP` (stored UTC). Newest row `2026-07-04 10:47`, **no rows on
+  server-date 07-05**, so filtering a Gulf "today" window (`>= 2026-07-05 00:00:00`) correctly returns empty.
+  Not a code bug — a **timezone-alignment gap**. Local couldn't reproduce (UTC-consistent end-to-end).
+  App sets **no** PHP default tz (inherits UTC) and **no** MySQL session tz. **Fix (pending CC + deploy):**
+  align the whole app to Gulf — `date_default_timezone_set('Asia/Dubai')` in `index.php` + PDO
+  `MYSQL_ATTR_INIT_COMMAND "SET time_zone='+04:00'"` in `config/db.php` (numeric offset, no tz-tables needed;
+  UAE has no DST). Caveat: existing TIMESTAMP rows then read +4h (Gulf) — desirable for live data; legacy
+  U3c rows drift +4h on display (day-boundary only, accepted). #5 reports inherit Gulf time.
 
 **3 Jul 2026**
 - Split ATV out of the shared sameroudi.com Cowork project into its own project + repo-canonical docs
@@ -210,8 +287,8 @@ rights/provenance (schema + admin), **#3** provider portal (Phase 2), **#1** car
 - **SECURITY fix:** `docs/` + root `*.md` (CLAUDE/Memory/VISION/backlog/previews) were deploying to the
   docroot and **publicly served** (leaked infra: DB name, `/home1/...` paths, repo, deploy-key alias). Now
   **`.htaccess` denies `/docs/*` + any `.md`** (403); legal pages unaffected (they read `docs/legal/*.md` via
-  the PHP filesystem, not HTTP). *Still TODO: manually delete the already-deployed `docs/` + root `.md` from
-  the staging docroot (rsync doesn't remove them); optional hardening — exclude them in `.cpanel.yml`.*
+  the PHP filesystem, not HTTP). **Done (5 Jul 2026):** all root + `docs/` `.md` files manually deleted from
+  the staging docroot. *(Optional hardening still open — exclude them in `.cpanel.yml`.)*
 - **Launch #6 — provider ownership provenance:** migration 013 added `venues.management_source`
   (unassigned/admin_assigned/provider_created/provider_claimed/legacy_import) + `provider_assigned_at`/`_by`
   (backfilled 94 legacy_import / 4 unassigned). Venue save/create now auto-sets source + assigned_at/by when
