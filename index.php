@@ -17,6 +17,14 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/helpers.php';
 require_once __DIR__ . '/lib/csrf.php';
 
+// Staging must not be indexed. Host-gated X-Robots-Tag covers non-HTML responses
+// too (assets, sitemap.xml, robots.txt); the layout adds the <meta> for pages.
+// Production hosts are untouched, so the apex keeps emitting index,follow.
+$isStagingHost = str_starts_with(strtolower((string)($_SERVER['HTTP_HOST'] ?? '')), 'staging.');
+if ($isStagingHost) {
+    header('X-Robots-Tag: noindex, nofollow');
+}
+
 // Legacy URL 301s (U6): the two per-record legacy paths need a DB lookup by
 // legacy_id. Cheap guard — two string compares — so normal requests skip it.
 // (Fixed legacy paths are handled in .htaccess.)

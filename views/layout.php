@@ -24,7 +24,10 @@ require_once __DIR__ . '/../lib/icons.php';
     <?php
       $meta_description = $meta_description ?? 'Discover and enquire about curated UAE event venues — weddings, corporate events, conferences and celebrations — through one simple, managed enquiry.';
       $canonical        = $canonical ?? base_url(ltrim((string)(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/'), '/'));
-      $robots           = $robots ?? 'index, follow';
+      // Staging must never be indexed (duplicate-content risk); the apex keeps
+      // per-page overrides. Host-gated so no hardcoded noindex reaches production.
+      $isStagingHost = str_starts_with(strtolower((string)($_SERVER['HTTP_HOST'] ?? '')), 'staging.');
+      $robots           = $isStagingHost ? 'noindex, nofollow' : ($robots ?? 'index, follow');
       $og_title         = $og_title ?? $page_title;
       $og_description   = $og_description ?? $meta_description;
       $og_image         = $og_image ?? base_url('assets/brand/og_social/atv_og_deep_navy_1200x630.png');
