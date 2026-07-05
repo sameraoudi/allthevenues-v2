@@ -26,7 +26,12 @@ Status key: `[ ]` open · `[~]` in progress · `[x]` done (dated).
 
 ---
 
-## Phase 1 — Functional QA (core loops on staging)
+## Phase 1 — Functional QA (core loops on staging) — objective sweep ✅ 5 Jul; interactive walk pending
+
+*Objective curl sweep passed: all public routes 200, `/this-does-not-exist`→404, `/admin`→302 (gated).
+Publication gate code-verified (`lib/partners.php:244` `status='approved'`); `/providers/banyan-tree-dubai`→200
+because it was approved. Interactive checks (filters/forms→inbox/shortlist/admin) still to be walked.*
+
 
 - [ ] Home → venues browse; filters (event type, emirate multi, guests, indoor/outdoor, price), active-filter
   chips, sort, pagination, keyword search `q` (name / provider / location) `[verify]`
@@ -88,11 +93,15 @@ Status key: `[ ]` open · `[~]` in progress · `[x]` done (dated).
   single-hop 301. `pid=62`→`/providers` hub because that provider is `status=draft` (correct: never 301 to an
   unpublished page; not indexed anyway). **Content decision:** approve Banyan Tree Dubai if it should be public.
 
-## Phase 5 — Analytics
+## Phase 5 — Analytics — ✅ built (commit `de9576e`); live-fire at cutover
 
-- [ ] GoatCounter live on apex; key events fire: enquiry submit (per mode), shortlist add, primary CTAs
-  `[verify]`
-- [ ] CSP `connect-src`/`img-src` allows GoatCounter on the apex `[verify]`
+- [x] GoatCounter snippet added to `views/layout.php`, **production-apex-gated** (`allthevenues.com`/`www.` only;
+  absent on staging + localhost so pre-launch traffic isn't recorded). External script + data-attribute only
+  (CSP-clean). Conversions via PRG success URLs (GoatCounter counts them as pageviews, no custom event code):
+  `/enquire?submitted=1`, `/contact?submitted=1`, `/become-a-venue-partner?submitted=1`.
+- [x] CSP already allows GoatCounter (`script gc.zgo.at`, `connect/img allthevenues.goatcounter.com`).
+- [ ] **At cutover** `[Samer]`: after go-live, confirm `count.js` loads + a hit appears in the GoatCounter
+  dashboard; toggle OFF "ignore query strings" so `?submitted=1` stays a countable conversion path.
 
 ## Phase 6 — Security review **CRITICAL** — ✅ swept 5 Jul 2026 (commit `589785e`)
 
@@ -114,17 +123,28 @@ Status key: `[ ]` open · `[~]` in progress · `[x]` done (dated).
   anchors, strips all attributes + `on*` handlers, drops `<script>`/`<style>` with contents, adds
   `rel="noopener nofollow"`. XSS harness passed.
 
-## Phase 7 — Performance
+## Phase 7 — Performance — ✅ audited 5 Jul 2026 (one fix: /locations images)
 
-- [ ] LiteSpeed cache on; images WebP + sized (full ≤2000 / thumb ≤600); no CDN/external asset deps `[verify]`
-- [ ] Reasonable page weight on venues list + detail; lazy-loaded images `[verify]`
+- [x] Front-end payload reasonable: Bootstrap 228K CSS / 79K JS (minified, self-hosted, gzips); fonts subset
+  woff2 (24–48K); app.js 17K; no CDN asset deps (only footer social profile links go offsite).
+- [x] Lazy-loading present on every card/detail image partial; venue images WebP (U4b re-encode ≤2000/≤600).
+- [x] **FIX (Cowork, pending commit):** `/locations` hero images were 2816×1536 ~1 MB each (6.5 MB/page) →
+  re-encoded to 1400×764 q82 → **1.2 MB total (−82%)**, matching the event-types scale. Originals safe in git.
+  *Samer: commit `assets/img/locations` + `.DS_Store` cleanup, deploy, flush LiteSpeed, eyeball /locations.*
+- [ ] LiteSpeed cache ON `[Samer]` — server-side; confirm it's serving cached (it's the CSP/asset cache we flush).
 
-## Phase 8 — Mobile QA `[Samer][verify]`
+## Phase 8 — Mobile QA `[Samer][verify]` — ✅ done 5 Jul 2026
 
-- [ ] Header nav (hamburger panel), venue cards, filters (mobile toggle), enquiry stepper, shortlist,
-  admin tables — all usable at phone widths
+- [x] Mobile walk completed on staging (nav, cards, filters, enquiry stepper, shortlist, admin) — usable.
 
 ## Phase 9 — Cutover (staging → apex)
+
+> **Samer's cutover constraints (5 Jul 2026):** (1) He has made live prod changes to DB `sameraou_atv2`
+> (provider emails, edits) + uploaded venue/provider photos to prod `uploads/` — these **must not be lost**.
+> → Design the cutover to **reuse the SAME DB + SAME `uploads/` in place** (no data copy/migration); take full
+> backups first as a safety net. (2) Every instruction must be **explicit** — full commands, exact paths,
+> expected output, verify-before-next. (3) Some features (e.g. approved-partner add/edit access = #3 portal)
+> ship **after** cutover — Phase 2, do not block launch.
 
 - [ ] **Rollback plan written + tested** `[Samer]` **CRITICAL** — exact steps to restore legacy docroot +
   DB from the Phase-0 backup if launch goes wrong; know the DNS/docroot revert.

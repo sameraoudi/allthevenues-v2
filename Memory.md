@@ -94,6 +94,47 @@ rights/provenance (schema + admin), **#3** provider portal (Phase 2), **#1** car
 
 ---
 
+## 🚀 CUTOVER COMPLETE — `allthevenues.com` LIVE on ATV (5 Jul 2026)
+
+Executed the docroot repoint: `allthevenues.com` addon-domain Document Root → `/atv-staging` (home-relative
+`/atv-staging`). Verified on the apex (cache-bust): robots meta `index, follow` (ATV format), legacy
+`venue.php?venueid=9` → `301 /venues/grand-ballroom`, GSC file `google5540984c536828b7.html` → 200, sitemap on
+apex host. Zero data movement (same DB `sameraou_atv2` + uploads + code). Config `BASE_URL` flipped to
+`https://allthevenues.com` (backup `config.php.bak-preapex` kept). Hiccup: first smoke tests showed legacy =
+stale LiteSpeed cache pre-propagation; a second flush fixed it. **Legacy kept as rollback** (files
+`/public_html/allthevenues` + DB `sameraou_atv` untouched — do not delete for a few weeks). Kept (harmless,
+force-redirect to apex): `allthevenues.sameraoudi.com` (cPanel addon subdomain — do NOT delete, tied to the
+addon domain), `m.allthevenues.com` (legacy mobile → keep, 301s old m. links to apex = SEO win).
+**Post-cutover DONE (5 Jul 2026):** marker removed; real apex enquiry end-to-end OK (Turnstile→inbox→forward);
+GSC sitemap submitted + read Success (174 pages); GoatCounter live. **GoatCounter query-strings:** no dashboard
+toggle exists — GC records full path incl. `?...` by DEFAULT (stripping is opt-in via `window.goatcounter={path:...}`,
+which we did NOT set), so `?submitted=1` conversions are already counted as distinct paths. Nothing to configure.
+**Remaining = passive:** keep legacy (`/public_html/allthevenues` + DB `sameraou_atv`) as rollback a few weeks;
+72h watch (error_log, GSC coverage, leads). **ATV v2 is LIVE.** Next = Phase-2 (#3 provider portal).
+
+**⚠️ Deploy now hits PROD directly.** Apex serves from `/atv-staging`, so a cPanel `allthevenues-v2` repo
+Deploy-HEAD updates the LIVE apex (no separate staging buffer). Workflow unchanged otherwise: local dev
+`~/Sites/allthevenues-v2` → GitHub `sameraoudi/allthevenues-v2` → cPanel Git (repo path
+`/home1/sameraou/repositories/allthevenues-v2`) → Update from Remote → Deploy HEAD → flush LiteSpeed. Lean on
+CC local verification before every deploy. `staging.allthevenues.com` currently = same `/atv-staging` docroot =
+a noindex prod-alias (NOT an isolated test env) — set up a real isolated staging (own docroot + cloned DB)
+before big/risky features like #3. Legacy cPanel Git repo `allthevenues` (`/home1/sameraou/repositories/
+allthevenues`) kept during the rollback window (harmless — its deploy target isn't the live apex).
+
+## Cutover plan (Phase 9) — runbook in `docs/ATV-CUTOVER-RUNBOOK.md`
+
+Hosting layout (confirmed 5 Jul 2026): cPanel primary domain `sameraoudi.com` (home1/sameraou).
+`allthevenues.com` = **addon domain**, docroot `/home1/sameraou/public_html/allthevenues` (LEGACY site, DB
+`sameraou_atv`). `staging.allthevenues.com` = subdomain, docroot `/home1/sameraou/atv-staging` (NEW app, DB
+`sameraou_atv2`, uploads inside). **Cutover = repoint the addon domain's Document Root → `/home1/sameraou/
+atv-staging`.** Zero data movement (same DB + uploads + code), no DNS change (domain already on account),
+rollback = revert docroot (legacy files + `sameraou_atv` never touched). BASE_URL flips staging→apex in
+`atv-staging/config/config.php`; noindex/GoatCounter gates flip automatically by host. Pre-flight gotchas:
+Turnstile widget Hostnames must include `allthevenues.com`; GSC `google*.html` verification file must be
+copied into `atv-staging` (or DNS-verified); deploy latest code first; `rm uploads/test.php`. Backups done +
+downloaded (DB 1.6M, uploads 275M). All staging phases (1–8) complete; only Phase 9 cutover + Phase 10 watch
+remain.
+
 ## Open work
 
 > **Post-launch backlog:** Samer's 8-item action list (partner portal, multi-venue shortlist, reporting,
@@ -165,8 +206,11 @@ rights/provenance (schema + admin), **#3** provider portal (Phase 2), **#1** car
   Meta/canonical/OG/sitemap/robots/FAQ-JSON-LD all present. **Cutover-time SEO steps (Phase 9):** apex
   `config/config.php` must set `BASE_URL=https://allthevenues.com` (else canonicals point at noindex staging =
   apex won't index); keep the GSC `google….html` verification file on the apex; submit apex sitemap (never
-  staging's) post-cutover. **U6 remaining:** Phase 1 functional QA, 2 content, 5 analytics, 7 perf, 8 mobile,
-  9 cutover, 10 watch.
+  staging's) post-cutover. **Phase 5 analytics ✅ built** (commit `de9576e`): GoatCounter snippet in layout, production-apex-gated (off on
+  staging/localhost); conversions via PRG success URLs (`/enquire?submitted=1` etc.) counted as pageviews;
+  live-fire + "ignore query strings OFF" at cutover. **Phase 1 objective curl sweep ✅** (all routes correct;
+  gate code-verified `lib/partners.php:244`; banyan-tree-dubai now approved). **U6 remaining:** Phase 1
+  interactive walk (Samer), 2 content, 7 perf, 8 mobile, 9 cutover, 10 watch.
   NB: `Memory.md` + `docs/ATV-U6-AUDIT.md` uncommitted in working copy — fold into a docs commit at a checkpoint.
 - **#5 admin reporting foundation** (commit `417c566`, shipped + verified on prod): new
   `/admin/reports` (controller `views/admin/reports.php` + `reports-content.php`), `lib/report_admin.php`
