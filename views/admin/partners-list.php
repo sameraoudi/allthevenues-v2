@@ -22,6 +22,7 @@ $listUrl = base_url('admin/partners');
 ?>
 <div class="lead-toolbar">
   <div class="lead-toolbar__counts"><strong><?= e(number_format($total)) ?></strong> provider<?= $total === 1 ? '' : 's' ?></div>
+  <a class="atv-btn atv-btn--sm" href="<?= e(base_url('admin/partners/new')) ?>">New provider</a>
 </div>
 
 <form class="lead-filters" method="get" action="<?= e($listUrl) ?>">

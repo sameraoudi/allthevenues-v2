@@ -88,6 +88,23 @@ function partner_admin_get(PDO $pdo, int $id): ?array
     return $row === false ? null : $row;
 }
 
+/**
+ * INSERT a partner from a validated $data map (col => value) and return the new
+ * id. Columns/placeholders are built from array_keys($data) — the caller
+ * guarantees a valid 'status' + slug and clean values. Prepared/bound.
+ */
+function partner_admin_create(PDO $pdo, array $data): int
+{
+    $cols = array_keys($data);
+    $ph   = array_map(static fn($c) => ':' . $c, $cols);
+    $stmt = $pdo->prepare(
+        'INSERT INTO partners (' . implode(', ', $cols) . ') VALUES (' . implode(', ', $ph) . ')'
+    );
+    foreach ($data as $col => $val) { $stmt->bindValue(':' . $col, $val); }
+    $stmt->execute();
+    return (int)$pdo->lastInsertId();
+}
+
 /** True if $slug is free (optionally excluding a partner id). */
 function partner_admin_slug_available(PDO $pdo, string $slug, int $excludeId): bool
 {

@@ -49,6 +49,120 @@ if ($rest === '') {
     return;
 }
 
+/* ============================ NEW / CREATE ============================= */
+if ($rest === 'new') {
+    $errors = [];
+    $old    = [];
+
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+        $old = $_POST;   // re-fill on error
+
+        if (!csrf_validate()) {
+            $errors['_form'] = 'Your session expired. Please review and save again.';
+        } else {
+            $plain = static fn(string $k, int $max) => mb_substr(trim(strip_tags((string)($_POST[$k] ?? ''))), 0, $max);
+
+            $clean = [];
+            // --- org_name (required) ---
+            $clean['org_name'] = $plain('org_name', 255);
+            if ($clean['org_name'] === '') { $errors['org_name'] = 'Name is required.'; }
+
+            // --- slug (explicit → validate; blank → auto-generate unique) ---
+            $slug = strtolower(trim((string)($_POST['slug'] ?? '')));
+            if ($slug !== '') {
+                if (!preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug) || mb_strlen($slug) > 191) {
+                    $errors['slug'] = 'Use lowercase letters, numbers and hyphens only.';
+                } elseif (!partner_admin_slug_available($pdo, $slug, 0)) {
+                    $errors['slug'] = 'That slug is already in use by another provider.';
+                }
+                $clean['slug'] = $slug;
+            } else {
+                $base = slugify($clean['org_name']) ?: 'provider';
+                $try  = $base; $n = 2;
+                while (!partner_admin_slug_available($pdo, $try, 0)) { $try = $base . '-' . $n; $n++; }
+                $clean['slug'] = $try;
+            }
+
+            // --- emirate (nullable; validated if set) ---
+            $em = (int)($_POST['emirate_id'] ?? 0);
+            if ($em > 0) {
+                $s = $pdo->prepare('SELECT 1 FROM emirates WHERE id = :id');
+                $s->execute([':id' => $em]);
+                $clean['emirate_id'] = $s->fetchColumn() !== false ? $em : null;
+            } else { $clean['emirate_id'] = null; }
+
+            // --- scalars ---
+            $clean['city_text']    = $plain('city_text', 150) ?: null;
+            $clean['contact_name'] = $plain('contact_name', 255) ?: null;
+            $clean['phone']        = $plain('phone', 50) ?: null;
+            $clean['website']      = $plain('website', 255) ?: null;
+
+            // --- email (nullable; validated if present) ---
+            $email = trim((string)($_POST['email'] ?? ''));
+            if ($email === '') {
+                $clean['email'] = null;
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 255) {
+                $errors['email'] = 'Enter a valid email address.';
+            } else {
+                $clean['email'] = $email;
+            }
+
+            $clean['is_featured'] = !empty($_POST['is_featured']) ? 1 : 0;
+            $clean['is_verified'] = !empty($_POST['is_verified']) ? 1 : 0;
+
+            // --- provider type (stored as the bucket LABEL in partner_group;
+            //     blank/invalid → NULL = fall back to the migration-derived type) ---
+            $tk = trim((string)($_POST['partner_type'] ?? ''));
+            if ($tk !== '' && isset(partner_type_buckets()[$tk])) {
+                $clean['partner_group'] = partner_type_buckets()[$tk][0];
+            } else {
+                $clean['partner_group'] = null;
+            }
+
+            // --- commission_rate (tri-state: blank=unknown/NULL, 0=none, >0=rate %) ---
+            $cr = trim((string)($_POST['commission_rate'] ?? ''));
+            if ($cr === '') {
+                $clean['commission_rate'] = null;                       // unknown
+            } elseif (!is_numeric($cr) || (float)$cr < 0 || (float)$cr > 100) {
+                $errors['commission_rate'] = 'Enter a percentage between 0 and 100, or leave blank for unknown.';
+            } else {
+                $clean['commission_rate'] = round((float)$cr, 2);       // 0 = none, >0 = rate
+            }
+
+            $st = trim((string)($_POST['status'] ?? ''));
+            $clean['status'] = isset(partner_admin_statuses()[$st]) ? $st : 'draft';
+
+            // --- rich-text (sanitized) ---
+            foreach (partner_admin_richtext_fields() as $rf) {
+                $clean[$rf] = html_sanitize($_POST[$rf] ?? null);   // null if empty
+            }
+
+            // created_at: DB column has DEFAULT CURRENT_TIMESTAMP — not set here.
+
+            if (!$errors) {
+                try {
+                    $newId = partner_admin_create($pdo, $clean);
+                    audit_log($pdo, (int)($me['id'] ?? 0) ?: null, 'create', 'partner', $newId, null, $clean);
+                    $_SESSION['admin_flash'] = ['type' => 'success', 'msg' => 'Provider created — add a cover image and finish details below.'];
+                    redirect('admin/partners/edit?id=' . $newId);
+                } catch (Throwable $e) {
+                    error_log('partner create failed: ' . $e->getMessage());
+                    $errors['_form'] = 'Something went wrong creating the provider. Please try again.';
+                }
+            }
+        }
+    }
+
+    $emirates = venue_emirates($pdo);
+
+    $admin_active       = 'partners';
+    $page_title         = 'Add provider — Admin';
+    $admin_page_title   = 'Add provider';
+    $admin_content_view = __DIR__ . '/partner-new.php';
+    require __DIR__ . '/layout.php';
+    return;
+}
+
 /* ============================ EDIT / SAVE =============================== */
 if ($rest === 'edit') {
     $id      = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
