@@ -48,6 +48,24 @@ function enquiry_mode_badge(string $mode, int $venueCount): array
     return ['Assisted', 'assisted'];
 }
 
+/** Sortable columns → SQL expression (allowlist; never interpolate raw input). */
+function enquiry_admin_sortable(): array
+{
+    return ['event_date' => 'e.event_date', 'created_at' => 'e.created_at'];
+}
+
+/** ORDER BY fragment from validated filters (col + dir come only from allowlists). */
+function enquiry_admin_order_sql(array $f): string
+{
+    $col = enquiry_admin_sortable()[$f['sort'] ?? ''] ?? 'e.created_at';
+    $dir = (($f['dir'] ?? 'desc') === 'asc') ? 'ASC' : 'DESC';
+    if ($col === 'e.event_date') {
+        // NULL event dates always last, regardless of direction.
+        return " ORDER BY (e.event_date IS NULL) ASC, e.event_date $dir, e.id DESC";
+    }
+    return " ORDER BY $col $dir, e.id DESC";
+}
+
 /** Normalise admin list filters from $_GET. */
 function enquiry_admin_filters(array $in): array
 {
@@ -76,6 +94,11 @@ function enquiry_admin_filters(array $in): array
     if ($q !== '') {
         $out['q'] = mb_substr($q, 0, 100);
     }
+    // Sort column + direction (both validated against allowlists).
+    $sort = (string)($in['sort'] ?? '');
+    if (isset(enquiry_admin_sortable()[$sort])) { $out['sort'] = $sort; }
+    $dir = strtolower((string)($in['dir'] ?? ''));
+    if (in_array($dir, ['asc', 'desc'], true)) { $out['dir'] = $dir; }
     return $out;
 }
 
@@ -138,7 +161,7 @@ function enquiry_admin_list(PDO $pdo, array $filters, int $page, int $perPage): 
 
     $offset = max(0, ($page - 1) * $perPage);
     $sql = _enquiry_admin_select() . ' WHERE 1=1' . $where
-         . ' ORDER BY e.created_at DESC, e.id DESC LIMIT :lim OFFSET :off';
+         . enquiry_admin_order_sql($filters) . ' LIMIT :lim OFFSET :off';
     $stmt = $pdo->prepare($sql);
     foreach ($params as $k => $v) {
         $stmt->bindValue($k, $v);
@@ -154,7 +177,7 @@ function enquiry_admin_export(PDO $pdo, array $filters, int $cap = 5000): array
 {
     [$where, $params] = enquiry_admin_where($filters);
     $sql = _enquiry_admin_select() . ' WHERE 1=1' . $where
-         . ' ORDER BY e.created_at DESC, e.id DESC LIMIT :lim';
+         . enquiry_admin_order_sql($filters) . ' LIMIT :lim';
     $stmt = $pdo->prepare($sql);
     foreach ($params as $k => $v) {
         $stmt->bindValue($k, $v);

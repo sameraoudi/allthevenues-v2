@@ -671,6 +671,9 @@ select:focus-visible,
   text-align: left; padding: 12px 14px; background: #f4f1ea; color: var(--muted);
   font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .3px; white-space: nowrap;
 }
+.lead-table thead th a.sort-link { color: var(--muted); display: inline-flex; gap: 4px; align-items: center; }
+.lead-table thead th a.sort-link:hover { color: var(--action); }
+.lead-table thead th a.sort-link.is-sorted { color: var(--navy); }
 .lead-table tbody td { padding: 12px 14px; border-top: 1px solid var(--line); vertical-align: top; }
 .lead-table tbody tr:hover { background: #fbfaf7; }
 .lead-ref { font-family: var(--font-body); font-weight: 600; color: var(--action); }

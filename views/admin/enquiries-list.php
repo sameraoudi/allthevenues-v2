@@ -17,11 +17,27 @@ $carry = array_filter([
     'date_from'  => $f['date_from']  ?? '',
     'date_to'    => $f['date_to']    ?? '',
     'q'          => $f['q']          ?? '',
+    'sort'       => $f['sort']       ?? '',
+    'dir'        => $f['dir']        ?? '',
 ], static fn($v) => $v !== '' && $v !== null);
 $hasFilters = (bool)$carry;
 $sel = static fn(string $k, $v): string => ((string)($f[$k] ?? '') === (string)$v) ? ' selected' : '';
 $listUrl = base_url('admin/enquiries');
 $modes = ['venue' => 'Venue enquiry', 'assisted' => 'Assisted', 'partner' => 'Partner interest', 'partner_signup' => 'Partner signup', 'contact' => 'Contact', 'general' => 'General'];
+
+// Sortable column headers (GET-link sort; created_at desc is the default).
+$activeSort = $f['sort'] ?? 'created_at';
+$activeDir  = $f['dir']  ?? 'desc';
+$sortHead = function (string $key, string $label) use ($listUrl, $carry, $activeSort, $activeDir): void {
+    $isActive = ($activeSort === $key);
+    $nextDir  = ($isActive && $activeDir === 'desc') ? 'asc' : 'desc';   // new column starts desc
+    $params = $carry; unset($params['page']);                            // re-sort → back to page 1
+    $params['sort'] = $key; $params['dir'] = $nextDir;
+    $arrow = $isActive ? ($activeDir === 'desc' ? ' ▼' : ' ▲') : '';
+    $aria  = $isActive ? ($activeDir === 'desc' ? 'descending' : 'ascending') : 'none';
+    echo '<th aria-sort="' . $aria . '"><a class="sort-link' . ($isActive ? ' is-sorted' : '')
+        . '" href="' . e($listUrl . query_string($params)) . '">' . e($label) . $arrow . '</a></th>';
+};
 ?>
 <div class="lead-toolbar">
   <div class="lead-toolbar__counts">
@@ -60,6 +76,8 @@ $modes = ['venue' => 'Venue enquiry', 'assisted' => 'Assisted', 'partner' => 'Pa
   </select>
   <label class="lead-filters__date">From <input type="date" name="date_from" value="<?= e((string)($f['date_from'] ?? '')) ?>"></label>
   <label class="lead-filters__date">To <input type="date" name="date_to" value="<?= e((string)($f['date_to'] ?? '')) ?>"></label>
+  <?php if (!empty($f['sort'])): ?><input type="hidden" name="sort" value="<?= e($f['sort']) ?>"><?php endif; ?>
+  <?php if (!empty($f['dir'])):  ?><input type="hidden" name="dir"  value="<?= e($f['dir'])  ?>"><?php endif; ?>
   <button type="submit" class="atv-btn atv-btn--sm">Filter</button>
   <?php if ($hasFilters): ?><a class="atv-btn atv-btn--sm atv-btn--ghost" href="<?= e($listUrl) ?>">Clear</a><?php endif; ?>
 </form>
@@ -74,7 +92,7 @@ $modes = ['venue' => 'Venue enquiry', 'assisted' => 'Assisted', 'partner' => 'Pa
       <thead>
         <tr>
           <th>Reference</th><th>Name</th><th>Contact</th><th>Event</th><th>Guests</th>
-          <th>Date</th><th>Venue(s)</th><th>Mode</th><th>Status</th><th>Received</th>
+          <?php $sortHead('event_date', 'Date'); ?><th>Venue(s)</th><th>Mode</th><th>Status</th><?php $sortHead('created_at', 'Received'); ?>
         </tr>
       </thead>
       <tbody>
