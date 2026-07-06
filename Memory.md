@@ -111,9 +111,11 @@ toggle exists — GC records full path incl. `?...` by DEFAULT (stripping is opt
 which we did NOT set), so `?submitted=1` conversions are already counted as distinct paths. Nothing to configure.
 **Remaining = passive:** keep legacy (`/public_html/allthevenues` + DB `sameraou_atv`) as rollback a few weeks;
 72h watch (error_log, GSC coverage, leads). **ATV v2 is LIVE.** **#10 slug-history 301s ✅ DONE (6 Jul 2026); #1 card-hover ✅ DONE.** In progress:
-**#3 provider portal** (Phase-2 unit 1) — plan in `docs/ATV-PORTAL-PLAN.md`; **U-P0/U-P1/U-P2 shipped +
-inert on prod** (dark behind `PORTAL_ENABLED`), next is **U-P3** (My Venues). Remaining post-launch: rest of
-#3 (U-P3→U-P9), #9 (image rights/provenance), U6 passive watch.
+**#3 provider portal** (Phase-2 unit 1) — plan in `docs/ATV-PORTAL-PLAN.md`; **U-P0→U-P5a shipped + inert on
+prod** (dark behind `PORTAL_ENABLED`): flag/skeleton, schema, partner auth, My Venues + read-only detail,
+live low-risk edit, and sensitive-field change-request submit/withdraw. Next is **U-P5b** (admin review +
+approve/notify). Remaining post-launch: rest of #3 (U-P5b→U-P9), #9 (image rights/provenance), U6 passive
+watch.
 
 **⚠️ Deploy now hits PROD directly.** Apex serves from `/atv-staging`, so a cPanel `allthevenues-v2` repo
 Deploy-HEAD updates the LIVE apex (no separate staging buffer). Workflow unchanged otherwise: local dev
@@ -223,9 +225,26 @@ remain.
     `/portal/logout` + gated landing in `dispatch.php`; `login-content.php` mirrors admin login. CSRF +
     rate-limit (10/IP, 5/email per 15m); **no Turnstile** (matches staff-login precedent; can add at U-P9).
     Staff/partner fully separated (verified both directions). `/portal/*` returns 404 on live (flag off).
-  - **Next:** U-P3 "My Venues" list + read-only detail (partner-scoped) then U-P4 live low-risk edit, U-P5
-    sensitive-field change requests + admin review, U-P6 new venue, U-P7 image requests, U-P8 claims, U-P9
-    launch (flip the flag + onboard providers). Partner accounts get created at U-P9.
+  - **U-P3 (commit `250b983`, DEPLOYED + inert):** partner-scoped "My Venues" + read-only detail. `lib/portal.php`
+    (`portal_my_venues`, `portal_venue_for_partner` — fail-closed ownership, null⇒404 no existence leak; SAFE
+    column set EXCLUDES contact_*/commission/management_source); portal chrome `views/portal/layout.php`
+    (noindex); `dashboard.php` + `venue.php`; `/portal/venues/{id}` route. Leak check passed (sentinel
+    contact values absent from HTML).
+  - **U-P4 (commit `9a90a6e`, DEPLOYED + inert):** live edit of LOW-RISK fields only, via a server-side
+    ALLOWLIST (`portal_venue_live_columns()` — area/address/website/video/indoor_outdoor/capacity/
+    minimum_spend/pricing/floor_area+unit/map_embed[guarded]/richtext + layouts). Validation mirrors admin
+    verbatim; UPDATE re-scoped `WHERE id=:id AND partner_id=:pid`; audited. Proven: forged
+    name/slug/status/is_featured/partner_id/contact in the POST are ignored (iterates the allowlist, never
+    `$_POST`). `/portal/venues/{id}/edit`.
+  - **U-P5a (commit `c73ca38`, DEPLOYED + inert):** sensitive-field change requests (SUBMIT side). Provider
+    proposes name/slug/venue_type_id/emirate_id → ONE `venue_change_requests` row (type=edit, status=pending,
+    JSON old→new diff); venue is NOT modified. One pending per venue; withdraw supported; both owner-scoped +
+    audited. `portal_create_edit_request` / `portal_pending_edit_request` / `portal_withdraw_request`;
+    `/portal/venues/{id}/request[/withdraw]`. No email yet (U-P5b).
+  - **Next:** **U-P5b** admin review side — queue + per-request diff (before→after), approve (applies diff to
+    the venue) / reject / needs_changes + email notifications (admin on submit, provider on decision). New
+    admin visual surface → design preview first (as with the reports screen). Then U-P6 new venue, U-P7 image
+    requests, U-P8 claims, U-P9 launch (flip the flag + onboard providers). Partner accounts created at U-P9.
 
 **5 Jul 2026 (post-launch)**
 - **Venue Layouts & Capacity editor + floor area** (first post-launch feature, shipped live to apex):
