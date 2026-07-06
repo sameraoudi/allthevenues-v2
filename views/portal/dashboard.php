@@ -8,14 +8,18 @@ declare(strict_types=1);
 /** @var array $myVenues */
 $myVenues = $myVenues ?? [];
 ?>
-<div class="portal-head">
-  <h1>My venues</h1>
-  <p class="portal-sub"><?= e(number_format(count($myVenues))) ?> venue<?= count($myVenues) === 1 ? '' : 's' ?> on your account</p>
+<div class="portal-head lead-detail__head">
+  <div>
+    <h1>My venues</h1>
+    <p class="portal-sub"><?= e(number_format(count($myVenues))) ?> venue<?= count($myVenues) === 1 ? '' : 's' ?> on your account</p>
+  </div>
+  <a class="atv-btn" href="<?= e(base_url('portal/venues/new')) ?>">Submit a new venue</a>
 </div>
 
 <?php if (!$myVenues): ?>
   <div class="admin-panel admin-panel--center">
-    <p class="text-muted mb-0">No venues assigned to your account yet.</p>
+    <p class="text-muted mb-2">No venues assigned to your account yet.</p>
+    <a class="atv-btn" href="<?= e(base_url('portal/venues/new')) ?>">Submit a new venue</a>
   </div>
 <?php else: ?>
   <div class="lead-table-wrap">

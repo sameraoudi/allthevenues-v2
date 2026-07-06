@@ -23,6 +23,10 @@ $robots = 'noindex, nofollow';   // the portal is never indexed
 if ($sub === 'venues' || strncmp($sub, 'venues/', 7) === 0) {
     auth_require_partner();
     $partnerId = (int)(auth_user()['partner_id']);
+    if ($sub === 'venues/new') {
+        require __DIR__ . '/venue-new.php';
+        return;
+    }
     if (preg_match('#^venues/(\d+)/edit$#', $sub, $me)) {
         $vid = (int)$me[1];
         require __DIR__ . '/venue-edit.php';

@@ -119,6 +119,80 @@ function portal_withdraw_request(PDO $pdo, int $requestId, int $venueId, int $pa
     return $stmt->rowCount() > 0;
 }
 
+/**
+ * #3 U-P6a — fields a provider may set when CREATING a new venue. Identity fields
+ * (name/type/emirate) ARE allowed here (unlike the live-edit allowlist) because the
+ * whole venue is born status='pending' and cannot go live until an admin approves.
+ * NOT settable here (forced by portal_create_new_venue): slug (auto), status
+ * ('pending'), is_featured/is_verified (0), partner_id (the provider), contact_*
+ * (internal), commission (n/a).
+ * @return string[]
+ */
+function portal_new_venue_fields(): array
+{
+    return array_merge(
+        ['name', 'venue_type_id', 'emirate_id', 'area', 'address', 'indoor_outdoor',
+         'capacity_min', 'capacity_max', 'minimum_spend', 'pricing_level',
+         'floor_area', 'floor_area_unit', 'website', 'video_url', 'map_embed'],
+        venue_richtext_fields()
+    );
+}
+
+/**
+ * Create a pending, provider-owned venue + its 'new_venue' change request in one
+ * transaction. $clean holds the already-validated fields keyed by column (name
+ * required). Returns [venueId, requestId]. Throws on failure (caller handles).
+ */
+function portal_create_new_venue(PDO $pdo, int $partnerId, int $userId, array $clean): array
+{
+    // Auto unique slug from the name.
+    $base = slugify((string)($clean['name'] ?? '')) ?: 'venue';
+    $slug = $base; $n = 2;
+    while (!venue_slug_available($pdo, $slug, 0)) { $slug = $base . '-' . $n; $n++; }
+
+    try {
+        $pdo->beginTransaction();
+
+        $insCols = array_keys($clean);
+        $colSql  = implode(', ', $insCols);
+        $valSql  = implode(', ', array_map(static fn($c) => ':' . $c, $insCols));
+
+        $sql = "INSERT INTO venues ($colSql, slug, status, partner_id, is_featured, is_verified,
+                    management_source, provider_assigned_at, provider_assigned_by, created_at)
+                VALUES ($valSql, :slug, 'pending', :pid, 0, 0, 'provider_created', NOW(), :uid, NOW())";
+        $stmt = $pdo->prepare($sql);
+        foreach ($clean as $c => $val) { $stmt->bindValue(':' . $c, $val); }
+        $stmt->bindValue(':slug', $slug);
+        $stmt->bindValue(':pid', $partnerId, PDO::PARAM_INT);
+        $stmt->bindValue(':uid', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        $venueId = (int)$pdo->lastInsertId();
+
+        // Snapshot of what was submitted (for the admin new-venue review, U-P6b).
+        $snapshot = $clean;
+        $snapshot['slug'] = $slug;
+        $cr = $pdo->prepare(
+            "INSERT INTO venue_change_requests
+                (venue_id, partner_id, submitted_by, type, proposed_changes_json, status)
+             VALUES (:vid, :pid, :uid, 'new_venue', :json, 'pending')"
+        );
+        $cr->execute([
+            ':vid'  => $venueId, ':pid' => $partnerId, ':uid' => $userId,
+            ':json' => json_encode($snapshot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        ]);
+        $requestId = (int)$pdo->lastInsertId();
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) { $pdo->rollBack(); }
+        throw $e;
+    }
+
+    audit_log($pdo, $userId, 'create', 'venue', $venueId, null, $clean);
+    audit_log($pdo, $userId, 'create', 'change_request', $requestId, null, ['type' => 'new_venue']);
+    return [$venueId, $requestId];
+}
+
 /** All venues owned by a provider (every status), newest-touched first. [] if none. */
 function portal_my_venues(PDO $pdo, int $partnerId): array
 {
