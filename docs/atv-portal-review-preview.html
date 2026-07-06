@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATV — Admin change-request review (U-P5b preview v2)</title>
+<style>
+  :root{
+    --navy:#0E1B2A; --blue:#6C93B7; --action:#426F94; --action-hover:#315B7C;
+    --sand:#D9C7A8; --ink:#1c2b38; --muted:#6b7b88; --line:#e4e8ec; --bg:#f3f1ec;
+    --ok:#2f7d5b; --okbg:#e7f3ec; --warn:#8a6d1f; --warnbg:#f6efdb; --danger:#a5433b; --dangerbg:#f6e7e5;
+    --hi:#a5433b; --hibg:#f6e7e5; --med:#8a6d1f; --medbg:#f6efdb; --lo:#2f7d5b; --lobg:#e7f3ec;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Segoe UI,Inter,sans-serif;font-size:14px;}
+  h1,h2,h3{font-family:Georgia,'Cormorant Garamond',serif;font-weight:600;letter-spacing:.2px;margin:0;}
+  a{color:var(--action);text-decoration:none;}
+  .wrap{display:grid;grid-template-columns:210px 1fr;min-height:100vh;}
+  .side{background:var(--navy);color:#c7d0d8;padding:22px 0;}
+  .side .brand{color:#fff;font-family:Georgia,serif;font-size:20px;padding:0 22px 20px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .side nav{display:flex;flex-direction:column;padding:14px 12px;gap:2px;}
+  .side nav a{color:#c7d0d8;padding:9px 12px;border-radius:8px;font-size:13.5px;}
+  .side nav a:hover{background:rgba(255,255,255,.06);color:#fff;}
+  .side nav a.on{background:var(--action);color:#fff;}
+  .side nav a .pill{background:var(--sand);color:var(--navy);font-size:11px;font-weight:700;border-radius:20px;padding:1px 8px;margin-left:8px;}
+  .main{padding:26px 30px 60px;}
+  .crumb{font-size:12px;color:var(--muted);margin-bottom:6px;}
+  .head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px;}
+  .head h1{font-size:27px;}
+  .screen-label{display:inline-block;background:#fff;border:1px solid var(--line);border-left:3px solid var(--action);border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--action);text-transform:uppercase;letter-spacing:1px;margin:34px 0 14px;}
+  .screen-label:first-of-type{margin-top:0;}
+  .filters{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:16px;box-shadow:0 6px 18px rgba(14,27,42,.05);flex-wrap:wrap;}
+  .filters .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .filters .seg button{border:0;background:#fff;padding:7px 14px;font-size:13px;color:var(--muted);cursor:pointer;}
+  .filters .seg button.on{background:var(--action);color:#fff;}
+  .filters .grow{flex:1;}
+  .filters .count{font-size:13px;color:var(--muted);}
+  .filters .soon{font-size:11.5px;color:var(--muted);border:1px dashed var(--line);border-radius:8px;padding:6px 10px;}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 6px 18px rgba(14,27,42,.05);}
+  thead th{text-align:left;padding:11px 14px;background:#faf8f4;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--line);}
+  tbody td{padding:12px 14px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:0;}
+  tbody tr:hover{background:#fbfaf7;}
+  .vn{font-weight:600;color:var(--ink);}
+  .sub{font-size:12px;color:var(--muted);}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;}
+  .b-pending{background:var(--warnbg);color:var(--warn);}
+  .b-edit{background:#e8eef4;color:var(--action);}
+  .b-new{background:#eae7f4;color:#5b53a8;}
+  .b-image{background:#e6f0ee;color:var(--ok);}
+  .b-claim{background:#f4ece4;color:#8a5a2a;}
+  .risk{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;}
+  .r-hi{background:var(--hibg);color:var(--hi);}
+  .r-med{background:var(--medbg);color:var(--med);}
+  .r-lo{background:var(--lobg);color:var(--lo);}
+  .btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;}
+  .btn-a{background:var(--action);color:#fff;}
+  .btn-a:hover{background:var(--action-hover);}
+  .btn-ghost{background:#fff;border-color:var(--line);color:var(--action);}
+  .btn-ghost:hover{background:#eef1f4;}
+  .btn-danger{background:#fff;border:1px solid #e2b6ad;color:var(--danger);}
+  .btn-danger:hover{background:var(--dangerbg);}
+  .btn-sm{padding:5px 12px;font-size:12.5px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 22px rgba(14,27,42,.06);padding:22px 24px;max-width:860px;}
+  .card .top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:4px;}
+  .card .top h2{font-size:23px;}
+  .meta{font-size:12.5px;color:var(--muted);margin-top:6px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+  .diff{width:100%;border:0;box-shadow:none;margin:10px 0 4px;}
+  .diff thead th{background:transparent;border-bottom:1px solid var(--line);}
+  .diff td{border-bottom:1px solid #f0eee9;font-size:13.5px;vertical-align:top;padding:12px 10px;}
+  .diff .field{width:210px;}
+  .diff .field .fn{font-weight:600;color:var(--ink);}
+  .fbadges{margin-top:5px;display:flex;gap:5px;flex-wrap:wrap;}
+  .fbadge{font-size:10px;font-weight:700;letter-spacing:.2px;padding:2px 7px;border-radius:5px;text-transform:uppercase;}
+  .fb-identity{background:#efe6dd;color:#8a5a2a;}
+  .fb-restricted{background:var(--hibg);color:var(--hi);}
+  .fb-seo{background:#e8eef4;color:var(--action);}
+  .fb-class{background:var(--medbg);color:var(--med);}
+  .from{color:#8a7f74;text-decoration:line-through;text-decoration-color:#d8c4b0;}
+  .arrow{color:var(--muted);padding:0 6px;}
+  .to{color:var(--ink);font-weight:600;}
+  .rowhelp{background:#fbf6ee;border-left:3px solid var(--sand);color:#6d5f45;font-size:12px;padding:8px 12px;border-radius:0 8px 8px 0;margin-top:6px;}
+  .note-wrap{margin:18px 0 6px;}
+  .note-wrap label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);margin-bottom:6px;}
+  .note-wrap label .req{color:var(--danger);text-transform:none;letter-spacing:0;font-weight:600;}
+  textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:13.5px;resize:vertical;min-height:62px;}
+  .actions{display:flex;gap:10px;align-items:center;border-top:1px solid var(--line);margin-top:16px;padding-top:16px;}
+  .actions .spacer{flex:1;}
+  .hint{font-size:12px;color:var(--muted);margin-top:10px;}
+  .legend{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-top:14px;font-size:12.5px;color:var(--muted);max-width:860px;}
+  .legend b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <aside class="side">
+    <div class="brand">All The Venues</div>
+    <nav>
+      <a href="#">Dashboard</a>
+      <a href="#">Enquiries</a>
+      <a href="#">Venues</a>
+      <a href="#">Providers</a>
+      <a href="#">Reports</a>
+      <a href="#" class="on">Change Requests <span class="pill">3</span></a>
+      <a href="#">Users</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="crumb">Admin › Change Requests</div>
+    <div class="head"><h1>Change requests</h1></div>
+
+    <div class="screen-label">Screen A — review queue</div>
+
+    <div class="filters">
+      <span class="sub" style="font-weight:600;color:var(--ink);">Status</span>
+      <span class="seg"><button class="on">Pending</button><button>All</button></span>
+      <span class="sub" style="font-weight:600;color:var(--ink);margin-left:8px;">Type</span>
+      <span class="seg"><button class="on">All</button><button>Edit</button><button>New venue</button><button>Image</button><button>Claim</button></span>
+      <span class="grow"></span>
+      <span class="soon">Provider filter — added as more providers go live</span>
+      <span class="count">3 pending</span>
+    </div>
+
+    <table>
+      <thead><tr><th>Venue</th><th>Provider</th><th>Type</th><th>Risk</th><th>Changes</th><th>Submitted</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="vn">Beach Gazebo</span><div class="sub">Abu Dhabi</div></td>
+          <td>Rixos Hotels<div class="sub">bianca@…</div></td>
+          <td><span class="badge b-edit">Edit</span></td>
+          <td><span class="risk r-hi">High</span></td>
+          <td>3 fields</td>
+          <td>6 Jul 2026<div class="sub">2h ago</div></td>
+          <td><span class="badge b-pending">Pending</span></td>
+          <td><a class="btn btn-a btn-sm" href="#detail">Review</a></td>
+        </tr>
+        <tr>
+          <td><span class="vn">The Terrace</span><div class="sub">— new submission</div></td>
+          <td>Zaya Nurai Island</td>
+          <td><span class="badge b-new">New venue</span></td>
+          <td><span class="risk r-hi">High</span></td>
+          <td>full venue</td>
+          <td>6 Jul 2026<div class="sub">5h ago</div></td>
+          <td><span class="badge b-pending">Pending</span></td>
+          <td><a class="btn btn-ghost btn-sm" href="#">Review (U-P6)</a></td>
+        </tr>
+        <tr>
+          <td><span class="vn">Al Andalus Ballroom</span><div class="sub">Dubai</div></td>
+          <td>Habtoor Grand</td>
+          <td><span class="badge b-image">Image</span></td>
+          <td><span class="risk r-med">Medium</span></td>
+          <td>2 photos</td>
+          <td>5 Jul 2026<div class="sub">1d ago</div></td>
+          <td><span class="badge b-pending">Pending</span></td>
+          <td><a class="btn btn-ghost btn-sm" href="#">Review (U-P7)</a></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="legend"><b>Risk</b> is derived from the fields changed — High: name / slug / location / claim ·
+      Medium: classification / capacity / images · Low: description / facilities / notes. New-venue, Image and
+      Claim requests open their own tailored review screens (U-P6 / U-P7 / U-P8); this unit (U-P5b) builds the
+      <b>Edit</b> review below.</div>
+
+    <div class="screen-label" id="detail">Screen B — edit-request detail &amp; diff (U-P5b)</div>
+
+    <div class="card">
+      <div class="top">
+        <div>
+          <h2>Beach Gazebo</h2>
+          <div class="meta">
+            <span>Provider: <strong style="color:var(--ink);">Rixos Hotels</strong></span>
+            <span>Submitted by bianca@… · 6 Jul 2026, 2h ago</span>
+            <span class="badge b-edit">Edit request</span>
+            <span class="badge b-pending">Pending</span>
+            <span class="risk r-hi">High risk</span>
+          </div>
+        </div>
+        <a href="#" class="btn btn-ghost btn-sm">Open venue ↗</a>
+      </div>
+
+      <table class="diff">
+        <thead><tr><th class="field">Field</th><th>Current</th><th></th><th>Proposed</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="field"><span class="fn">Name</span>
+              <div class="fbadges"><span class="fbadge fb-identity">Identity</span><span class="fbadge fb-restricted">Restricted</span></div></td>
+            <td class="from">Beach Gazebo</td><td class="arrow">→</td>
+            <td class="to">Beach Gazebo &amp; Lawn</td>
+          </tr>
+          <tr>
+            <td class="field"><span class="fn">Slug (URL)</span>
+              <div class="fbadges"><span class="fbadge fb-identity">Identity</span><span class="fbadge fb-seo">SEO-impacting</span></div></td>
+            <td class="from">beach-gazebo</td><td class="arrow">→</td>
+            <td class="to">beach-gazebo-and-lawn
+              <div class="rowhelp">Changing the slug updates the public URL. The old URL redirects automatically
+                (301), but approve a slug change only when the venue name or identity has genuinely changed.</div></td>
+          </tr>
+          <tr>
+            <td class="field"><span class="fn">Classification</span>
+              <div class="fbadges"><span class="fbadge fb-class">Classification</span></div></td>
+            <td class="from">Beach Venue</td><td class="arrow">→</td>
+            <td class="to">Resort</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="note-wrap">
+        <label>Review note <span class="req">— required when rejecting or requesting changes; optional when approving</span></label>
+        <textarea placeholder="e.g. Happy to approve the name change, but please keep the classification as Beach Venue."></textarea>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-a">Approve &amp; apply</button>
+        <button class="btn btn-ghost">Request changes</button>
+        <div class="spacer"></div>
+        <button class="btn btn-danger">Reject</button>
+      </div>
+      <p class="hint">Approve applies the proposed values to the venue and audits the decision (request/venue/
+        provider ids, both timestamps, old→proposed→applied values, decision, note, notification status).
+        Reject and Request-changes leave the venue unchanged. All three email the provider.
+        <br>MVP is whole-request approve/reject/request-changes; field-level partial approval is a future
+        enhancement.</p>
+    </div>
+  </main>
+</div>
+</body>
+</html>

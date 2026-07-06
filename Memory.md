@@ -111,11 +111,12 @@ toggle exists — GC records full path incl. `?...` by DEFAULT (stripping is opt
 which we did NOT set), so `?submitted=1` conversions are already counted as distinct paths. Nothing to configure.
 **Remaining = passive:** keep legacy (`/public_html/allthevenues` + DB `sameraou_atv`) as rollback a few weeks;
 72h watch (error_log, GSC coverage, leads). **ATV v2 is LIVE.** **#10 slug-history 301s ✅ DONE (6 Jul 2026); #1 card-hover ✅ DONE.** In progress:
-**#3 provider portal** (Phase-2 unit 1) — plan in `docs/ATV-PORTAL-PLAN.md`; **U-P0→U-P5a shipped + inert on
-prod** (dark behind `PORTAL_ENABLED`): flag/skeleton, schema, partner auth, My Venues + read-only detail,
-live low-risk edit, and sensitive-field change-request submit/withdraw. Next is **U-P5b** (admin review +
-approve/notify). Remaining post-launch: rest of #3 (U-P5b→U-P9), #9 (image rights/provenance), U6 passive
-watch.
+**#3 provider portal** (Phase-2 unit 1) — plan in `docs/ATV-PORTAL-PLAN.md`; **U-P0→U-P5b built** (portal dark
+behind `PORTAL_ENABLED`): flag/skeleton, schema, partner auth, My Venues + read-only detail, live low-risk
+edit, sensitive-field change-request submit/withdraw, and admin review (approve/reject/needs_changes + email +
+audit). U-P0→U-P4 deployed; **U-P5a + U-P5b pushed, deploy pending** (both inert on the public side; U-P5b's
+admin queue is admin-only + empty until launch). Next is **U-P6** (new-venue submissions). Remaining
+post-launch: rest of #3 (U-P6→U-P9), #9 (image rights/provenance), U6 passive watch.
 
 **⚠️ Deploy now hits PROD directly.** Apex serves from `/atv-staging`, so a cPanel `allthevenues-v2` repo
 Deploy-HEAD updates the LIVE apex (no separate staging buffer). Workflow unchanged otherwise: local dev
@@ -236,15 +237,27 @@ remain.
     verbatim; UPDATE re-scoped `WHERE id=:id AND partner_id=:pid`; audited. Proven: forged
     name/slug/status/is_featured/partner_id/contact in the POST are ignored (iterates the allowlist, never
     `$_POST`). `/portal/venues/{id}/edit`.
-  - **U-P5a (commit `c73ca38`, DEPLOYED + inert):** sensitive-field change requests (SUBMIT side). Provider
+  - **U-P5a (commit `c73ca38`, pushed — deploy pending confirmation; inert regardless):** sensitive-field change requests (SUBMIT side). Provider
     proposes name/slug/venue_type_id/emirate_id → ONE `venue_change_requests` row (type=edit, status=pending,
     JSON old→new diff); venue is NOT modified. One pending per venue; withdraw supported; both owner-scoped +
     audited. `portal_create_edit_request` / `portal_pending_edit_request` / `portal_withdraw_request`;
     `/portal/venues/{id}/request[/withdraw]`. No email yet (U-P5b).
-  - **Next:** **U-P5b** admin review side — queue + per-request diff (before→after), approve (applies diff to
-    the venue) / reject / needs_changes + email notifications (admin on submit, provider on decision). New
-    admin visual surface → design preview first (as with the reports screen). Then U-P6 new venue, U-P7 image
-    requests, U-P8 claims, U-P9 launch (flip the flag + onboard providers). Partner accounts created at U-P9.
+  - **U-P5b (commit `d3108d2`, pushed — deploy pending):** admin review of EDIT change requests (design lock
+    `docs/atv-portal-review-preview.html`). `change_requests.manage` cap = admin-only; `lib/change_request_admin.php`
+    (field meta: label/badges/risk + FK resolver; queue list + pending count; `cr_approve`/`cr_reject`/
+    `cr_needs_changes`); `/admin/change-requests` queue + per-request diff (Current→Proposed, Identity/
+    Restricted/SEO/Classification badges, risk High/Med/Low, slug helper); whole-request Approve & apply /
+    Request changes / Reject; **note REQUIRED on reject + needs_changes**. Approve re-validates every field at
+    approval (blocks a since-taken slug — all-or-nothing), applies only requested cols in a transaction,
+    **fires the #10 slug_redirect_capture on a slug change** (rename stays SEO-safe), audits (old + applied +
+    email_sent), emails the provider (mail failure never rolls back a committed approve). Provider side:
+    `portal_latest_request()` + needs_changes/rejected banners (+ note + resubmit) on the portal venue detail.
+    ⚠️ Adds a LIVE admin surface on deploy (admin-only; queue empty on prod until the portal flag flips at U-P9).
+  - **Next:** **U-P6** new-venue submissions — provider submits a full new venue → pending record; admin gets a
+    STRUCTURED review (basics/location/type/capacity/description/images + completeness score + missing-required)
+    with Approve-as-draft / Approve & publish / Request changes / Reject (see `docs/ATV-PORTAL-PLAN.md`). Then
+    U-P7 image requests, U-P8 claims, U-P9 launch (flip the flag + onboard providers). Partner accounts created
+    at U-P9.
 
 **5 Jul 2026 (post-launch)**
 - **Venue Layouts & Capacity editor + floor area** (first post-launch feature, shipped live to apex):

@@ -128,6 +128,39 @@ additive capabilities; U-P9 is the switch. #9 (image rights) should ideally land
 
 ---
 
+## Admin review screen — refinements (Samer's 6 Jul 2026 review; preview `atv-portal-review-preview.html`)
+
+**Access:** admin-only (new `change_requests.manage` capability; editors don't see it). **Governance:** provider
+edits NEVER go live before admin approval; providers only ever see their own venues + own requests; every
+decision emails the provider.
+
+**Queue:** venue, provider, type (Edit/New venue/Image/Claim), **risk** (High: name/slug/location/claim ·
+Medium: classification/capacity/images · Low: description/facilities/notes), #changes, submitted, status,
+Review. Status + type filters now; **provider filter later** (as more providers go live).
+
+**Audit — every decision writes a full record:** request id, venue id, provider id, submitted_by, reviewed_by,
+submitted + reviewed timestamps, old values, proposed values, **applied values**, decision, review note,
+**notification status**. (U-P5b: captured via `audit_log` JSON + the `venue_change_requests` row; a dedicated
+`notified_at`/notify-status column is an optional later enhancement.)
+
+**U-P5b — Edit requests (this unit):** current diff layout; changed fields only; **flag restricted/identity/
+SEO-impacting fields with badges**; slug rows show the "old URL 301s automatically — approve only on a genuine
+identity change" helper; whole-request **Approve & apply / Request changes / Reject**; **review note REQUIRED on
+Reject + Request-changes**, optional on Approve. (Edit requests only touch name/slug/classification/location —
+all short fields — so no long-content/expandable-row handling needed here.)
+
+**Deferred — tailored review screens by type:**
+- **New venue (U-P6):** structured layout (not just a diff) — basics, provider, location, venue type, event
+  types, capacity, facilities, description, images, **image-rights confirmation**, **completeness score**,
+  missing-required-fields; actions **Approve as draft / Approve & publish / Request changes / Reject**.
+- **Image (U-P7):** image-specific screen — current gallery, proposed images, source, **provider permission
+  confirmation** (required), suggested primary, crop preview, alt text, **approve/reject per image**.
+- **Claim (U-P8):** ownership screen — venue claimed, requesting provider + requester name/email/role, email
+  domain vs website/domain **match**, submitted evidence/message, existing assigned provider + **conflict
+  warning if already managed**; actions **Approve claim / Request proof / Reject claim**.
+- **Field-level partial approval** (approve/reject/edit individual fields): future enhancement; MVP is
+  whole-request decisions.
+
 ## Open questions to resolve as we reach them
 
 - **Provider onboarding:** how do partner users get created initially — admin creates them in `/admin/users`
