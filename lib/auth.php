@@ -47,7 +47,7 @@ function auth_login(array $user): void
  * The current user row (id, name, email, role, status), loaded ONCE per
  * request from the DB and cached. Returns null when there is no active staff
  * session — not logged in, the row vanished, or status is not 'active'.
- * @return array{id:int,name:string,email:string,role:string,status:string}|null
+ * @return array{id:int,name:string,email:string,role:string,status:string,partner_id:?int}|null
  */
 function auth_user(): ?array
 {
@@ -64,7 +64,7 @@ function auth_user(): ?array
     }
     try {
         $stmt = db_pdo()->prepare(
-            'SELECT id, name, email, role, status FROM users WHERE id = :id LIMIT 1'
+            'SELECT id, name, email, role, status, partner_id FROM users WHERE id = :id LIMIT 1'
         );
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch();
@@ -76,6 +76,7 @@ function auth_user(): ?array
         return $user = null;   // fail closed on disabled / missing
     }
     $row['id'] = (int)$row['id'];
+    $row['partner_id'] = ($row['partner_id'] ?? null) !== null ? (int)$row['partner_id'] : null;
     return $user = $row;
 }
 
@@ -84,6 +85,26 @@ function auth_role(): string
 {
     $u = auth_user();
     return $u ? (string)$u['role'] : '';
+}
+
+/** True when the current session is a provider (portal) user. */
+function auth_is_partner(): bool
+{
+    return auth_role() === 'partner';
+}
+
+/**
+ * Fail-closed portal gate. Requires a partner session with a non-null partner_id;
+ * anything else (anon, staff/admin) is redirected to the portal login. Staff
+ * therefore can't wander into /portal, and partners can't reach staff pages
+ * (those are gated by auth_require_role(['admin','editor'])).
+ */
+function auth_require_partner(): void
+{
+    $u = auth_user();
+    if ($u === null || ($u['role'] ?? '') !== 'partner' || empty($u['partner_id'])) {
+        redirect('portal/login');
+    }
 }
 
 /** Is there an authenticated staff session? */
@@ -227,6 +248,45 @@ function auth_login_attempt(PDO $pdo, string $email, string $password): ?array
     if (!$ok || !is_array($user)
         || !in_array($user['role'], ['admin', 'editor'], true)
         || $user['status'] !== 'active') {
+        return null;
+    }
+
+    $upd = $pdo->prepare('UPDATE users SET last_login_at = NOW() WHERE id = :id');
+    $upd->execute([':id' => (int)$user['id']]);
+
+    return $user;
+}
+
+/**
+ * Verify PROVIDER credentials for the portal. Mirrors auth_login_attempt() but
+ * accepts ONLY role='partner' + status='active' + a non-null partner_id — a
+ * staff account can never open a partner session. Uniform timing (password_verify
+ * runs even on miss); generic null on any failure (no enumeration). On success,
+ * stamps last_login_at and returns the row.
+ */
+function auth_partner_login_attempt(PDO $pdo, string $email, string $password): ?array
+{
+    $email = trim($email);
+    if ($email === '' || $password === '') {
+        return null;
+    }
+
+    $stmt = $pdo->prepare(
+        'SELECT id, name, email, password_hash, role, status, partner_id
+         FROM users WHERE email = :email LIMIT 1'
+    );
+    $stmt->execute([':email' => $email]);
+    $user = $stmt->fetch();
+
+    // Always run password_verify (even on miss) to keep timing uniform.
+    $hash = is_array($user) ? (string)$user['password_hash'] : '$2y$10$'
+        . str_repeat('.', 53);
+    $ok = password_verify($password, $hash);
+
+    if (!$ok || !is_array($user)
+        || $user['role'] !== 'partner'
+        || $user['status'] !== 'active'
+        || ($user['partner_id'] ?? null) === null) {
         return null;
     }
 
