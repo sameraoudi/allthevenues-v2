@@ -110,8 +110,9 @@ GSC sitemap submitted + read Success (174 pages); GoatCounter live. **GoatCounte
 toggle exists — GC records full path incl. `?...` by DEFAULT (stripping is opt-in via `window.goatcounter={path:...}`,
 which we did NOT set), so `?submitted=1` conversions are already counted as distinct paths. Nothing to configure.
 **Remaining = passive:** keep legacy (`/public_html/allthevenues` + DB `sameraou_atv`) as rollback a few weeks;
-72h watch (error_log, GSC coverage, leads). **ATV v2 is LIVE.** Next = Phase-2: #3 provider portal + **#10 slug-history 301 redirects** (new, scoped in
-`docs/ATV-BACKLOG.md` — small standalone SEO unit, makes slug renames auto-301 old→current instead of 404).
+72h watch (error_log, GSC coverage, leads). **ATV v2 is LIVE.** Next = Phase-2: **#3 provider portal** (the big unit). **#10 slug-history 301 redirects
+✅ DONE (6 Jul 2026)** — see dated history. **#1 card-hover ✅ DONE.** Remaining post-launch: #3 (portal),
+#9 (image rights/provenance), U6 passive watch.
 
 **⚠️ Deploy now hits PROD directly.** Apex serves from `/atv-staging`, so a cPanel `allthevenues-v2` repo
 Deploy-HEAD updates the LIVE apex (no separate staging buffer). Workflow unchanged otherwise: local dev
@@ -163,7 +164,7 @@ remain.
   replaces any stopgap).
 
 **Polish (approved, cascade platform-wide):**
-- **Card hover effect** (approved on homepage) — apply to all cards.
+- **Card hover effect** — ✅ DONE (6 Jul 2026, #1): applied to venue/provider/listing cards platform-wide.
 - **Button capitalization** rule — first letter capital on every button.
 
 **Content track (Samer):**
@@ -181,6 +182,25 @@ remain.
 ---
 
 ## Dated history
+
+**6 Jul 2026 (post-launch)**
+- **#10 slug-history 301 redirects SHIPPED + verified on prod** (commit `cd694f3`): migration 018 added
+  `slug_redirects` (`entity_type` ENUM venue/provider, `old_slug`, `entity_id`, UNIQUE(entity_type,old_slug));
+  `lib/slug_redirect.php` (`slug_redirect_capture` on admin save when the slug changes — rows point at the
+  entity id so chained renames A→B→C resolve in one hop; `slug_redirect_maybe_301` resolver only 301s to a
+  currently published/approved target, else falls through to landing/404). Capture hooks after the successful
+  UPDATE in `views/admin/venues.php` + `partners.php`; resolver hooks as the first statement in the `=== null`
+  branch of `views/venue.php` + `partner.php`; admin slug-hint copy flipped to "old links auto-redirect."
+  Prod-verified: rename A→B 301s old→new, chained A/B→C single-hop, revert auto-drops the row (no loop), draft
+  target → 404 (never 301 to unpublished). *Known gap:* only captures FUTURE renames — pre-launch renames
+  (e.g. Caesars→Banyan, which is draft anyway) aren't backfilled; add a `slug_redirects` row by hand if an
+  already-renamed old slug was indexed and is now live.
+- **#1 card-hover standardization SHIPPED + verified on prod** (commit `7bd950c`): the approved `.atv-et-tile`
+  lift+zoom (translateY(-4px) + shadow `0 16px 34px rgba(14,27,42,.16)`, image `scale(1.06)`; `.28s` lift /
+  `.5s` zoom) applied to `.atv-card` (featured/similar/shortlist), `.pcard` (/providers), and `.venue-row`
+  (/venues listing) in `assets/css/brand.css` only. Added `overflow:hidden` to `.atv-card__img` + `.venue-row__img`
+  (NOT `.pcard__cover` — would clip the `.pcard__type` avatar); `prefers-reduced-motion` guard disables the
+  motion. Design preview approved before build. CSS-only → deploy + LiteSpeed flush, no migration.
 
 **5 Jul 2026 (post-launch)**
 - **Venue Layouts & Capacity editor + floor area** (first post-launch feature, shipped live to apex):
