@@ -186,9 +186,12 @@ select:focus-visible,
   overflow: hidden; box-shadow: 0 10px 26px rgba(14,27,42,.08);
   display: flex; flex-direction: column; height: 100%;
   position: relative;   /* anchors the heart toggle (a sibling of the img link) */
+  transition: transform .28s ease, box-shadow .28s ease;
 }
-.atv-card__img { height: 220px; background: var(--navy) center/cover no-repeat; position: relative; display: block; }
-.atv-card__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.atv-card:hover { transform: translateY(-4px); box-shadow: 0 16px 34px rgba(14,27,42,.16); }
+.atv-card__img { height: 220px; background: var(--navy) center/cover no-repeat; position: relative; display: block; overflow: hidden; }
+.atv-card__img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
+.atv-card:hover .atv-card__img img { transform: scale(1.06); }
 .atv-card__badges { position: absolute; top: 12px; left: 12px; display: flex; gap: 8px; z-index: 2; }
 /* Heart is a real toggle button (add/remove shortlist). Button reset + circular. */
 .atv-card__heart {
@@ -781,9 +784,11 @@ select:focus-visible,
 .venues-filters__apply { width: 100%; margin-top: 14px; }
 
 /* Horizontal result card */
-.venue-row { background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: grid; grid-template-columns: 232px 1fr; box-shadow: 0 8px 22px rgba(14,27,42,.07); margin-bottom: 18px; }
-.venue-row__img { position: relative; min-height: 190px; background: var(--navy); display: block; }
-.venue-row__img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.venue-row { background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: grid; grid-template-columns: 232px 1fr; box-shadow: 0 8px 22px rgba(14,27,42,.07); margin-bottom: 18px; transition: transform .28s ease, box-shadow .28s ease; }
+.venue-row:hover { transform: translateY(-4px); box-shadow: 0 16px 34px rgba(14,27,42,.16); }
+.venue-row__img { position: relative; min-height: 190px; background: var(--navy); display: block; overflow: hidden; }
+.venue-row__img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+.venue-row:hover .venue-row__img img { transform: scale(1.06); }
 .venue-row__badge { position: absolute; top: 12px; left: 12px; }
 .venue-row__body { padding: 16px 18px; position: relative; }
 .venue-row__heart { position: absolute; top: 14px; right: 14px; background: none; border: 0; color: var(--muted); cursor: pointer; padding: 2px; }
@@ -935,9 +940,11 @@ select:focus-visible,
 
 /* ---- Image-led provider cards ------------------------------------------- */
 .pgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-.pcard { background: #fff; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; box-shadow: 0 8px 22px rgba(14,27,42,.07); display: flex; flex-direction: column; }
+.pcard { background: #fff; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; box-shadow: 0 8px 22px rgba(14,27,42,.07); display: flex; flex-direction: column; transition: transform .28s ease, box-shadow .28s ease; }
+.pcard:hover { transform: translateY(-4px); box-shadow: 0 16px 34px rgba(14,27,42,.16); }
 .pcard__cover { display: block; height: 150px; position: relative; background: var(--navy) center / cover no-repeat; }
-.pcard__cover-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.pcard__cover-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
+.pcard:hover .pcard__cover-img { transform: scale(1.06); }
 .pcard__badge { position: absolute; top: 12px; left: 12px; }
 .pcard__count { position: absolute; bottom: 12px; right: 12px; background: rgba(14,27,42,.72); color: #fff; font-size: 11.5px; font-weight: 500; padding: 4px 10px; border-radius: 20px; }
 .pcard__type { width: 46px; height: 46px; border-radius: 12px; background: #fff; border: 1px solid var(--line); box-shadow: 0 4px 10px rgba(14,27,42,.12); display: flex; align-items: center; justify-content: center; position: absolute; left: 16px; bottom: -18px; }
@@ -1223,3 +1230,13 @@ select:focus-visible,
 /* Admin layout-capacity editor */
 .layout-label { display: flex; align-items: center; gap: 6px; }
 .layout-ico { width: 18px; height: 18px; flex: 0 0 auto; color: var(--action); }
+
+/* Reduced-motion: no lift/zoom transitions for users who prefer less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .atv-card, .pcard, .venue-row,
+  .atv-card__img img, .pcard__cover-img, .venue-row__img img { transition: none; }
+  .atv-card:hover, .pcard:hover, .venue-row:hover { transform: none; }
+  .atv-card:hover .atv-card__img img,
+  .pcard:hover .pcard__cover-img,
+  .venue-row:hover .venue-row__img img { transform: none; }
+}
