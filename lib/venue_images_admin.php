@@ -15,7 +15,9 @@ require_once __DIR__ . '/helpers.php';   // app_path()
 function venue_images_admin_list(PDO $pdo, int $venueId): array
 {
     $stmt = $pdo->prepare(
-        "SELECT id, venue_id, file_path, thumb_path, alt_text, is_primary, sort_order, status
+        "SELECT id, venue_id, file_path, thumb_path, alt_text, is_primary, sort_order, status,
+                permission_status, image_source, source_url, provider_approved_by,
+                approval_date, usage_notes, expires_at
          FROM venue_images
          WHERE venue_id = :vid AND status = 'active'
          ORDER BY sort_order ASC, id ASC"
@@ -28,7 +30,9 @@ function venue_images_admin_list(PDO $pdo, int $venueId): array
 function venue_images_get(PDO $pdo, int $venueId, int $imageId): ?array
 {
     $stmt = $pdo->prepare(
-        'SELECT id, venue_id, file_path, thumb_path, alt_text, is_primary, sort_order, status
+        'SELECT id, venue_id, file_path, thumb_path, alt_text, is_primary, sort_order, status,
+                permission_status, image_source, source_url, provider_approved_by,
+                approval_date, usage_notes, expires_at
          FROM venue_images WHERE id = :id AND venue_id = :vid LIMIT 1'
     );
     $stmt->execute([':id' => $imageId, ':vid' => $venueId]);
@@ -187,4 +191,70 @@ function venue_images_delete(PDO $pdo, int $venueId, int $imageId): ?array
         }
     }
     return $row;
+}
+
+/**
+ * #9b — permission_status ENUM (from migration 020) → [label, cleared?]. The
+ * "cleared" flag drives the badge colour + (later, #9b gate) publish eligibility.
+ * @return array<string,array{0:string,1:bool}>
+ */
+function venue_images_permission_options(): array
+{
+    return [
+        'approved_by_provider'            => ['Approved by provider', true],
+        'owned_by_atv'                    => ['ATV-owned', true],
+        'licensed_stock'                  => ['Licensed (stock)', true],
+        'legacy_needs_review'             => ['Needs review', false],
+        'public_website_needs_permission' => ['From public site — needs permission', false],
+        'remove_replace'                  => ['Remove / replace', false],
+    ];
+}
+
+/**
+ * #9b — set an image's provenance/permission (scoped to its venue). Validates
+ * permission_status against the ENUM allowlist (rejects a forged value with no
+ * write). Dates are parsed strictly (invalid → NULL). Returns false only when
+ * permission_status is invalid; otherwise true.
+ */
+function venue_images_update_provenance(PDO $pdo, int $venueId, int $imageId, array $in): bool
+{
+    $opts = venue_images_permission_options();
+    $status = trim((string)($in['permission_status'] ?? ''));
+    if (!isset($opts[$status])) {
+        return false;   // forged/invalid permission_status — no write
+    }
+
+    $plain = static function ($v, int $max): ?string {
+        $s = mb_substr(trim(strip_tags((string)$v)), 0, $max);
+        return $s !== '' ? $s : null;
+    };
+    $date = static function ($v): ?string {
+        $s = trim((string)$v);
+        if ($s === '') { return null; }
+        $d = DateTime::createFromFormat('!Y-m-d', $s);
+        $err = DateTime::getLastErrors();
+        if ($d === false || ($err !== false && (($err['warning_count'] ?? 0) > 0 || ($err['error_count'] ?? 0) > 0))) {
+            return null;   // e.g. '2026-13-40' → NULL, never fatal
+        }
+        return $d->format('Y-m-d');
+    };
+
+    $stmt = $pdo->prepare(
+        'UPDATE venue_images
+            SET permission_status = :ps, image_source = :src, source_url = :url,
+                provider_approved_by = :by, approval_date = :ad, usage_notes = :notes, expires_at = :exp
+          WHERE id = :id AND venue_id = :vid'
+    );
+    $stmt->execute([
+        ':ps'    => $status,
+        ':src'   => $plain($in['image_source'] ?? '', 100),
+        ':url'   => $plain($in['source_url'] ?? '', 255),
+        ':by'    => $plain($in['provider_approved_by'] ?? '', 255),
+        ':ad'    => $date($in['approval_date'] ?? ''),
+        ':notes' => $plain($in['usage_notes'] ?? '', 65535),
+        ':exp'   => $date($in['expires_at'] ?? ''),
+        ':id'    => $imageId,
+        ':vid'   => $venueId,
+    ]);
+    return true;
 }

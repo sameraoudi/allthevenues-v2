@@ -112,6 +112,30 @@ switch ($action) {
         $done('success', 'Alt text saved.');
         break;
 
+    /* ---- Image rights / provenance (#9b) ---- */
+    case 'provenance':
+        $img = venue_images_get($pdo, $venueId, $imageId);
+        if ($img === null) {
+            $done('error', 'That image could not be found.');
+        }
+        $fields = [
+            'permission_status'    => (string)($_POST['permission_status'] ?? ''),
+            'image_source'         => (string)($_POST['image_source'] ?? ''),
+            'source_url'           => (string)($_POST['source_url'] ?? ''),
+            'provider_approved_by' => (string)($_POST['provider_approved_by'] ?? ''),
+            'approval_date'        => (string)($_POST['approval_date'] ?? ''),
+            'expires_at'           => (string)($_POST['expires_at'] ?? ''),
+            'usage_notes'          => (string)($_POST['usage_notes'] ?? ''),
+        ];
+        if (!venue_images_update_provenance($pdo, $venueId, $imageId, $fields)) {
+            $done('error', 'Could not save image rights (check the permission status).');
+        }
+        audit_log($pdo, $uid, 'venue_image.provenance', 'venue_image', $imageId,
+            ['permission_status' => $img['permission_status'] ?? null],
+            ['venue_id' => $venueId, 'permission_status' => $fields['permission_status'] ?: null]);
+        $done('success', 'Image rights saved.');
+        break;
+
     /* ---- Delete ---- */
     case 'delete':
         $deleted = venue_images_delete($pdo, $venueId, $imageId);

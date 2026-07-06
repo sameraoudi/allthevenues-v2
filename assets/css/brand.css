@@ -1067,6 +1067,19 @@ select:focus-visible,
 .img-card__alt input { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; font-size: 12.5px; font-family: var(--font-body); color: var(--ink); }
 .img-card__acts { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .img-card__acts form { margin: 0; }
+/* #9b — image permission badge + rights sub-form (additive). */
+.img-perm { display: inline-block; align-self: flex-start; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+.img-perm--ok     { background: #d7ecdd; color: #1f6a41; }
+.img-perm--review { background: #fbeecb; color: #8a6d1b; }
+.img-perm--remove { background: #f7d9d5; color: #a12f24; }
+.img-rights { border-top: 1px solid var(--line); padding-top: 6px; }
+.img-rights > summary { cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--action); }
+.img-rights__form { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.img-rights__form label { font-size: 11px; font-weight: 600; color: var(--muted); }
+.img-rights__form select,
+.img-rights__form input,
+.img-rights__form textarea { border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; font-size: 12.5px; font-family: var(--font-body); color: var(--ink); width: 100%; }
+.img-rights__form button { align-self: flex-start; margin-top: 4px; }
 
 @media (max-width: 700px) { .admin-form__grid { grid-template-columns: 1fr; } }
 
