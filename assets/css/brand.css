@@ -712,6 +712,19 @@ select:focus-visible,
 .cr-risk--low    { background: #d7ecdd; color: #1f6a41; }
 .cr-badge { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; padding: 2px 7px; margin-left: 6px; border-radius: 4px; background: #eef1f4; color: #566573; vertical-align: middle; }
 .cr-diff__help td { padding-top: 0; border-top: 0; }
+/* #3 U-P6b — new-venue completeness meter + checklist (additive). */
+.cr-comp { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.cr-meter { flex: 1; height: 10px; background: #eef1f4; border-radius: 6px; overflow: hidden; }
+.cr-bar { height: 100%; border-radius: 6px; }
+.cr-bar--ok   { background: #2f9e6f; }
+.cr-bar--warn { background: #d9a441; }
+.cr-comp__pct { font-weight: 700; font-size: 14px; color: var(--ink); min-width: 42px; text-align: right; }
+.cr-check { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px 16px; }
+.cr-tick { font-size: 13px; }
+.cr-tick--ok   { color: #1f6a41; }
+.cr-tick--miss { color: #a12f24; }
+.cr-req-flag { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; padding: 1px 6px; border-radius: 4px; background: #f7d9d5; color: #a12f24; margin-left: 6px; }
+.atv-btn:disabled { opacity: .45; cursor: not-allowed; }   /* e.g. Approve & publish before completeness */
 
 .lead-pagination { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
 .lead-page { padding: 6px 11px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; color: var(--action); background: #fff; }

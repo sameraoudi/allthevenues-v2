@@ -104,8 +104,32 @@ if (!empty($pending)):
     $lr       = portal_latest_request($pdo, $vid, (int)($partnerId ?? 0));
     $lrStatus = $lr['status'] ?? '';
     $lrNote   = trim((string)($lr['review_note'] ?? ''));
+
+    // #3 U-P6b — a new_venue submission carries its own decision (owner-scoped).
+    // (lib/portal.php is out of this unit's scope, so the lookup is inline here.)
+    $nvStmt = $pdo->prepare(
+        "SELECT status, review_note FROM venue_change_requests
+         WHERE venue_id = :vid AND partner_id = :pid AND type = 'new_venue'
+         ORDER BY id DESC LIMIT 1"
+    );
+    $nvStmt->execute([':vid' => $vid, ':pid' => (int)($partnerId ?? 0)]);
+    $nvReq    = $nvStmt->fetch() ?: null;
+    $nvStatus = $nvReq['status'] ?? '';
+    $nvNote   = trim((string)($nvReq['review_note'] ?? ''));
 ?>
-  <?php if ($lrStatus === 'needs_changes'): ?>
+  <?php if ($nvStatus === 'needs_changes'): ?>
+    <div class="admin-panel">
+      <h2 class="admin-panel__title">Changes requested</h2>
+      <p class="lead-hint mb-2">All The Venues reviewed your venue submission and asked for some changes. Update your venue below and we will re-review it.</p>
+      <?php if ($nvNote !== ''): ?><div class="lead-detail__row"><span class="lead-detail__k">Reviewer note</span><span class="lead-detail__v"><?= nl2br(e($nvNote)) ?></span></div><?php endif; ?>
+    </div>
+  <?php elseif ($nvStatus === 'rejected'): ?>
+    <div class="admin-panel">
+      <h2 class="admin-panel__title">Submission declined</h2>
+      <p class="lead-hint mb-2">All The Venues reviewed your venue submission and were unable to accept it.</p>
+      <?php if ($nvNote !== ''): ?><div class="lead-detail__row"><span class="lead-detail__k">Reviewer note</span><span class="lead-detail__v"><?= nl2br(e($nvNote)) ?></span></div><?php endif; ?>
+    </div>
+  <?php elseif ($lrStatus === 'needs_changes'): ?>
     <div class="admin-panel">
       <h2 class="admin-panel__title">Changes requested</h2>
       <p class="lead-hint mb-2">All The Venues reviewed your last request and asked for some changes before it can be applied.</p>

@@ -13,7 +13,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/venues.php';          // venue_types_all(), venue_emirates(), venue_slug_available()?(admin)
-require_once __DIR__ . '/venue_admin.php';      // venue_slug_available()
+require_once __DIR__ . '/venue_admin.php';      // venue_slug_available(), venue_admin_get()
+require_once __DIR__ . '/venue_images_admin.php'; // venue_images_count() (#3 U-P6b completeness)
 require_once __DIR__ . '/slug_redirect.php';    // slug_redirect_capture() (#10)
 require_once __DIR__ . '/audit.php';            // audit_log()
 require_once __DIR__ . '/mail.php';             // send_mail()
@@ -165,7 +166,9 @@ function cr_admin_list(PDO $pdo, array $filters): array
         $changes        = cr_decode_changes($r['proposed_changes_json']);
         $r['changes']   = $changes;
         $r['change_count'] = count($changes);
-        $r['risk']      = ($r['type'] === 'edit') ? cr_request_risk(array_keys($changes)) : 'low';
+        // new_venue has no changed-field list — a whole new listing is inherently high-risk.
+        $r['risk']      = ($r['type'] === 'edit') ? cr_request_risk(array_keys($changes))
+                        : (($r['type'] === 'new_venue') ? 'high' : 'low');
     }
     unset($r);
     return $rows;
@@ -210,7 +213,8 @@ function cr_admin_get(PDO $pdo, int $id): ?array
     }
     $req['changes']      = $changes;
     $req['change_rows']  = $rows;
-    $req['risk']         = ($req['type'] === 'edit') ? cr_request_risk(array_keys($changes)) : 'low';
+    $req['risk']         = ($req['type'] === 'edit') ? cr_request_risk(array_keys($changes))
+                         : (($req['type'] === 'new_venue') ? 'high' : 'low');
     $req['recipient']    = trim((string)($req['submitter_email'] ?? '')) !== ''
         ? (string)$req['submitter_email'] : (string)($req['provider_email'] ?? '');
     return $req;
@@ -388,10 +392,170 @@ function _cr_decline(PDO $pdo, array $req, int $adminUserId, string $note, strin
     return $out;
 }
 
+/* ==========================================================================
+ * #3 U-P6b — NEW-VENUE submissions (structured review + completeness gate).
+ * ======================================================================== */
+
+/**
+ * Load the pending venue behind a new_venue request + display context:
+ * resolved type/emirate names, its event-type names, and image count.
+ * Returns ['venue'=>array|null, 'type_name'=>?, 'emirate_name'=>?,
+ *          'event_types'=>string[], 'image_count'=>int].
+ */
+function cr_load_new_venue(PDO $pdo, array $req): array
+{
+    $venueId = (int)($req['venue_id'] ?? 0);
+    $venue   = $venueId > 0 ? venue_admin_get($pdo, $venueId) : null;
+
+    $typeName = $emirateName = null;
+    $eventTypes = [];
+    $imageCount = 0;
+
+    if ($venue !== null) {
+        $fk = _cr_fk_maps($pdo);
+        $typeName    = $venue['venue_type_id'] ? ($fk['venue_type'][(int)$venue['venue_type_id']] ?? null) : null;
+        $emirateName = $venue['emirate_id'] ? ($fk['emirate'][(int)$venue['emirate_id']] ?? null) : null;
+
+        $s = $pdo->prepare(
+            'SELECT et.name FROM venue_event_types vet
+             JOIN event_types et ON et.id = vet.event_type_id
+             WHERE vet.venue_id = :vid ORDER BY et.sort_order, et.name'
+        );
+        $s->execute([':vid' => $venueId]);
+        $eventTypes = array_map(static fn($r) => (string)$r['name'], $s->fetchAll());
+
+        $imageCount = venue_images_count($pdo, $venueId);
+    }
+
+    return [
+        'venue'        => $venue,
+        'type_name'    => $typeName,
+        'emirate_name' => $emirateName,
+        'event_types'  => $eventTypes,
+        'image_count'  => $imageCount,
+    ];
+}
+
+/**
+ * Completeness of a pending venue against the locked required-to-publish set.
+ * Returns ['score'=>int %, 'missing'=>string[], 'can_publish'=>bool].
+ */
+function cr_newvenue_completeness(array $venue, int $eventTypeCount, int $imageCount): array
+{
+    $nonEmpty = static fn($v): bool => $v !== null && trim((string)$v) !== '';
+    $posInt   = static fn($v): bool => (int)$v > 0;
+
+    // Each entry: [label, present?]. Order = display order.
+    $checks = [
+        ['Name',                        $nonEmpty($venue['name'] ?? null)],
+        ['Slug',                        $nonEmpty($venue['slug'] ?? null)],
+        ['Provider',                    $posInt($venue['partner_id'] ?? 0)],
+        ['Primary emirate',             $posInt($venue['emirate_id'] ?? 0)],
+        ['Area or address',             $nonEmpty($venue['area'] ?? null) || $nonEmpty($venue['address'] ?? null)],
+        ['Venue type',                  $posInt($venue['venue_type_id'] ?? 0)],
+        ['At least one event type',     $eventTypeCount >= 1],
+        ['Capacity',                    ((int)($venue['capacity_min'] ?? 0) > 0) || ((int)($venue['capacity_max'] ?? 0) > 0)],
+        ['Description',                 $nonEmpty($venue['description'] ?? null)],
+        // #9 hook: for now any image satisfies this. Once venue_images gains
+        // permission_status, tighten to "≥1 image with permission_status='approved'".
+        ['At least one approved photo', $imageCount >= 1],
+    ];
+
+    $total   = count($checks);
+    $present = 0;
+    $missing = [];
+    foreach ($checks as [$label, $ok]) {
+        if ($ok) { $present++; } else { $missing[] = $label; }
+    }
+
+    return [
+        'score'       => (int)round($present / $total * 100),
+        'missing'     => $missing,
+        'can_publish' => $missing === [],
+        'checks'      => $checks,   // for the checklist UI
+    ];
+}
+
+/**
+ * Decide a new_venue submission. $decision ∈ approve_publish | approve_draft |
+ * request_changes | reject. Only for type='new_venue' with status pending/
+ * needs_changes. approve_publish re-checks completeness server-side. Applies the
+ * venue status change + request status in one transaction, audits (incl. the
+ * missing-fields snapshot at decision time), and emails the provider.
+ * @return array{ok:bool,error?:string,warning?:string}
+ */
+function cr_newvenue_decide(PDO $pdo, array $req, int $adminUserId, string $decision, string $note): array
+{
+    if (($req['type'] ?? '') !== 'new_venue'
+        || !in_array((string)($req['status'] ?? ''), ['pending', 'needs_changes'], true)) {
+        return ['ok' => false, 'error' => 'This submission can no longer be reviewed.'];
+    }
+    $map = [
+        'approve_publish' => ['published', 'approved',      'nv_published'],
+        'approve_draft'   => ['draft',     'approved',      'nv_draft'],
+        'request_changes' => [null,        'needs_changes', 'nv_changes'],
+        'reject'          => ['archived',  'rejected',      'nv_rejected'],
+    ];
+    if (!isset($map[$decision])) {
+        return ['ok' => false, 'error' => 'Unknown decision.'];
+    }
+    [$venueStatus, $reqStatus, $mailDecision] = $map[$decision];
+
+    $rid     = (int)$req['id'];
+    $venueId = (int)$req['venue_id'];
+    $pid     = (int)$req['partner_id'];
+
+    // Snapshot completeness at decision time (for the publish guard + audit).
+    $ctx  = cr_load_new_venue($pdo, $req);
+    $comp = $ctx['venue'] !== null
+        ? cr_newvenue_completeness($ctx['venue'], count($ctx['event_types']), $ctx['image_count'])
+        : ['can_publish' => false, 'missing' => ['Venue not found']];
+
+    if ($decision === 'approve_publish' && !$comp['can_publish']) {
+        return ['ok' => false, 'error' => 'Cannot publish — missing: ' . implode(', ', $comp['missing']) . '.'];
+    }
+
+    $beforeStatus = (string)($ctx['venue']['status'] ?? '');
+
+    try {
+        $pdo->beginTransaction();
+
+        if ($venueStatus !== null) {
+            $uv = $pdo->prepare('UPDATE venues SET status = :st WHERE id = :vid AND partner_id = :pid');
+            $uv->execute([':st' => $venueStatus, ':vid' => $venueId, ':pid' => $pid]);
+        }
+
+        $ur = $pdo->prepare(
+            "UPDATE venue_change_requests
+             SET status=:st, reviewed_by=:by, reviewed_at=NOW(), review_note=:note, updated_at=NOW()
+             WHERE id=:rid AND status IN ('pending','needs_changes')"
+        );
+        $ur->execute([':st' => $reqStatus, ':by' => $adminUserId,
+                      ':note' => ($note !== '' ? $note : null), ':rid' => $rid]);
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) { $pdo->rollBack(); }
+        error_log('cr_newvenue_decide failed (request=' . $rid . ', decision=' . $decision . '): ' . $e->getMessage());
+        return ['ok' => false, 'error' => 'Something went wrong recording the decision. Please try again.'];
+    }
+
+    $mailOk = cr_notify_provider($req, $mailDecision, $note);
+    audit_log($pdo, $adminUserId, $decision, 'change_request', $rid,
+        ['venue_id' => $venueId, 'partner_id' => $pid, 'venue_status' => $beforeStatus],
+        ['venue_status' => ($venueStatus ?? $beforeStatus), 'missing_fields' => $comp['missing'],
+         'note' => $note, 'email_sent' => $mailOk]);
+
+    $out = ['ok' => true];
+    if (!$mailOk) { $out['warning'] = 'Saved, but the provider notification email failed to send.'; }
+    return $out;
+}
+
 /**
  * Email the submitting provider about a decision. $decision ∈ approved |
- * changes-requested | rejected. send_mail() never throws (returns bool). Returns
- * false (and logs) when there is no recipient or the send failed.
+ * changes-requested | rejected  (edit requests), or  nv_published | nv_draft |
+ * nv_changes | nv_rejected  (new-venue submissions). send_mail() never throws
+ * (returns bool). Returns false (and logs) when there is no recipient / send failed.
  */
 function cr_notify_provider(array $req, string $decision, string $note): bool
 {
@@ -404,21 +568,47 @@ function cr_notify_provider(array $req, string $decision, string $note): bool
     $venue   = (string)($req['venue_name'] ?? 'your venue');
     $link    = base_url('portal/venues/' . (int)($req['venue_id'] ?? 0));
 
-    if ($decision === 'approved') {
-        $subject = 'Your change request was approved — ' . $venue;
-        $intro   = 'Good news — your requested changes to <strong>' . $esc($venue)
-                 . '</strong> have been reviewed and applied. They are now live.';
-    } elseif ($decision === 'rejected') {
-        $subject = 'Your change request was declined — ' . $venue;
-        $intro   = 'Your requested changes to <strong>' . $esc($venue)
-                 . '</strong> were reviewed and could not be applied.';
-    } else { // changes-requested
-        $subject = 'Changes requested on your update — ' . $venue;
-        $intro   = 'We reviewed your requested changes to <strong>' . $esc($venue)
-                 . '</strong> and need a few adjustments before they can be applied. You can revise and resubmit.';
+    // Decisions that are pure approvals (no reviewer note shown to the provider).
+    $positive = ['approved', 'nv_published', 'nv_draft'];
+
+    switch ($decision) {
+        case 'approved':
+            $subject = 'Your change request was approved — ' . $venue;
+            $intro   = 'Good news — your requested changes to <strong>' . $esc($venue)
+                     . '</strong> have been reviewed and applied. They are now live.';
+            break;
+        case 'rejected':
+            $subject = 'Your change request was declined — ' . $venue;
+            $intro   = 'Your requested changes to <strong>' . $esc($venue)
+                     . '</strong> were reviewed and could not be applied.';
+            break;
+        case 'nv_published':
+            $subject = 'Your venue is now live — ' . $venue;
+            $intro   = 'Good news — your venue submission <strong>' . $esc($venue)
+                     . '</strong> has been reviewed and published. It is now live on All The Venues.';
+            break;
+        case 'nv_draft':
+            $subject = 'Your venue submission was accepted — ' . $venue;
+            $intro   = 'Your venue submission <strong>' . $esc($venue)
+                     . '</strong> has been accepted and saved as a draft. Our team will finish preparing it before it goes live.';
+            break;
+        case 'nv_rejected':
+            $subject = 'Your venue submission was declined — ' . $venue;
+            $intro   = 'Your venue submission <strong>' . $esc($venue)
+                     . '</strong> was reviewed and could not be accepted.';
+            break;
+        case 'nv_changes':
+            $subject = 'Changes requested on your venue submission — ' . $venue;
+            $intro   = 'We reviewed your venue submission <strong>' . $esc($venue)
+                     . '</strong> and need a few changes before it can go live. Please update your venue in the portal and we will re-review it.';
+            break;
+        default: // changes-requested (edit)
+            $subject = 'Changes requested on your update — ' . $venue;
+            $intro   = 'We reviewed your requested changes to <strong>' . $esc($venue)
+                     . '</strong> and need a few adjustments before they can be applied. You can revise and resubmit.';
     }
 
-    $noteHtml = ($decision !== 'approved' && trim($note) !== '')
+    $noteHtml = (!in_array($decision, $positive, true) && trim($note) !== '')
         ? '<p style="margin:16px 0;padding:12px 14px;background:#f4f1ea;border-radius:6px;">'
           . '<strong>Reviewer note:</strong><br>' . nl2br($esc($note)) . '</p>'
         : '';

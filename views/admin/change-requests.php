@@ -56,6 +56,8 @@ if (preg_match('#^(\d+)$#', $rest, $m)) {
     $noteError = null;
     $note      = '';
 
+    $type = (string)($req['type'] ?? '');
+
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $decision = trim((string)($_POST['decision'] ?? ''));
         $note     = trim((string)($_POST['review_note'] ?? ''));
@@ -65,41 +67,68 @@ if (preg_match('#^(\d+)$#', $rest, $m)) {
             redirect($detailUrl);
         }
 
-        if (($req['type'] ?? '') !== 'edit') {
+        if ($type === 'edit') {
+            /* ---- U-P5b: edit-request decisions -------------------------- */
+            if (in_array($decision, ['reject', 'needs_changes'], true) && $note === '') {
+                $noteError = 'A note to the provider is required for this decision.';
+            } else {
+                switch ($decision) {
+                    case 'approve':        $res = cr_approve($pdo, $req, $uid, $note); break;
+                    case 'reject':         $res = cr_reject($pdo, $req, $uid, $note); break;
+                    case 'needs_changes':  $res = cr_needs_changes($pdo, $req, $uid, $note); break;
+                    default:               $res = ['ok' => false, 'error' => 'Unknown decision.'];
+                }
+                if (!empty($res['ok'])) {
+                    $labels = ['approve' => 'Change request approved and applied.',
+                               'reject' => 'Change request rejected.',
+                               'needs_changes' => 'Changes requested from the provider.'];
+                    $msg = $labels[$decision] ?? 'Done.';
+                    if (!empty($res['warning'])) { $msg .= ' ' . $res['warning']; }
+                    $_SESSION['admin_flash'] = ['type' => (!empty($res['warning']) ? 'warning' : 'success'), 'msg' => $msg];
+                    redirect(base_url('admin/change-requests'));
+                }
+                $noteError = $res['error'] ?? 'Could not complete that action.';
+            }
+        } elseif ($type === 'new_venue') {
+            /* ---- U-P6b: new-venue submission decisions ------------------ */
+            if (in_array($decision, ['reject', 'request_changes'], true) && $note === '') {
+                $noteError = 'A note to the provider is required for this decision.';
+            } else {
+                $res = cr_newvenue_decide($pdo, $req, $uid, $decision, $note);
+                if (!empty($res['ok'])) {
+                    $labels = ['approve_publish' => 'Venue approved and published.',
+                               'approve_draft'   => 'Venue accepted as a draft.',
+                               'request_changes' => 'Changes requested from the provider.',
+                               'reject'          => 'Venue submission rejected.'];
+                    $msg = $labels[$decision] ?? 'Done.';
+                    if (!empty($res['warning'])) { $msg .= ' ' . $res['warning']; }
+                    $_SESSION['admin_flash'] = ['type' => (!empty($res['warning']) ? 'warning' : 'success'), 'msg' => $msg];
+                    redirect(base_url('admin/change-requests'));
+                }
+                $noteError = $res['error'] ?? 'Could not complete that action.';
+            }
+        } else {
             $_SESSION['admin_flash'] = ['type' => 'error', 'msg' => 'This request type is reviewed in a later unit.'];
             redirect($detailUrl);
-        }
-
-        if (in_array($decision, ['reject', 'needs_changes'], true) && $note === '') {
-            $noteError = 'A note to the provider is required for this decision.';
-        } else {
-            switch ($decision) {
-                case 'approve':        $res = cr_approve($pdo, $req, $uid, $note); break;
-                case 'reject':         $res = cr_reject($pdo, $req, $uid, $note); break;
-                case 'needs_changes':  $res = cr_needs_changes($pdo, $req, $uid, $note); break;
-                default:               $res = ['ok' => false, 'error' => 'Unknown decision.'];
-            }
-
-            if (!empty($res['ok'])) {
-                $labels = ['approve' => 'Change request approved and applied.',
-                           'reject' => 'Change request rejected.',
-                           'needs_changes' => 'Changes requested from the provider.'];
-                $msg = $labels[$decision] ?? 'Done.';
-                if (!empty($res['warning'])) { $msg .= ' ' . $res['warning']; }
-                $_SESSION['admin_flash'] = ['type' => (!empty($res['warning']) ? 'warning' : 'success'), 'msg' => $msg];
-                redirect(base_url('admin/change-requests'));
-            }
-            $noteError = $res['error'] ?? 'Could not complete that action.';
         }
     }
 
     $flash = $_SESSION['admin_flash'] ?? null;
     unset($_SESSION['admin_flash']);
 
-    $admin_active       = 'change-requests';
-    $page_title         = 'Change request — Admin';
-    $admin_page_title   = 'Change request';
-    $admin_content_view = __DIR__ . '/change-request-detail.php';
+    $admin_active     = 'change-requests';
+    $page_title       = 'Change request — Admin';
+    $admin_page_title = 'Change request';
+
+    if ($type === 'new_venue') {
+        $nv   = cr_load_new_venue($pdo, $req);
+        $comp = $nv['venue'] !== null
+            ? cr_newvenue_completeness($nv['venue'], count($nv['event_types']), $nv['image_count'])
+            : ['score' => 0, 'missing' => ['Venue not found'], 'can_publish' => false, 'checks' => []];
+        $admin_content_view = __DIR__ . '/change-request-newvenue.php';
+    } else {
+        $admin_content_view = __DIR__ . '/change-request-detail.php';
+    }
     require __DIR__ . '/layout.php';
     return;
 }

@@ -41,19 +41,19 @@ $types = ['edit' => 'Edit', 'new_venue' => 'New venue', 'image' => 'Image', 'cla
       <tbody>
         <?php foreach ($rows as $r):
           [$stLabel, $stClass] = cr_status_meta((string)$r['status']);
-          $isEdit = ($r['type'] === 'edit');
+          $reviewable = in_array((string)$r['type'], ['edit', 'new_venue'], true);   // U-P5b + U-P6b
           $detail = base_url('admin/change-requests/' . (int)$r['id']);
         ?>
           <tr>
             <td data-label="Venue"><?= e((string)($r['venue_name'] ?? '—')) ?></td>
             <td data-label="Provider"><?= e((string)($r['provider_name'] ?? '—')) ?></td>
             <td data-label="Type"><span class="lead-mode lead-mode--<?= e((string)$r['type']) ?>"><?= e(cr_type_label((string)$r['type'])) ?></span></td>
-            <td data-label="Risk"><?php if ($isEdit): ?><span class="cr-risk cr-risk--<?= e((string)$r['risk']) ?>"><?= e(cr_risk_label((string)$r['risk'])) ?></span><?php else: ?><span class="text-muted">—</span><?php endif; ?></td>
+            <td data-label="Risk"><?php if ($reviewable): ?><span class="cr-risk cr-risk--<?= e((string)$r['risk']) ?>"><?= e(cr_risk_label((string)$r['risk'])) ?></span><?php else: ?><span class="text-muted">—</span><?php endif; ?></td>
             <td data-label="Changes"><?= (int)$r['change_count'] ?></td>
             <td data-label="Submitted"><?= e(date('j M Y H:i', strtotime((string)$r['created_at']))) ?></td>
             <td data-label="Status"><span class="lead-status lead-status--<?= e($stClass) ?>"><?= e($stLabel) ?></span></td>
             <td data-label="">
-              <?php if ($isEdit): ?>
+              <?php if ($reviewable): ?>
                 <a class="atv-btn atv-btn--sm" href="<?= e($detail) ?>">Review</a>
               <?php else: ?>
                 <span class="text-muted" title="Reviewed in a later unit">Coming soon</span>
