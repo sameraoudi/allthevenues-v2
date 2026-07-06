@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../lib/helpers.php';
 require_once __DIR__ . '/../lib/venues.php';
+require_once __DIR__ . '/../lib/slug_redirect.php';
 
 /** @var string $slug */
 $slug = isset($slug) ? (string)$slug : '';
@@ -19,6 +20,9 @@ $pdo   = db_pdo();
 $venue = venue_by_slug($pdo, $slug);
 
 if ($venue === null) {
+    // #10 — a known OLD slug for a still-published venue wins over the landing
+    // fallback: 301 to its current URL (single hop) and exit.
+    slug_redirect_maybe_301($pdo, 'venue', $slug);
     // No real venue by this slug. An "{event}-in-{emirate}" slug is an SEO
     // landing page (real venues always win; no event/emirate slug contains
     // '-in-', so a first-split is safe). landing.php renders / redirects / 404s.

@@ -18,6 +18,7 @@ require_once __DIR__ . '/../../lib/sanitize.php';
 require_once __DIR__ . '/../../lib/venues.php';
 require_once __DIR__ . '/../../lib/venue_admin.php';
 require_once __DIR__ . '/../../lib/venue_images_admin.php';
+require_once __DIR__ . '/../../lib/slug_redirect.php';
 
 $me   = auth_current_user();
 $rest = trim(substr((string)$sub, strlen('venues')), '/');   // '' | 'edit' | 'images/*'
@@ -360,6 +361,9 @@ if ($rest === 'edit') {
                     $upd->execute();
 
                     venue_layout_capacity_save($pdo, $id, (array)($_POST['layout'] ?? []));
+
+                    // #10 — record the old pretty slug → this venue for SEO-safe 301s.
+                    slug_redirect_capture($pdo, 'venue', (string)($venue['slug'] ?? ''), $clean['slug'], $id);
 
                     if ($changedNew) {
                         audit_log($pdo, (int)($me['id'] ?? 0) ?: null, 'update', 'venue', $id, $changedOld, $changedNew);

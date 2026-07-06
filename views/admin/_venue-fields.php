@@ -40,7 +40,7 @@ $layoutValues = $layoutValues ?? [];   // layout_type => capacity (edit prefill;
       <div class="atv-field atv-field--full">
         <label for="f-slug">Slug <span class="req">*</span></label>
         <input type="text" id="f-slug" name="slug" value="<?= $v('slug') ?>" maxlength="191" class="<?= $has('slug') ? 'is-invalid' : '' ?>">
-        <p class="lead-hint">Changing the slug changes the public URL (/venues/&lt;slug&gt;). Old links will stop working.</p>
+        <p class="lead-hint">Changing the slug changes the public URL (/venues/&lt;slug&gt;). Old links auto-redirect to the new URL.</p>
         <?php $err('slug'); ?>
       </div>
       <div class="atv-field">

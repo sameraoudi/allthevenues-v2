@@ -17,6 +17,7 @@ require_once __DIR__ . '/../../lib/audit.php';
 require_once __DIR__ . '/../../lib/sanitize.php';
 require_once __DIR__ . '/../../lib/partners.php';
 require_once __DIR__ . '/../../lib/partner_admin.php';
+require_once __DIR__ . '/../../lib/slug_redirect.php';
 
 $me   = auth_current_user();
 $rest = trim(substr((string)$sub, strlen('partners')), '/');   // '' | 'edit' | 'cover/*'
@@ -274,6 +275,9 @@ if ($rest === 'edit') {
                     foreach ($clean as $col => $val) { $upd->bindValue(':' . $col, $val); }
                     $upd->bindValue(':id', $id, PDO::PARAM_INT);
                     $upd->execute();
+
+                    // #10 — record the old pretty slug → this provider for SEO-safe 301s.
+                    slug_redirect_capture($pdo, 'provider', (string)($partner['slug'] ?? ''), $clean['slug'], $id);
 
                     if ($changedNew) {
                         audit_log($pdo, (int)($me['id'] ?? 0) ?: null, 'update', 'partner', $id, $changedOld, $changedNew);

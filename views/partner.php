@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../lib/helpers.php';
 require_once __DIR__ . '/../lib/partners.php';
+require_once __DIR__ . '/../lib/slug_redirect.php';
 
 /** @var string $slug */
 $slug = isset($slug) ? (string)$slug : '';
@@ -17,6 +18,8 @@ $pdo     = db_pdo();
 $partner = partner_by_slug($pdo, $slug);
 
 if ($partner === null) {
+    // #10 — a known OLD slug for a still-approved provider 301s to its current URL.
+    slug_redirect_maybe_301($pdo, 'provider', $slug);
     http_response_code(404);
     require __DIR__ . '/404.php';
     exit;
