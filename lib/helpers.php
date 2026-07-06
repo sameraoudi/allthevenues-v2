@@ -143,3 +143,11 @@ if (!function_exists('slugify')) {
         return trim($s, '-');
     }
 }
+
+if (!function_exists('portal_enabled')) {
+    /** #3 provider portal dark-launch flag. Undefined ⇒ OFF (prod stays dark until launch). */
+    function portal_enabled(): bool
+    {
+        return defined('PORTAL_ENABLED') && PORTAL_ENABLED === true;
+    }
+}

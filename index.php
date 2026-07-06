@@ -128,6 +128,20 @@ if (preg_match('#^/providers/([a-z0-9-]+)$#', $path, $m)) {
     exit;
 }
 
+// Provider portal: /portal and /portal/* → gated behind PORTAL_ENABLED (dark by
+// default). config.php (which defines the flag) is loaded here, only for portal
+// paths, so a normal request pays nothing. Flag off / undefined ⇒ fall through to
+// the branded 404 — the route is invisible on prod until launch (U-P9).
+if (preg_match('#^/portal(?:/(.*))?$#', $path, $m)) {
+    require_once __DIR__ . '/config/config.php';   // may or may not define PORTAL_ENABLED
+    if (portal_enabled()) {
+        $portalSub = $m[1] ?? '';
+        require __DIR__ . '/views/portal/dispatch.php';
+        exit;
+    }
+    // Flag off ⇒ do NOT handle; fall through to the 404 below.
+}
+
 // Admin area: /admin and /admin/* → the admin controller ($adminSub = the
 // path after /admin). Login is public there; everything else fails closed.
 if (preg_match('#^/admin(?:/(.*))?$#', $path, $m)) {

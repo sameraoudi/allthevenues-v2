@@ -20,6 +20,10 @@ define('DB_PASS', 'REPLACE_ME');
 // Base URL, no trailing slash.
 define('BASE_URL', 'https://staging.allthevenues.com');
 
+// #3 Provider portal (dark-launch). Leave false until the portal is ready to go
+// live (U-P9). While false/undefined, /portal and /portal/* return the branded 404.
+define('PORTAL_ENABLED', false);
+
 // --- Cloudflare Turnstile (enquiry anti-bot) ------------------------------
 // Dev: Cloudflare's test keys below always pass on any domain. When the
 // secret starts with "1x" (test key), server-side verify auto-passes with
