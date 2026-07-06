@@ -211,6 +211,22 @@ function venue_images_permission_options(): array
 }
 
 /**
+ * #9c — the single source of truth for which permission_status values count as
+ * "cleared" for use (derived from the options table's cleared flag). Everything
+ * else is "needs review". Consumed by the needs-review report + the new-venue
+ * publish gate.
+ * @return string[]
+ */
+function venue_images_cleared_statuses(): array
+{
+    $cleared = [];
+    foreach (venue_images_permission_options() as $key => [$label, $isCleared]) {
+        if ($isCleared) { $cleared[] = $key; }
+    }
+    return $cleared;   // ['approved_by_provider','owned_by_atv','licensed_stock']
+}
+
+/**
  * #9b — set an image's provenance/permission (scoped to its venue). Validates
  * permission_status against the ENUM allowlist (rejects a forged value with no
  * write). Dates are parsed strictly (invalid → NULL). Returns false only when

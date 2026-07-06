@@ -112,6 +112,12 @@ $coverThumb  = trim((string)($partner['cover_thumb_path'] ?? ''));
 $coverAlt    = (string)($partner['cover_image_alt'] ?? '');
 $hasCoverImg = $coverFull !== '';
 $coverAction = static fn(string $a): string => e(base_url('admin/partners/cover/' . $a));
+// #9c — cover permission badge/sub-form (mirrors the venue image card).
+$coverPermOpts   = venue_images_permission_options();
+$coverPermStatus = (string)($partner['cover_permission_status'] ?? 'legacy_needs_review');
+$coverPermLabel  = $coverPermOpts[$coverPermStatus][0] ?? 'Needs review';
+$coverPermClass  = ($coverPermStatus === 'remove_replace') ? 'img-perm--remove'
+    : (!empty($coverPermOpts[$coverPermStatus][1]) ? 'img-perm--ok' : 'img-perm--review');
 ?>
 <div class="admin-panel img-mgr">
   <h2 class="admin-panel__title">Cover image</h2>
@@ -130,6 +136,33 @@ $coverAction = static fn(string $a): string => e(base_url('admin/partners/cover/
         <div class="img-card__acts">
           <form method="post" action="<?= $coverAction('delete') ?>" data-confirm="Remove this cover image?"><?php csrf_field(); ?><input type="hidden" name="partner_id" value="<?= e((string)$id) ?>"><button type="submit" class="atv-btn atv-btn--sm atv-btn--danger">Remove</button></form>
         </div>
+
+        <span class="img-perm <?= e($coverPermClass) ?>"><?= e($coverPermLabel) ?></span>
+        <details class="img-rights">
+          <summary>Image rights</summary>
+          <form method="post" action="<?= $coverAction('provenance') ?>" class="img-rights__form">
+            <?php csrf_field(); ?><input type="hidden" name="partner_id" value="<?= e((string)$id) ?>">
+            <label for="cover-perm">Permission status</label>
+            <select id="cover-perm" name="permission_status">
+              <?php foreach ($coverPermOpts as $k => $opt): ?>
+                <option value="<?= e($k) ?>"<?= $coverPermStatus === $k ? ' selected' : '' ?>><?= e($opt[0]) ?></option>
+              <?php endforeach; ?>
+            </select>
+            <label for="cover-src">Source</label>
+            <input type="text" id="cover-src" name="image_source" value="<?= e((string)($partner['cover_image_source'] ?? '')) ?>" maxlength="100" placeholder="e.g. Provider, ATV shoot, Unsplash">
+            <label for="cover-url">Source URL</label>
+            <input type="text" id="cover-url" name="source_url" value="<?= e((string)($partner['cover_source_url'] ?? '')) ?>" maxlength="255">
+            <label for="cover-by">Approved by</label>
+            <input type="text" id="cover-by" name="provider_approved_by" value="<?= e((string)($partner['cover_provider_approved_by'] ?? '')) ?>" maxlength="255" placeholder="Who confirmed rights">
+            <label for="cover-ad">Approval date</label>
+            <input type="date" id="cover-ad" name="approval_date" value="<?= e((string)($partner['cover_approval_date'] ?? '')) ?>">
+            <label for="cover-exp">Licence expiry</label>
+            <input type="date" id="cover-exp" name="expires_at" value="<?= e((string)($partner['cover_expires_at'] ?? '')) ?>">
+            <label for="cover-notes">Usage notes</label>
+            <textarea id="cover-notes" name="usage_notes" rows="2"><?= e((string)($partner['cover_usage_notes'] ?? '')) ?></textarea>
+            <button type="submit" class="atv-btn atv-btn--sm">Save image rights</button>
+          </form>
+        </details>
       </div>
     </div>
   <?php endif; ?>

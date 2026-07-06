@@ -424,7 +424,17 @@ function cr_load_new_venue(PDO $pdo, array $req): array
         $s->execute([':vid' => $venueId]);
         $eventTypes = array_map(static fn($r) => (string)$r['name'], $s->fetchAll());
 
-        $imageCount = venue_images_count($pdo, $venueId);
+        // #9c — the publish gate requires a CLEARED image, not just any image.
+        // 'image_count' is therefore the count of images with a cleared
+        // permission_status (approved_by_provider / owned_by_atv / licensed_stock).
+        $cleared = venue_images_cleared_statuses();
+        $ph      = implode(',', array_fill(0, count($cleared), '?'));
+        $cs = $pdo->prepare(
+            "SELECT COUNT(*) FROM venue_images
+             WHERE venue_id = ? AND status = 'active' AND permission_status IN ($ph)"
+        );
+        $cs->execute(array_merge([$venueId], $cleared));
+        $imageCount = (int)$cs->fetchColumn();
     }
 
     return [
@@ -432,15 +442,16 @@ function cr_load_new_venue(PDO $pdo, array $req): array
         'type_name'    => $typeName,
         'emirate_name' => $emirateName,
         'event_types'  => $eventTypes,
-        'image_count'  => $imageCount,
+        'image_count'  => $imageCount,   // #9c: count of CLEARED images (gate input)
     ];
 }
 
 /**
  * Completeness of a pending venue against the locked required-to-publish set.
  * Returns ['score'=>int %, 'missing'=>string[], 'can_publish'=>bool].
+ * $clearedImageCount = images whose permission_status is cleared (#9c gate).
  */
-function cr_newvenue_completeness(array $venue, int $eventTypeCount, int $imageCount): array
+function cr_newvenue_completeness(array $venue, int $eventTypeCount, int $clearedImageCount): array
 {
     $nonEmpty = static fn($v): bool => $v !== null && trim((string)$v) !== '';
     $posInt   = static fn($v): bool => (int)$v > 0;
@@ -456,9 +467,9 @@ function cr_newvenue_completeness(array $venue, int $eventTypeCount, int $imageC
         ['At least one event type',     $eventTypeCount >= 1],
         ['Capacity',                    ((int)($venue['capacity_min'] ?? 0) > 0) || ((int)($venue['capacity_max'] ?? 0) > 0)],
         ['Description',                 $nonEmpty($venue['description'] ?? null)],
-        // #9 hook: for now any image satisfies this. Once venue_images gains
-        // permission_status, tighten to "≥1 image with permission_status='approved'".
-        ['At least one approved photo', $imageCount >= 1],
+        // #9c: the photo requirement is a cleared image (rights confirmed), not
+        // just any upload — $clearedImageCount comes from cr_load_new_venue.
+        ['≥1 image with confirmed rights', $clearedImageCount >= 1],
     ];
 
     $total   = count($checks);

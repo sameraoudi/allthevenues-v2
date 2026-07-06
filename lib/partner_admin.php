@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/partners.php';   // partner_org_type_expr(), type labels
+require_once __DIR__ . '/venue_images_admin.php';   // #9c shared permission options (cover provenance)
 
 /** Partner status enum → [label, css-modifier] (reuses lead-status modifiers). */
 function partner_admin_statuses(): array
@@ -144,4 +145,54 @@ function partner_cover_clear(PDO $pdo, int $id): void
         'UPDATE partners SET cover_image_path = NULL, cover_thumb_path = NULL, cover_image_alt = NULL WHERE id = :id'
     );
     $stmt->execute([':id' => $id]);
+}
+
+/**
+ * #9c — set the provider cover's provenance/permission (mirrors
+ * venue_images_update_provenance). Validates permission_status against the shared
+ * allowlist (forged → no write, false); dates strict Y-m-d→NULL; text plain/
+ * null-if-empty. Writes the cover_* columns for one partner. (partner_admin_get's
+ * `SELECT p.*` already returns these columns — no SELECT change needed.)
+ */
+function partner_cover_update_provenance(PDO $pdo, int $partnerId, array $in): bool
+{
+    $opts   = venue_images_permission_options();
+    $status = trim((string)($in['permission_status'] ?? ''));
+    if (!isset($opts[$status])) {
+        return false;   // forged/invalid — no write
+    }
+
+    $plain = static function ($v, int $max): ?string {
+        $s = mb_substr(trim(strip_tags((string)$v)), 0, $max);
+        return $s !== '' ? $s : null;
+    };
+    $date = static function ($v): ?string {
+        $s = trim((string)$v);
+        if ($s === '') { return null; }
+        $d = DateTime::createFromFormat('!Y-m-d', $s);
+        $err = DateTime::getLastErrors();
+        if ($d === false || ($err !== false && (($err['warning_count'] ?? 0) > 0 || ($err['error_count'] ?? 0) > 0))) {
+            return null;
+        }
+        return $d->format('Y-m-d');
+    };
+
+    $stmt = $pdo->prepare(
+        'UPDATE partners
+            SET cover_permission_status = :ps, cover_image_source = :src, cover_source_url = :url,
+                cover_provider_approved_by = :by, cover_approval_date = :ad, cover_usage_notes = :notes,
+                cover_expires_at = :exp
+          WHERE id = :pid'
+    );
+    $stmt->execute([
+        ':ps'    => $status,
+        ':src'   => $plain($in['image_source'] ?? '', 100),
+        ':url'   => $plain($in['source_url'] ?? '', 255),
+        ':by'    => $plain($in['provider_approved_by'] ?? '', 255),
+        ':ad'    => $date($in['approval_date'] ?? ''),
+        ':notes' => $plain($in['usage_notes'] ?? '', 65535),
+        ':exp'   => $date($in['expires_at'] ?? ''),
+        ':pid'   => $partnerId,
+    ]);
+    return true;
 }

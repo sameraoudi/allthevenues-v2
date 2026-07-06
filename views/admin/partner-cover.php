@@ -82,6 +82,29 @@ switch ($action) {
         $done('success', 'Alt text saved.');
         break;
 
+    /* ---- Cover image rights / provenance (#9c) ---- */
+    case 'provenance':
+        if ((string)($partner['cover_image_path'] ?? '') === '') {
+            $done('error', 'This provider has no cover image to classify.');
+        }
+        $fields = [
+            'permission_status'    => (string)($_POST['permission_status'] ?? ''),
+            'image_source'         => (string)($_POST['image_source'] ?? ''),
+            'source_url'           => (string)($_POST['source_url'] ?? ''),
+            'provider_approved_by' => (string)($_POST['provider_approved_by'] ?? ''),
+            'approval_date'        => (string)($_POST['approval_date'] ?? ''),
+            'expires_at'           => (string)($_POST['expires_at'] ?? ''),
+            'usage_notes'          => (string)($_POST['usage_notes'] ?? ''),
+        ];
+        if (!partner_cover_update_provenance($pdo, $partnerId, $fields)) {
+            $done('error', 'Could not save image rights (check the permission status).');
+        }
+        audit_log($pdo, $uid, 'partner_cover.provenance', 'partner_cover', $partnerId,
+            ['permission_status' => $partner['cover_permission_status'] ?? null],
+            ['permission_status' => $fields['permission_status'] ?: null]);
+        $done('success', 'Cover image rights saved.');
+        break;
+
     /* ---- Remove the cover ---- */
     case 'delete':
         $oldFull  = (string)($partner['cover_image_path'] ?? '');

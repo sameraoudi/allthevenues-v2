@@ -1080,6 +1080,8 @@ select:focus-visible,
 .img-rights__form input,
 .img-rights__form textarea { border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; font-size: 12.5px; font-family: var(--font-body); color: var(--ink); width: 100%; }
 .img-rights__form button { align-self: flex-start; margin-top: 4px; }
+/* #9c — image-review report thumbnail cell. */
+.ir-thumb { width: 64px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); display: block; background: var(--navy); }
 
 @media (max-width: 700px) { .admin-form__grid { grid-template-columns: 1fr; } }
 

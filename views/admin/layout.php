@@ -32,6 +32,13 @@ if (auth_can('change_requests.manage')) {
     $crPending = cr_admin_pending_count(db_pdo());
 }
 
+// Image-rights needs-review count (#9c) — staff nav badge.
+$imgReview = 0;
+if (auth_can('venues.manage')) {
+    require_once __DIR__ . '/../../lib/image_review_admin.php';
+    try { $imgReview = (int)(image_review_counts(db_pdo())['total'] ?? 0); } catch (Throwable $e) { $imgReview = 0; }
+}
+
 // Role-aware nav: each item carries the capability required to see it. Items
 // the current role can't reach are hidden (and the routes are server-gated too).
 $nav = [
@@ -41,6 +48,7 @@ $nav = [
     'partners'  => ['label' => 'Providers', 'url' => base_url('admin/partners'),  'icon' => 'users',    'cap' => 'providers.manage'],
     'reports'   => ['label' => 'Reports',   'url' => base_url('admin/reports'),   'icon' => 'chart',    'cap' => 'enquiries.manage'],
     'change-requests' => ['label' => 'Change Requests', 'url' => base_url('admin/change-requests'), 'icon' => 'inbox', 'cap' => 'change_requests.manage', 'badge' => $crPending],
+    'image-review' => ['label' => 'Image Review', 'url' => base_url('admin/image-review'), 'icon' => 'building', 'cap' => 'venues.manage', 'badge' => $imgReview],
     'users'     => ['label' => 'Users',     'url' => base_url('admin/users'),     'icon' => 'shield',   'cap' => 'users.manage'],
     'settings'  => ['label' => 'Settings',  'url' => base_url('admin/settings'),  'icon' => 'settings', 'cap' => 'settings.manage'],
 ];

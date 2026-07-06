@@ -58,6 +58,13 @@ if ($sub === 'change-requests' || strncmp($sub, 'change-requests/', 16) === 0) {
     return;
 }
 
+// Image-rights needs-review report (#9c) — staff. Own sub-routes/params.
+if ($sub === 'image-review' || strncmp($sub, 'image-review/', 13) === 0) {
+    auth_require_role(['admin', 'editor']);
+    require __DIR__ . '/image-review.php';
+    return;
+}
+
 switch ($sub) {
 
     /* ---- Login (public) -------------------------------------------------- */
