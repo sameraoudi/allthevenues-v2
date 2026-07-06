@@ -150,9 +150,32 @@ Reject + Request-changes**, optional on Approve. (Edit requests only touch name/
 all short fields — so no long-content/expandable-row handling needed here.)
 
 **Deferred — tailored review screens by type:**
-- **New venue (U-P6):** structured layout (not just a diff) — basics, provider, location, venue type, event
-  types, capacity, facilities, description, images, **image-rights confirmation**, **completeness score**,
-  missing-required-fields; actions **Approve as draft / Approve & publish / Request changes / Reject**.
+- **New venue (U-P6):** submit side U-P6a (DONE — pending venue + new_venue request). Admin review U-P6b
+  (design lock `atv-portal-newvenue-review-preview.html`, refined per Samer's 2nd review): structured grouped
+  layout (basics/location/classification+capacity/description/photos) + **completeness score** + missing-
+  required flags; high-risk helper ("creates a new public page/URL/search result/provider listing"); "Preview
+  pending venue" (not public). Actions **Approve & publish / Approve as draft / Request changes / Reject** with
+  **confirmation modals** (reuse app.js `data-confirm`); note REQUIRED on reject/request-changes.
+  - **Required-to-publish set (hard gate on Approve & publish):** name, slug, provider, primary emirate, area
+    OR address, venue type, ≥1 event type, capacity, short description, **≥1 approved image with rights
+    confirmation**. Optional/recommended: minimum spend, floor area, indoor/outdoor, SEO, accessibility, etc.
+  - **Approve as draft** = accept into DB, keep hidden (status='draft'), stay assigned to provider, admin
+    completes; **Request changes** = provider must supply missing/corrected info (stays pending, emails them).
+  - **Image-rights gate depends on #9 + U-P7:** the "approved photo WITH rights confirmation" check can't be
+    fully enforced until #9 adds `permission_status` and U-P7 enables provider uploads. **U-P6b implements the
+    buildable half — gate on ≥1 image present** (via `venue_images`) — and wires the rights-confirmation half
+    to activate once #9 lands. Until then Approve & publish stays disabled for portal-submitted venues (no
+    images yet) → admins use Approve-as-draft + finish via admin tools. **Suggests doing #9 before U-P7.**
+  - **Audit each decision:** request/venue/provider ids, submitted_by/reviewed_by, both timestamps, decision,
+    review note, **missing fields at decision time**, notification status.
+  - **Deferred (nice-to-have):** smart location suggestion (infer primary emirate from the address; admin
+    confirms before applying).
+  - **Gaps found during U-P6b build (address before/at launch):** (1) **portal event-type editor** — providers
+    can't set `venue_event_types` in the new-venue form or the U-P4 edit form, so every provider-submitted
+    venue is missing the required "≥1 event type" until an admin adds it; needs a small portal event-type
+    editor (add to the U-P6a form + U-P4 edit, live-tier). (2) **per-action confirm modals** — `app.js`
+    `data-confirm` is FORM-level only; U-P6b ships one combined confirm. Distinct publish/draft/reject copy
+    needs a small `app.js` enhancement (read a per-button `data-confirm`).
 - **Image (U-P7):** image-specific screen — current gallery, proposed images, source, **provider permission
   confirmation** (required), suggested primary, crop preview, alt text, **approve/reject per image**.
 - **Claim (U-P8):** ownership screen — venue claimed, requesting provider + requester name/email/role, email

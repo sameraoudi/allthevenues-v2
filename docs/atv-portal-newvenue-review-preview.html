@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATV — New-venue review (U-P6b preview)</title>
+<style>
+  :root{
+    --navy:#0E1B2A; --blue:#6C93B7; --action:#426F94; --action-hover:#315B7C;
+    --sand:#D9C7A8; --ink:#1c2b38; --muted:#6b7b88; --line:#e4e8ec; --bg:#f3f1ec;
+    --ok:#2f7d5b; --okbg:#e7f3ec; --warn:#8a6d1f; --warnbg:#f6efdb; --danger:#a5433b; --dangerbg:#f6e7e5;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Segoe UI,Inter,sans-serif;font-size:14px;}
+  h1,h2,h3{font-family:Georgia,'Cormorant Garamond',serif;font-weight:600;margin:0;}
+  a{color:var(--action);text-decoration:none;}
+  .wrap{display:grid;grid-template-columns:210px 1fr;min-height:100vh;}
+  .side{background:var(--navy);color:#c7d0d8;padding:22px 0;}
+  .side .brand{color:#fff;font-family:Georgia,serif;font-size:20px;padding:0 22px 20px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .side nav{display:flex;flex-direction:column;padding:14px 12px;gap:2px;}
+  .side nav a{color:#c7d0d8;padding:9px 12px;border-radius:8px;font-size:13.5px;}
+  .side nav a:hover{background:rgba(255,255,255,.06);color:#fff;}
+  .side nav a.on{background:var(--action);color:#fff;}
+  .side nav a .pill{background:var(--sand);color:var(--navy);font-size:11px;font-weight:700;border-radius:20px;padding:1px 8px;margin-left:8px;}
+  .main{padding:26px 30px 60px;max-width:960px;}
+  .crumb{font-size:12px;color:var(--muted);margin-bottom:12px;}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;}
+  .b-new{background:#eae7f4;color:#5b53a8;} .b-pending{background:var(--warnbg);color:var(--warn);}
+  .risk{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:var(--dangerbg);color:var(--danger);}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 22px rgba(14,27,42,.06);padding:22px 24px;margin-bottom:16px;}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;}
+  .top h2{font-size:24px;}
+  .meta{font-size:12.5px;color:var(--muted);margin-top:6px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+  .btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:8px 15px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;}
+  .btn-a{background:var(--action);color:#fff;} .btn-a:hover{background:var(--action-hover);}
+  .btn-ghost{background:#fff;border-color:var(--line);color:var(--action);} .btn-ghost:hover{background:#eef1f4;}
+  .btn-danger{background:#fff;border:1px solid #e2b6ad;color:var(--danger);} .btn-danger:hover{background:var(--dangerbg);}
+  .btn-sm{padding:5px 12px;font-size:12.5px;}
+  .btn[disabled]{opacity:.5;cursor:not-allowed;}
+  /* completeness */
+  .comp{display:flex;gap:22px;align-items:center;flex-wrap:wrap;}
+  .meter{flex:1;min-width:240px;}
+  .meter .bar{height:12px;border-radius:20px;background:#eee7db;overflow:hidden;}
+  .meter .bar span{display:block;height:100%;background:linear-gradient(90deg,var(--warn),var(--ok));}
+  .meter .lbl{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px;color:var(--muted);}
+  .meter .lbl b{color:var(--ink);}
+  .checklist{list-style:none;margin:0;padding:0;font-size:13px;min-width:250px;}
+  .checklist li{display:flex;align-items:center;gap:8px;padding:3px 0;}
+  .tick{width:16px;height:16px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex:0 0 auto;}
+  .tick.ok{background:var(--ok);} .tick.miss{background:var(--danger);} .tick.opt{background:var(--sand);color:var(--navy);}
+  .miss-txt{color:var(--danger);font-weight:600;}
+  /* field sections */
+  .sec-h{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;margin:2px 0 12px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 26px;}
+  .f{border-bottom:1px solid #f0eee9;padding-bottom:9px;}
+  .f .k{font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);}
+  .f .v{font-size:14px;color:var(--ink);margin-top:3px;}
+  .f .v.empty{color:var(--danger);font-style:italic;}
+  .full{grid-column:1 / -1;}
+  .prose{font-size:13.5px;line-height:1.55;color:#40525f;}
+  .photos-empty{background:#fbf6ee;border:1px dashed var(--sand);border-radius:10px;padding:16px;color:#6d5f45;font-size:13px;text-align:center;}
+  .note-wrap label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);margin-bottom:6px;}
+  .note-wrap label .req{color:var(--danger);text-transform:none;letter-spacing:0;}
+  textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:13.5px;resize:vertical;min-height:62px;}
+  .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:4px;padding-top:16px;}
+  .actions .spacer{flex:1;}
+  .hint{font-size:12px;color:var(--muted);margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <aside class="side">
+    <div class="brand">All The Venues</div>
+    <nav>
+      <a href="#">Dashboard</a><a href="#">Enquiries</a><a href="#">Venues</a><a href="#">Providers</a>
+      <a href="#">Reports</a><a href="#" class="on">Change Requests <span class="pill">4</span></a><a href="#">Users</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="crumb">Admin › Change Requests › New-venue review</div>
+
+    <div class="card">
+      <div class="top">
+        <div>
+          <h2>My Rooftop Lounge</h2>
+          <div class="meta">
+            <span>Provider: <strong style="color:var(--ink);">Rixos Hotels</strong></span>
+            <span>Submitted by bianca@… · 6 Jul 2026, 20m ago</span>
+            <span class="badge b-new">New venue</span><span class="badge b-pending">Pending</span>
+            <span class="risk" title="New venues create a public page, URL, search result and provider-managed listing — full editorial review required.">High risk ⓘ</span>
+          </div>
+          <p class="hint" style="margin-top:8px;">High risk because approving this creates a new public venue page, URL, search result and provider-managed listing.</p>
+        </div>
+        <a href="#" class="btn btn-ghost btn-sm">Preview pending venue ↗</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec-h">Completeness</div>
+      <div class="comp">
+        <div class="meter">
+          <div class="lbl"><span><b>72%</b> complete</span><span>2 required fields missing</span></div>
+          <div class="bar"><span style="width:72%"></span></div>
+          <p class="hint">Approve &amp; publish is unavailable until all <b>required</b> fields and at least one
+            photo are present. You can still Approve as draft and finish it in the venue editor.</p>
+        </div>
+        <ul class="checklist">
+          <li><span class="tick ok">✓</span> Name &amp; slug</li>
+          <li><span class="tick ok">✓</span> Provider</li>
+          <li><span class="tick ok">✓</span> Venue type</li>
+          <li><span class="tick ok">✓</span> Event type(s)</li>
+          <li><span class="tick ok">✓</span> Area / address</li>
+          <li><span class="tick ok">✓</span> Capacity</li>
+          <li><span class="tick ok">✓</span> Short description</li>
+          <li><span class="tick miss">!</span> <span class="miss-txt">Primary emirate — required</span></li>
+          <li><span class="tick miss">!</span> <span class="miss-txt">≥1 approved photo with rights confirmation — required to publish</span></li>
+          <li><span class="tick opt">○</span> Minimum spend · floor area (optional)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec-h">Basics</div>
+      <div class="grid">
+        <div class="f"><div class="k">Name</div><div class="v">My Rooftop Lounge</div></div>
+        <div class="f"><div class="k">Slug (auto)</div><div class="v">my-rooftop-lounge</div></div>
+      </div>
+      <div class="sec-h" style="margin-top:20px;">Location</div>
+      <div class="grid">
+        <div class="f"><div class="k">Primary emirate</div><div class="v empty">Not provided</div></div>
+        <div class="f"><div class="k">Area</div><div class="v">JBR</div></div>
+        <div class="f full"><div class="k">Address</div><div class="v">The Walk, Jumeirah Beach Residence, Dubai</div></div>
+      </div>
+      <div class="sec-h" style="margin-top:20px;">Classification &amp; capacity</div>
+      <div class="grid">
+        <div class="f"><div class="k">Venue type</div><div class="v">Rooftop Venue</div></div>
+        <div class="f"><div class="k">Indoor / outdoor</div><div class="v">Outdoor</div></div>
+        <div class="f"><div class="k">Capacity</div><div class="v">40 – 180 guests</div></div>
+        <div class="f"><div class="k">Floor area</div><div class="v">320 sqm</div></div>
+        <div class="f"><div class="k">Pricing level</div><div class="v">Premium</div></div>
+        <div class="f"><div class="k">Minimum spend</div><div class="v empty">Not provided</div></div>
+        <div class="f full"><div class="k">Event types</div><div class="v">Private Party, Corporate Event, Networking Event</div></div>
+      </div>
+      <div class="sec-h" style="margin-top:20px;">Description</div>
+      <p class="prose">A relaxed open-air rooftop with skyline and sea views, ideal for sunset receptions and
+        intimate corporate gatherings. Flexible layouts, in-house catering, and a private bar…</p>
+      <div class="sec-h" style="margin-top:20px;">Photos</div>
+      <div class="photos-empty"><strong style="color:var(--danger);">Publishing blocked:</strong> at least one
+        approved venue image with rights confirmation is required. No photos submitted yet — image submissions
+        are reviewed separately (per-image, with rights confirmation) in U-P7.</div>
+    </div>
+
+    <div class="card">
+      <div class="note-wrap">
+        <label>Review note <span class="req">— required when rejecting or requesting changes; optional when approving</span></label>
+        <textarea placeholder="e.g. Please add the primary emirate and at least one photo, then resubmit."></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn btn-a" disabled title="Add the missing required fields + one approved photo to publish">Approve &amp; publish</button>
+        <button class="btn btn-ghost" data-confirm="Approve as draft? This accepts the venue but keeps it hidden from the public website.">Approve as draft</button>
+        <button class="btn btn-ghost">Request changes</button>
+        <div class="spacer"></div>
+        <button class="btn btn-danger" data-confirm="Reject this venue submission? The provider will be notified. Add a review note explaining the reason.">Reject</button>
+      </div>
+      <p class="hint"><b>Approve &amp; publish</b> → live (status=published) + in search/event-type/location/provider
+        pages (confirm modal). <b>Approve as draft</b> → accepted into the database, assigned to the provider,
+        kept hidden; admin finishes the listing. <b>Request changes</b> → use when the <i>provider</i> must
+        supply missing/corrected info (stays pending, emails them). <b>Reject</b> → declined + emailed. Every
+        decision is audited: request/venue/provider ids, both timestamps, decision, note, <b>missing fields at
+        decision time</b>, notification status.</p>
+    </div>
+  </main>
+</div>
+</body>
+</html>
