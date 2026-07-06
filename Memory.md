@@ -118,6 +118,10 @@ structured review). **Deployed: U-P0→U-P6b** (all portal units to date). **#9 
 (#9a/b/c — provenance schema, admin classification, needs-review report, publish-gate flip). Next: **U-P7**
 (provider image uploads — now unblocked by #9), then **U-P8** (claims), **U-P9** (launch). Known gaps: portal
 event-type editor; per-action confirm modals. Remaining post-launch: rest of #3, U6 passive watch.
+> **⚠️ QA-TODO (Samer):** full end-to-end test of the **#9 image-rights** flow before it's relied on / launch —
+> it's deployed but only CC-verified. Cover: Admin → Image Review (classify + report accuracy + Fix links),
+> per-image "Image rights" panel, cover provenance, and the new-venue publish gate (can't publish until ≥1
+> image is classified cleared).
 
 **⚠️ Deploy now hits PROD directly.** Apex serves from `/atv-staging`, so a cPanel `allthevenues-v2` repo
 Deploy-HEAD updates the LIVE apex (no separate staging buffer). Workflow unchanged otherwise: local dev
