@@ -51,6 +51,13 @@ if ($sub === 'reports' || strncmp($sub, 'reports/', 8) === 0) {
     return;
 }
 
+// Provider portal change-request review (#3 U-P5b) — ADMIN ONLY. Own sub-routes.
+if ($sub === 'change-requests' || strncmp($sub, 'change-requests/', 16) === 0) {
+    auth_require_role(['admin']);
+    require __DIR__ . '/change-requests.php';
+    return;
+}
+
 switch ($sub) {
 
     /* ---- Login (public) -------------------------------------------------- */

@@ -699,6 +699,19 @@ select:focus-visible,
 .lead-mode--partner  { background: #e5e0ef; color: #5b4a86; }
 .lead-mode--partner-signup { background: #d9ede4; color: #2f6b52; }
 .lead-mode--contact  { background: #f0e3d6; color: #8a5a2b; }
+/* #3 U-P5b — change-request badges (additive; --pending/--needs_changes/--archived already exist). */
+.lead-status--approved  { background: #cdebd6; color: #16663b; }
+.lead-status--rejected  { background: #f1dcda; color: #8f3b33; }
+.lead-mode--edit      { background: #e7eef4; color: var(--action); }
+.lead-mode--new_venue { background: #d9ede4; color: #2f6b52; }
+.lead-mode--image     { background: #efe7d8; color: #7a6a45; }
+.lead-mode--claim     { background: #e5e0ef; color: #5b4a86; }
+.cr-risk { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+.cr-risk--high   { background: #f7d9d5; color: #a12f24; }
+.cr-risk--medium { background: #fbeecb; color: #8a6d1b; }
+.cr-risk--low    { background: #d7ecdd; color: #1f6a41; }
+.cr-badge { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; padding: 2px 7px; margin-left: 6px; border-radius: 4px; background: #eef1f4; color: #566573; vertical-align: middle; }
+.cr-diff__help td { padding-top: 0; border-top: 0; }
 
 .lead-pagination { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
 .lead-page { padding: 6px 11px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; color: var(--action); background: #fff; }

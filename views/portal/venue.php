@@ -98,8 +98,30 @@ if (!empty($pending)):
       <button type="submit" class="atv-btn atv-btn--ghost atv-btn--sm">Withdraw request</button>
     </form>
   </div>
-<?php else: ?>
-  <p><a href="<?= e(base_url('portal/venues/' . $vid . '/request')) ?>">Request a change to managed fields (name, classification, location…)</a></p>
+<?php else:
+    // #3 U-P5b — reflect the latest decision when there is no pending request.
+    // ($partnerId is in scope from the portal dispatch venues block.)
+    $lr       = portal_latest_request($pdo, $vid, (int)($partnerId ?? 0));
+    $lrStatus = $lr['status'] ?? '';
+    $lrNote   = trim((string)($lr['review_note'] ?? ''));
+?>
+  <?php if ($lrStatus === 'needs_changes'): ?>
+    <div class="admin-panel">
+      <h2 class="admin-panel__title">Changes requested</h2>
+      <p class="lead-hint mb-2">All The Venues reviewed your last request and asked for some changes before it can be applied.</p>
+      <?php if ($lrNote !== ''): ?><div class="lead-detail__row"><span class="lead-detail__k">Reviewer note</span><span class="lead-detail__v"><?= nl2br(e($lrNote)) ?></span></div><?php endif; ?>
+      <p class="mt-2"><a class="atv-btn atv-btn--sm" href="<?= e(base_url('portal/venues/' . $vid . '/request')) ?>">Revise &amp; resubmit</a></p>
+    </div>
+  <?php elseif ($lrStatus === 'rejected'): ?>
+    <div class="admin-panel">
+      <h2 class="admin-panel__title">Request declined</h2>
+      <p class="lead-hint mb-2">All The Venues reviewed your last request and were unable to apply it.</p>
+      <?php if ($lrNote !== ''): ?><div class="lead-detail__row"><span class="lead-detail__k">Reviewer note</span><span class="lead-detail__v"><?= nl2br(e($lrNote)) ?></span></div><?php endif; ?>
+      <p class="mt-2"><a href="<?= e(base_url('portal/venues/' . $vid . '/request')) ?>">Request a change to managed fields (name, classification, location…)</a></p>
+    </div>
+  <?php else: ?>
+    <p><a href="<?= e(base_url('portal/venues/' . $vid . '/request')) ?>">Request a change to managed fields (name, classification, location…)</a></p>
+  <?php endif; ?>
 <?php endif; ?>
 
 <div class="admin-panel">

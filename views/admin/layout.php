@@ -25,6 +25,13 @@ try {
     $newCount = 0;
 }
 
+// Pending change-request count (#3 U-P5b) — admin nav badge; admin-only route.
+$crPending = 0;
+if (auth_can('change_requests.manage')) {
+    require_once __DIR__ . '/../../lib/change_request_admin.php';
+    $crPending = cr_admin_pending_count(db_pdo());
+}
+
 // Role-aware nav: each item carries the capability required to see it. Items
 // the current role can't reach are hidden (and the routes are server-gated too).
 $nav = [
@@ -33,6 +40,7 @@ $nav = [
     'venues'    => ['label' => 'Venues',    'url' => base_url('admin/venues'),    'icon' => 'building', 'cap' => 'venues.manage'],
     'partners'  => ['label' => 'Providers', 'url' => base_url('admin/partners'),  'icon' => 'users',    'cap' => 'providers.manage'],
     'reports'   => ['label' => 'Reports',   'url' => base_url('admin/reports'),   'icon' => 'chart',    'cap' => 'enquiries.manage'],
+    'change-requests' => ['label' => 'Change Requests', 'url' => base_url('admin/change-requests'), 'icon' => 'inbox', 'cap' => 'change_requests.manage', 'badge' => $crPending],
     'users'     => ['label' => 'Users',     'url' => base_url('admin/users'),     'icon' => 'shield',   'cap' => 'users.manage'],
     'settings'  => ['label' => 'Settings',  'url' => base_url('admin/settings'),  'icon' => 'settings', 'cap' => 'settings.manage'],
 ];

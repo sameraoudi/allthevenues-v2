@@ -91,6 +91,22 @@ function portal_create_edit_request(PDO $pdo, int $venueId, int $partnerId, int 
     return (int)$pdo->lastInsertId();
 }
 
+/**
+ * #3 U-P5b — the most recent request for an owned venue, ANY status (for the
+ * provider-side decision reflection: needs_changes / rejected banners). Owner-scoped.
+ */
+function portal_latest_request(PDO $pdo, int $venueId, int $partnerId): ?array
+{
+    $stmt = $pdo->prepare(
+        "SELECT * FROM venue_change_requests
+         WHERE venue_id = :vid AND partner_id = :pid AND type = 'edit'
+         ORDER BY id DESC LIMIT 1"
+    );
+    $stmt->execute([':vid' => $venueId, ':pid' => $partnerId]);
+    $row = $stmt->fetch();
+    return $row === false ? null : $row;
+}
+
 /** Withdraw the provider's OWN pending request. True if a row was withdrawn. */
 function portal_withdraw_request(PDO $pdo, int $requestId, int $venueId, int $partnerId): bool
 {
