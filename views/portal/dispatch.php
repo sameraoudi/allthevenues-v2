@@ -28,6 +28,12 @@ if ($sub === 'venues' || strncmp($sub, 'venues/', 7) === 0) {
         require __DIR__ . '/venue-edit.php';
         return;
     }
+    if (preg_match('#^venues/(\d+)/request(?:/(withdraw))?$#', $sub, $mr)) {
+        $vid           = (int)$mr[1];
+        $requestAction = $mr[2] ?? '';   // '' = form/submit, 'withdraw' = withdraw
+        require __DIR__ . '/venue-request.php';
+        return;
+    }
     if (preg_match('#^venues/(\d+)$#', $sub, $mm)) {
         $venue = portal_venue_for_partner($pdo, (int)$mm[1], $partnerId);
         if ($venue === null) {
@@ -41,6 +47,7 @@ if ($sub === 'venues' || strncmp($sub, 'venues/', 7) === 0) {
         $images    = venue_images($pdo, $vid);
         $layouts   = venue_layout_capacity($pdo, $vid);
         $eventTags = portal_venue_event_types($pdo, $vid);
+        $pending   = portal_pending_edit_request($pdo, $vid, $partnerId);
         $flash     = $_SESSION['portal_flash'] ?? null;
         unset($_SESSION['portal_flash']);
         $page_title          = (string)$venue['name'] . ' — Provider Portal';

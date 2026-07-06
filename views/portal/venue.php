@@ -64,6 +64,44 @@ $ltypeIcons = venue_layout_types();
   </div>
 </div>
 
+<?php
+/* #3 U-P5a — pending change request for managed (name/slug/type/emirate) fields. */
+$vid = (int)$venue['id'];
+if (!empty($pending)):
+    $vcChanges = json_decode((string)($pending['proposed_changes_json'] ?? ''), true);
+    if (!is_array($vcChanges)) { $vcChanges = []; }
+    // Resolve type/emirate ids to names for readable old → new lines.
+    $vcTypes = $vcEmirates = [];
+    foreach (venue_types_all($pdo) as $t) { $vcTypes[(int)$t['id']] = (string)$t['name']; }
+    foreach (venue_emirates($pdo) as $em) { $vcEmirates[(int)$em['id']] = (string)$em['name']; }
+    $vcLabels = ['name' => 'Name', 'slug' => 'Slug', 'venue_type_id' => 'Venue type', 'emirate_id' => 'Primary emirate'];
+    $vcShow = static function (string $field, $val) use ($vcTypes, $vcEmirates): string {
+        if ($val === null || $val === '') return '—';
+        if ($field === 'venue_type_id') return $vcTypes[(int)$val] ?? ('#' . (int)$val);
+        if ($field === 'emirate_id')    return $vcEmirates[(int)$val] ?? ('#' . (int)$val);
+        if ($field === 'slug')          return '/venues/' . (string)$val;
+        return (string)$val;
+    };
+?>
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">Change request pending review</h2>
+    <p class="lead-hint mb-2">These proposed changes are with All The Venues for review. Your venue stays unchanged until they are approved.</p>
+    <?php foreach ($vcChanges as $field => $pair): if (!isset($vcLabels[$field])) continue; ?>
+      <div class="lead-detail__row">
+        <span class="lead-detail__k"><?= e($vcLabels[$field]) ?></span>
+        <span class="lead-detail__v"><?= e($vcShow($field, $pair['old'] ?? null)) ?> &rarr; <?= e($vcShow($field, $pair['new'] ?? null)) ?></span>
+      </div>
+    <?php endforeach; ?>
+    <form class="mt-2" method="post" action="<?= e(base_url('portal/venues/' . $vid . '/request/withdraw')) ?>">
+      <?php csrf_field(); ?>
+      <input type="hidden" name="request_id" value="<?= (int)$pending['id'] ?>">
+      <button type="submit" class="atv-btn atv-btn--ghost atv-btn--sm">Withdraw request</button>
+    </form>
+  </div>
+<?php else: ?>
+  <p><a href="<?= e(base_url('portal/venues/' . $vid . '/request')) ?>">Request a change to managed fields (name, classification, location…)</a></p>
+<?php endif; ?>
+
 <div class="admin-panel">
   <h2 class="admin-panel__title">Key information</h2>
   <?php

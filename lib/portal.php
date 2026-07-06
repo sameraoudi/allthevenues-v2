@@ -47,6 +47,62 @@ function portal_venue_live_columns(): array
     );
 }
 
+/**
+ * #3 U-P5a — sensitive venue fields a provider may REQUEST to change (never edits
+ * live). These write ONE venue_change_requests row (type='edit', status='pending')
+ * holding the diff; the venue itself is untouched until admin approval (U-P5b).
+ * @return string[]
+ */
+function portal_venue_request_fields(): array
+{
+    return ['name', 'slug', 'venue_type_id', 'emirate_id'];
+}
+
+/** The single pending 'edit' request for an owned venue (or null). Owner-scoped. */
+function portal_pending_edit_request(PDO $pdo, int $venueId, int $partnerId): ?array
+{
+    $stmt = $pdo->prepare(
+        "SELECT * FROM venue_change_requests
+         WHERE venue_id = :vid AND partner_id = :pid AND type = 'edit' AND status = 'pending'
+         ORDER BY id DESC LIMIT 1"
+    );
+    $stmt->execute([':vid' => $venueId, ':pid' => $partnerId]);
+    $row = $stmt->fetch();
+    return $row === false ? null : $row;
+}
+
+/**
+ * Insert a pending edit request. $changes = ['field'=>['old'=>..,'new'=>..], ...]
+ * (changed fields only). Returns the new request id.
+ */
+function portal_create_edit_request(PDO $pdo, int $venueId, int $partnerId, int $userId, array $changes): int
+{
+    $stmt = $pdo->prepare(
+        "INSERT INTO venue_change_requests
+            (venue_id, partner_id, submitted_by, type, proposed_changes_json, status)
+         VALUES (:vid, :pid, :uid, 'edit', :json, 'pending')"
+    );
+    $stmt->execute([
+        ':vid'  => $venueId,
+        ':pid'  => $partnerId,
+        ':uid'  => $userId,
+        ':json' => json_encode($changes, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+    ]);
+    return (int)$pdo->lastInsertId();
+}
+
+/** Withdraw the provider's OWN pending request. True if a row was withdrawn. */
+function portal_withdraw_request(PDO $pdo, int $requestId, int $venueId, int $partnerId): bool
+{
+    $stmt = $pdo->prepare(
+        "UPDATE venue_change_requests
+         SET status = 'withdrawn', updated_at = NOW()
+         WHERE id = :rid AND venue_id = :vid AND partner_id = :pid AND status = 'pending'"
+    );
+    $stmt->execute([':rid' => $requestId, ':vid' => $venueId, ':pid' => $partnerId]);
+    return $stmt->rowCount() > 0;
+}
+
 /** All venues owned by a provider (every status), newest-touched first. [] if none. */
 function portal_my_venues(PDO $pdo, int $partnerId): array
 {

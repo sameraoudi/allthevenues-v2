@@ -43,7 +43,7 @@ $layoutValues = $layoutValues ?? [];
 
   <div class="admin-panel">
     <h2 class="admin-panel__title">Managed by All The Venues</h2>
-    <p class="lead-hint mb-2">These are managed by All The Venues. To change them, submit a request (coming soon).</p>
+    <p class="lead-hint mb-2">These are managed by All The Venues. To change them, <a href="<?= e(base_url('portal/venues/' . $id . '/request')) ?>">request a change</a>.</p>
     <div class="admin-form__grid">
       <div class="atv-field"><label>Name</label><div class="portal-ro-val"><?= e((string)$venue['name']) ?></div></div>
       <div class="atv-field"><label>Slug</label><div class="portal-ro-val">/venues/<?= e((string)$venue['slug']) ?></div></div>
