@@ -114,10 +114,10 @@ which we did NOT set), so `?submitted=1` conversions are already counted as dist
 **#3 provider portal** (Phase-2 unit 1) — plan in `docs/ATV-PORTAL-PLAN.md`; **U-P0→U-P6b built** (portal dark
 behind `PORTAL_ENABLED`): flag/skeleton, schema, partner auth, My Venues + read-only detail, live low-risk
 edit, sensitive-field change requests (submit + admin review), and new-venue submissions (submit + admin
-structured review). **Deployed: U-P0→U-P6a** (+ U-P5b admin surface); **U-P6b pushed, deploy pending.** Next
-recommended: **#9 image rights/provenance** before **U-P7** (image uploads), then **U-P8** (claims), **U-P9**
-(launch). Known gaps: portal event-type editor; per-action confirm modals. Remaining post-launch: rest of #3,
-#9, U6 passive watch.
+structured review). **Deployed: U-P0→U-P6b** (all portal units to date). **#9 image rights/provenance COMPLETE + deployed**
+(#9a/b/c — provenance schema, admin classification, needs-review report, publish-gate flip). Next: **U-P7**
+(provider image uploads — now unblocked by #9), then **U-P8** (claims), **U-P9** (launch). Known gaps: portal
+event-type editor; per-action confirm modals. Remaining post-launch: rest of #3, U6 passive watch.
 
 **⚠️ Deploy now hits PROD directly.** Apex serves from `/atv-staging`, so a cPanel `allthevenues-v2` repo
 Deploy-HEAD updates the LIVE apex (no separate staging buffer). Workflow unchanged otherwise: local dev
@@ -258,7 +258,7 @@ remain.
     `status='pending'`, `management_source='provider_created'`, auto-unique slug, partner forced, + a
     `venue_change_requests(type='new_venue', pending)`; 10/hr rate-limit; allowlist-validated. Pending venue is
     non-public (404) until approved; appears in My Venues; editable via U-P4. `/portal/venues/new`.
-  - **U-P6b (commit `410994b`, pushed — deploy pending):** admin STRUCTURED review of new_venue requests (lock
+  - **U-P6b (commit `410994b`, DEPLOYED via the #9b HEAD deploy):** admin STRUCTURED review of new_venue requests (lock
     `docs/atv-portal-newvenue-review-preview.html`). `cr_load_new_venue` + `cr_newvenue_completeness` (score +
     missing[] + can_publish; **required-to-publish**: name/slug/provider/emirate/area-or-address/venue_type/
     ≥1 event-type/capacity/short description/**≥1 image**) + `cr_newvenue_decide` (Approve & publish [server-
@@ -272,10 +272,28 @@ remain.
     "≥1 event type" until an admin adds it (needs a portal event-type editor unit). (2) **Per-action confirm
     copy** — `app.js` `data-confirm` is FORM-level only, so U-P6b uses one combined confirm; distinct
     publish/draft/reject modals need a small app.js enhancement.
-  - **Next:** **#9 image rights/provenance** (recommended before U-P7 — adds `venue_images.permission_status`
-    etc. + admin review; unblocks U-P7's rights-confirmation + the U-P6b publish gate's full enforcement), then
-    **U-P7** provider image uploads (review per-image), **U-P8** claims, **U-P9** launch (flip the flag +
-    onboard providers; partner accounts created here). Also pending: portal event-type editor.
+  - **Next:** **U-P7** provider image uploads (review per-image; now unblocked by #9), **U-P8** claims, **U-P9**
+    launch (flip the flag + onboard providers; partner accounts created here). Also pending: portal event-type
+    editor; per-action confirm modals (app.js enhancement).
+
+- **#9 image rights/provenance — COMPLETE + deployed (6 Jul 2026).** Backlog #9. Every image now carries a
+  permission/provenance record; nothing is assumed cleared.
+  - **#9a (commit `369f93a`, migration 020 APPLIED on prod):** provenance columns on `venue_images`
+    (`permission_status` ENUM[approved_by_provider/owned_by_atv/licensed_stock/legacy_needs_review/
+    public_website_needs_permission/remove_replace] NOT NULL DEFAULT legacy_needs_review, + image_source/
+    source_url/provider_approved_by/approval_date/usage_notes/expires_at + idx) and the partners cover (`cover_*`
+    mirror, NULLABLE + backfill where a cover exists). All 260 existing images → legacy_needs_review; 1 cover.
+  - **#9b (commit `c273dd1`, DEPLOYED):** admin per-image classification in the venue image manager — status
+    badge (green cleared / amber review / red remove) + a CSP-safe `<details>` "Image rights" panel;
+    `venue_images_update_provenance()` (allowlist + strict date validation, venue-scoped) + audit. Admin+editor.
+  - **#9c (commit `8c854c2`, DEPLOYED):** (1) **Needs-review report** `/admin/image-review` (`lib/image_review_admin.php`;
+    UNION of venue images + covers needing review; KPIs, status filter, Fix links, pager, nav badge). (2)
+    **Cover provenance** (mirror of #9b via `lib/partner_admin.php` + partner-cover.php + partner-edit.php).
+    (3) **Publish-gate flip:** `cr_newvenue_completeness` now requires ≥1 image with a CLEARED
+    permission_status (`venue_images_cleared_statuses()` = approved_by_provider/owned_by_atv/licensed_stock),
+    label "≥1 image with confirmed rights" — resolves the U-P6b stub. **Behaviour change:** new-venue Approve &
+    publish requires a classified-cleared image, not just any upload.
+  - **Content task (Samer/Bianca):** work the 260 `legacy_needs_review` images down via Admin → Image Review.
 
 **5 Jul 2026 (post-launch)**
 - **Venue Layouts & Capacity editor + floor area** (first post-launch feature, shipped live to apex):
