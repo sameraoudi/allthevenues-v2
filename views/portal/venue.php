@@ -54,11 +54,15 @@ $ltypeIcons = venue_layout_types();
 ?>
 <p><a class="lead-back" href="<?= e(base_url('portal')) ?>">&larr; Back to my venues</a></p>
 
+<?php if (!empty($flash)): ?><div class="lead-flash lead-flash--<?= e((string)($flash['type'] ?? 'success')) ?>" role="status"><?= e((string)($flash['msg'] ?? '')) ?></div><?php endif; ?>
+
 <div class="lead-detail__head">
   <h1><?= e((string)$venue['name']) ?></h1>
-  <span class="lead-status lead-status--<?= e((string)$venue['status']) ?>"><?= e(venue_admin_status_label((string)$venue['status'])) ?></span>
+  <div>
+    <span class="lead-status lead-status--<?= e((string)$venue['status']) ?>"><?= e(venue_admin_status_label((string)$venue['status'])) ?></span>
+    <a class="atv-btn atv-btn--sm" href="<?= e(base_url('portal/venues/' . (int)$venue['id'] . '/edit')) ?>">Edit venue</a>
+  </div>
 </div>
-<p class="lead-hint">Read-only for now — editing your venue details is coming soon.</p>
 
 <div class="admin-panel">
   <h2 class="admin-panel__title">Key information</h2>

@@ -28,6 +28,25 @@ function _portal_venue_select(): string
             LEFT JOIN emirates    em ON em.id = v.emirate_id";
 }
 
+/**
+ * #3 U-P4 — the SECURITY BOUNDARY: DB columns a provider may write LIVE from the
+ * portal. Any field outside this list is ignored on save (validation iterates the
+ * allowlist, never $_POST). NOT here (never portal-writable): name, slug,
+ * venue_type_id, emirate_id (→ change requests, U-P5); is_featured, is_verified,
+ * status, partner_id (locked); contact_name/email/phone (internal). Layout
+ * capacities are LIVE-editable too, but via venue_layout_capacity_save().
+ * @return string[]
+ */
+function portal_venue_live_columns(): array
+{
+    return array_merge(
+        ['area', 'address', 'video_url', 'website', 'indoor_outdoor',
+         'capacity_min', 'capacity_max', 'minimum_spend', 'pricing_level',
+         'floor_area', 'floor_area_unit', 'map_embed'],
+        venue_richtext_fields()   // description, best_for, highlights, facilities, …
+    );
+}
+
 /** All venues owned by a provider (every status), newest-touched first. [] if none. */
 function portal_my_venues(PDO $pdo, int $partnerId): array
 {

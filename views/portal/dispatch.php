@@ -23,6 +23,11 @@ $robots = 'noindex, nofollow';   // the portal is never indexed
 if ($sub === 'venues' || strncmp($sub, 'venues/', 7) === 0) {
     auth_require_partner();
     $partnerId = (int)(auth_user()['partner_id']);
+    if (preg_match('#^venues/(\d+)/edit$#', $sub, $me)) {
+        $vid = (int)$me[1];
+        require __DIR__ . '/venue-edit.php';
+        return;
+    }
     if (preg_match('#^venues/(\d+)$#', $sub, $mm)) {
         $venue = portal_venue_for_partner($pdo, (int)$mm[1], $partnerId);
         if ($venue === null) {
@@ -36,6 +41,8 @@ if ($sub === 'venues' || strncmp($sub, 'venues/', 7) === 0) {
         $images    = venue_images($pdo, $vid);
         $layouts   = venue_layout_capacity($pdo, $vid);
         $eventTags = portal_venue_event_types($pdo, $vid);
+        $flash     = $_SESSION['portal_flash'] ?? null;
+        unset($_SESSION['portal_flash']);
         $page_title          = (string)$venue['name'] . ' — Provider Portal';
         $portal_active       = 'venues';
         $portal_content_view = __DIR__ . '/venue.php';
