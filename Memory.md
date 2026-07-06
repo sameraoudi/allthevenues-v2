@@ -110,9 +110,10 @@ GSC sitemap submitted + read Success (174 pages); GoatCounter live. **GoatCounte
 toggle exists — GC records full path incl. `?...` by DEFAULT (stripping is opt-in via `window.goatcounter={path:...}`,
 which we did NOT set), so `?submitted=1` conversions are already counted as distinct paths. Nothing to configure.
 **Remaining = passive:** keep legacy (`/public_html/allthevenues` + DB `sameraou_atv`) as rollback a few weeks;
-72h watch (error_log, GSC coverage, leads). **ATV v2 is LIVE.** Next = Phase-2: **#3 provider portal** (the big unit). **#10 slug-history 301 redirects
-✅ DONE (6 Jul 2026)** — see dated history. **#1 card-hover ✅ DONE.** Remaining post-launch: #3 (portal),
-#9 (image rights/provenance), U6 passive watch.
+72h watch (error_log, GSC coverage, leads). **ATV v2 is LIVE.** **#10 slug-history 301s ✅ DONE (6 Jul 2026); #1 card-hover ✅ DONE.** In progress:
+**#3 provider portal** (Phase-2 unit 1) — plan in `docs/ATV-PORTAL-PLAN.md`; **U-P0/U-P1/U-P2 shipped +
+inert on prod** (dark behind `PORTAL_ENABLED`), next is **U-P3** (My Venues). Remaining post-launch: rest of
+#3 (U-P3→U-P9), #9 (image rights/provenance), U6 passive watch.
 
 **⚠️ Deploy now hits PROD directly.** Apex serves from `/atv-staging`, so a cPanel `allthevenues-v2` repo
 Deploy-HEAD updates the LIVE apex (no separate staging buffer). Workflow unchanged otherwise: local dev
@@ -201,6 +202,30 @@ remain.
   (/venues listing) in `assets/css/brand.css` only. Added `overflow:hidden` to `.atv-card__img` + `.venue-row__img`
   (NOT `.pcard__cover` — would clip the `.pcard__type` avatar); `prefers-reduced-motion` guard disables the
   motion. Design preview approved before build. CSS-only → deploy + LiteSpeed flush, no migration.
+
+- **#3 provider portal — scoped + first 3 units shipped (Phase-2 unit 1).** Full plan in
+  `docs/ATV-PORTAL-PLAN.md`. Decisions locked (Samer): **no isolated staging** → dark-launch behind a
+  `PORTAL_ENABLED` flag (deploys hit LIVE prod, so every unit ships inert until the flag flips at U-P9); **v1
+  scope = all four** (edit-requests, new venues, image requests, claims); **hybrid edit model** (low-risk
+  fields live / sensitive fields = admin-approved change requests / commercial+trust+ownership locked).
+  - **U-P0 (commit `1c12337`, DEPLOYED + verified inert on apex):** `PORTAL_ENABLED` flag (undefined = OFF, so
+    prod stays dark with no manual step), `portal_enabled()` in `lib/helpers.php`, `/portal` router branch in
+    `index.php` (flag off = falls through to branded 404), skeleton `views/portal/dispatch.php` +
+    `placeholder.php` (noindex via the layout's `$robots` override). `/portal` returns 404 on live.
+  - **U-P1 (commit `0e14ace`, migration 019 APPLIED on prod):** `venue_change_requests` table (see
+    `docs/ATV-SCHEMA.md`). FKs to venues/partners/users; empty + inert until U-P5. Confirmed prod deps:
+    `users.partner_id` (int unsigned) + `venue_images.status` (enum active/hidden — a visibility flag, NOT a
+    review lane; U-P7 needs its own pending mechanism).
+  - **U-P2 (commit `917163f`, DEPLOYED + verified inert on apex):** partner auth —
+    `auth_partner_login_attempt()` (role=partner + active + non-null partner_id; mirrors staff login, generic
+    errors, uniform timing) + `auth_require_partner()` (fail-closed to `/portal/login`) in `lib/auth.php`;
+    `auth_user()` SELECT extended with `partner_id` (DB-fresh, NULL for staff); `/portal/login` +
+    `/portal/logout` + gated landing in `dispatch.php`; `login-content.php` mirrors admin login. CSRF +
+    rate-limit (10/IP, 5/email per 15m); **no Turnstile** (matches staff-login precedent; can add at U-P9).
+    Staff/partner fully separated (verified both directions). `/portal/*` returns 404 on live (flag off).
+  - **Next:** U-P3 "My Venues" list + read-only detail (partner-scoped) then U-P4 live low-risk edit, U-P5
+    sensitive-field change requests + admin review, U-P6 new venue, U-P7 image requests, U-P8 claims, U-P9
+    launch (flip the flag + onboard providers). Partner accounts get created at U-P9.
 
 **5 Jul 2026 (post-launch)**
 - **Venue Layouts & Capacity editor + floor area** (first post-launch feature, shipped live to apex):

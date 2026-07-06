@@ -98,10 +98,26 @@ new multi-venue enquiries → many.
 
 ---
 
-## 5. Phase-2 (define later, not built in U1)
+## 5. Phase-2 — partner portal (#3)
 
-`venue_claims` and `venue_change_requests` (with `proposed_changes_json`) — built with the partner portal
-in Phase 2. Noted here so the schema anticipates them.
+**`venue_change_requests`** (BUILT — migration 019, U-P1, 6 Jul 2026) — one row per pending provider action:
+`id`, `venue_id` INT UNSIGNED NULL (NULL for a new-venue submission), `partner_id` INT UNSIGNED NOT NULL
+(owning provider, the scope key), `submitted_by` INT UNSIGNED NULL (users.id), `type`
+ENUM('edit','new_venue','image','claim'), `proposed_changes_json` JSON (field diff / new-venue payload /
+image ref / claim target), `status` ENUM('pending','approved','rejected','needs_changes','withdrawn')
+DEFAULT 'pending', `review_note` TEXT, `reviewed_by` INT UNSIGNED NULL, `reviewed_at` DATETIME,
+`created_at`/`updated_at`. FKs → venues (CASCADE), partners (CASCADE), users×2 (SET NULL). Indexes:
+`(partner_id,status)`, `(venue_id)`, `(status,created_at)`, `(type)`.
+
+**`venue_claims`** — still deferred; may be folded into `venue_change_requests` (`type='claim'`) rather than a
+separate table (decision at U-P8).
+
+**NB — `venue_images.status` is `ENUM('active','hidden')`** (a visibility flag, NOT a review lane). Portal
+image uploads (U-P7) therefore need their own pending mechanism — either extend that enum with a review value
+or route pending images through `venue_change_requests` (`type='image'`). Coordinate with #9 image-rights
+`permission_status`.
+
+Full portal architecture + build sequence: `docs/ATV-PORTAL-PLAN.md`.
 
 ---
 

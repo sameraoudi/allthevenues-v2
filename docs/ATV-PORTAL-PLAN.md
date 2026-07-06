@@ -29,8 +29,9 @@ schema-before-code CC build order.*
 - **Review states** — `venues.status` ENUM already includes `pending` and `needs_changes`.
 - **Ownership provenance (#6)** — `venues.partner_id` + `management_source`
   (unassigned/admin_assigned/provider_created/provider_claimed/legacy_import) + `provider_assigned_at`/`_by`.
-- **Image status** — `venue_images.status` exists (a pending/approved lane for portal uploads; coordinates
-  with #9 image-rights `permission_status`).
+- **Image status** — `venue_images.status` exists but is `ENUM('active','hidden')` (a VISIBILITY flag, not a
+  review lane). U-P7 image uploads need their own pending mechanism (extend the enum or route via
+  `venue_change_requests` `type='image'`); coordinate with #9 `permission_status`.
 - **Reusable infra** — `lib/csrf.php`, `lib/ratelimit.php`, `lib/turnstile.php`, `lib/mail.php`,
   `lib/upload.php` (secure images), `lib/audit.php`, `lib/venues.php` validation patterns in
   `views/admin/venues.php`.
@@ -48,7 +49,9 @@ schema-before-code CC build order.*
   `auth_user()['partner_id']`. A provider may only ever see/act on venues where `venues.partner_id` = their
   own id. Never trust a `venue_id` from the client without re-checking ownership. Fail closed on mismatch (404,
   not 403 — don't reveal existence).
-- **Reused guards:** CSRF on every write, rate-limit + Turnstile on `/portal/login`, `lib/upload` for images
+- **Reused guards:** CSRF on every write, rate-limit on `/portal/login` (10/IP + 5/email per 15 min, mirroring
+  `/admin/login`; Turnstile intentionally omitted to match the staff-login precedent — add in U-P9 hardening
+  if abuse appears), `lib/upload` for images
   (allowlist + `getimagesize` + WebP re-encode + random names + non-exec dir), `html_sanitize` on rich text,
   prepared statements + `e()`/`(int)` output escaping, generic errors (`error_log` + no `getMessage()` leak).
 - **Audit:** every portal write (live edit, request submit, image upload, claim) writes `audit_log` with the
