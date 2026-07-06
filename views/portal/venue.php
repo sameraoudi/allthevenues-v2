@@ -1,0 +1,131 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * #3 U-P3 — Read-only owned-venue detail (portal). Expects $venue (provider-safe
+ * row, ownership already verified), $images, $layouts, $eventTags. NO edit
+ * controls, NO internal contact/commission. Rich-text fields are rendered raw
+ * ONLY because they are sanitized on write (same rule as the public/admin detail);
+ * everything else is escaped with e().
+ */
+/** @var array $venue @var array $images @var array $layouts @var array $eventTags */
+
+$ioLabel = !empty($venue['indoor_outdoor'])
+    ? (venue_indoor_outdoor_options()[$venue['indoor_outdoor']] ?? $venue['indoor_outdoor'])
+    : '';
+$loc = trim(implode(', ', array_filter([
+    trim((string)($venue['area'] ?? '')),
+    trim((string)($venue['emirate_name'] ?? '')),
+])));
+$cap = '';
+$cmin = ($venue['capacity_min'] ?? null) !== null ? (int)$venue['capacity_min'] : null;
+$cmax = ($venue['capacity_max'] ?? null) !== null ? (int)$venue['capacity_max'] : null;
+if ($cmin !== null && $cmax !== null) { $cap = number_format($cmin) . '–' . number_format($cmax); }
+elseif ($cmax !== null)               { $cap = 'Up to ' . number_format($cmax); }
+elseif ($cmin !== null)               { $cap = 'From ' . number_format($cmin); }
+$floor = '';
+if (($venue['floor_area'] ?? null) !== null && (float)$venue['floor_area'] > 0) {
+    $u = (string)($venue['floor_area_unit'] ?? '');
+    $floor = number_format((float)$venue['floor_area']) . ' ' . ($u === 'sqm' ? 'm²' : ($u === 'sqft' ? 'ft²' : $u));
+}
+$spend = ($venue['minimum_spend'] ?? null) && (float)$venue['minimum_spend'] > 0
+    ? 'AED ' . number_format((float)$venue['minimum_spend']) : '';
+
+$mapEmbed = trim((string)($venue['map_embed'] ?? ''));
+$isGoogleMapEmbed = $mapEmbed !== ''
+    && (bool)preg_match('#^<iframe[^>]*\ssrc="https://www\.google\.com/maps/#i', $mapEmbed);
+
+$krow = static function (string $k, string $v): void {
+    if (trim($v) === '') return;
+    echo '<div class="lead-detail__row"><span class="lead-detail__k">' . e($k)
+        . '</span><span class="lead-detail__v">' . e($v) . '</span></div>';
+};
+$richBlocks = [
+    'description'   => 'Description',
+    'highlights'    => 'What makes it special',
+    'facilities'    => 'Facilities',
+    'food_beverage' => 'Food & beverage',
+    'av_support'    => 'AV & technical',
+    'restrictions'  => 'Notes & restrictions',
+    'packages'      => 'Packages',
+    'special_offer' => 'Special offer',
+];
+$ltypeIcons = venue_layout_types();
+?>
+<p><a class="lead-back" href="<?= e(base_url('portal')) ?>">&larr; Back to my venues</a></p>
+
+<div class="lead-detail__head">
+  <h1><?= e((string)$venue['name']) ?></h1>
+  <span class="lead-status lead-status--<?= e((string)$venue['status']) ?>"><?= e(venue_admin_status_label((string)$venue['status'])) ?></span>
+</div>
+<p class="lead-hint">Read-only for now — editing your venue details is coming soon.</p>
+
+<div class="admin-panel">
+  <h2 class="admin-panel__title">Key information</h2>
+  <?php
+    $krow('Venue type', (string)($venue['venue_type_name'] ?? ''));
+    $krow('Location', $loc);
+    $krow('Address', (string)($venue['address'] ?? ''));
+    $krow('Indoor / outdoor', (string)$ioLabel);
+    $krow('Capacity', $cap);
+    $krow('Floor area', $floor);
+    $krow('Pricing level', (string)($venue['pricing_level'] ?? ''));
+    $krow('Minimum spend', $spend);
+  ?>
+  <?php if (trim((string)($venue['website'] ?? '')) !== ''): ?>
+    <div class="lead-detail__row"><span class="lead-detail__k">Website</span><span class="lead-detail__v"><a href="<?= e((string)$venue['website']) ?>" target="_blank" rel="noopener nofollow"><?= e((string)$venue['website']) ?></a></span></div>
+  <?php endif; ?>
+</div>
+
+<?php if ($eventTags): ?>
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">Event types</h2>
+    <div class="atv-card__chips">
+      <?php foreach ($eventTags as $t): ?><span class="atv-chip"><?= e($t) ?></span><?php endforeach; ?>
+    </div>
+  </div>
+<?php endif; ?>
+
+<?php if ($images): ?>
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">Images</h2>
+    <div class="portal-thumbs">
+      <?php foreach ($images as $img): ?>
+        <img class="portal-thumb" src="<?= e(venue_img_src($img['file_path'] ?? null)) ?>" alt="<?= e((string)($img['alt_text'] ?? '')) ?>" loading="lazy">
+      <?php endforeach; ?>
+    </div>
+  </div>
+<?php endif; ?>
+
+<?php if ($layouts): ?>
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">Layouts &amp; capacity</h2>
+    <table class="vd-layouts">
+      <thead><tr><th>Layout</th><th class="ta-r">Capacity</th></tr></thead>
+      <tbody>
+        <?php foreach ($layouts as $l): ?>
+          <tr>
+            <td class="vd-layout-name"><?php $lk = $ltypeIcons[$l['layout_type']] ?? ''; if ($lk !== '') echo icon($lk, 'vd-layout-ico'); ?> <?= e((string)$l['layout_type']) ?></td>
+            <td class="ta-r"><?= e(number_format((int)$l['capacity'])) ?></td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+<?php endif; ?>
+
+<?php foreach ($richBlocks as $field => $label):
+    $val = trim((string)($venue[$field] ?? ''));
+    if ($val === '') continue; ?>
+  <div class="admin-panel">
+    <h2 class="admin-panel__title"><?= e($label) ?></h2>
+    <div class="venue-richtext"><?= $venue[$field] /* sanitized on write */ ?></div>
+  </div>
+<?php endforeach; ?>
+
+<?php if ($isGoogleMapEmbed): ?>
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">Map</h2>
+    <div class="vd-map"><?= $mapEmbed /* validated Google Maps iframe */ ?></div>
+  </div>
+<?php endif; ?>
