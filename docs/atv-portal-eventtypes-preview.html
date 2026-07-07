@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATV — Portal event-type editor (U-P9b preview)</title>
+<style>
+  :root{
+    --navy:#0E1B2A; --blue:#6C93B7; --action:#426F94; --action-hover:#315B7C;
+    --sand:#D9C7A8; --ink:#1c2b38; --muted:#6b7b88; --line:#e4e8ec; --bg:#f3f1ec;
+    --ok:#2f7d5b; --okbg:#e7f3ec; --warn:#8a6d1f; --warnbg:#f6efdb;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Segoe UI,Inter,sans-serif;font-size:14px;}
+  h1,h2,h3{font-family:Georgia,'Cormorant Garamond',serif;font-weight:600;margin:0;}
+  .topbar{background:var(--navy);color:#fff;display:flex;justify-content:space-between;align-items:center;padding:14px 26px;}
+  .brand{font-family:Georgia,serif;font-size:19px;color:#fff;} .brand span{color:var(--blue);} .brand em{color:var(--sand);font-style:normal;font-size:13px;margin-left:4px;}
+  .main{max-width:720px;margin:0 auto;padding:26px 24px 60px;}
+  .note{font-size:12px;color:var(--muted);margin-bottom:18px;}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 22px rgba(14,27,42,.06);padding:22px 24px;margin-bottom:18px;}
+  .sec-h{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;margin:0 0 4px;}
+  .lbl{display:block;font-size:15px;font-weight:600;margin-bottom:3px;}
+  .help{font-size:12.5px;color:var(--muted);margin:0 0 14px;line-height:1.5;}
+  .req-pub{display:inline-block;font-size:11px;font-weight:700;color:var(--warn);background:var(--warnbg);border-radius:20px;padding:1px 9px;margin-left:6px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px 16px;}
+  @media(max-width:560px){.grid{grid-template-columns:1fr 1fr;}}
+  .chk{display:flex;gap:8px;align-items:center;font-size:13.5px;padding:5px 0;}
+  .chk input{width:16px;height:16px;flex:0 0 auto;}
+  .selrow{margin-top:12px;font-size:12.5px;color:var(--muted);}
+  .selrow b{color:var(--ink);}
+  .btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:9px 17px;font-size:13.5px;font-weight:600;cursor:pointer;border:1px solid transparent;background:var(--action);color:#fff;}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#">All The <span>Venues</span> <em>· Provider</em></a>
+  <div style="font-size:13px;color:#c7d0d8;">Omar — Nikki Beach</div>
+</header>
+
+<main class="main">
+  <p class="note">Appears as a fieldset inside both the portal <b>Submit a venue</b> and <b>Edit venue</b> forms
+    (same styling as the existing fields). On the edit form the boxes are pre-checked with the venue's current tags.</p>
+
+  <div class="panel">
+    <div class="sec-h">Event types</div>
+    <label class="lbl">What kinds of events does this venue host? <span class="req-pub">needed to publish</span></label>
+    <p class="help">Choose all that genuinely apply. These tags help planners find your venue through search,
+      event-type pages, and enquiry matching. At least one event type is required before All The Venues can publish
+      the listing.</p>
+    <p class="help" style="color:#6d5f45;background:#fbf7ef;border:1px dashed var(--sand);border-radius:8px;padding:8px 11px;">
+      Choose the event types this venue is genuinely suitable for, not every possible use. <b>Recommended: 3&ndash;6 event types.</b></p>
+
+    <div class="grp-h" style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;margin:6px 0 8px;">Primary event types</div>
+    <div class="grid">
+      <label class="chk"><input type="checkbox" checked> Wedding</label>
+      <label class="chk"><input type="checkbox" checked> Corporate Event</label>
+      <label class="chk"><input type="checkbox"> Conference</label>
+      <label class="chk"><input type="checkbox"> Product Launch</label>
+      <label class="chk"><input type="checkbox" checked> Private Party</label>
+      <label class="chk"><input type="checkbox"> Exhibition</label>
+      <label class="chk"><input type="checkbox"> Gala Dinner</label>
+      <label class="chk"><input type="checkbox"> Yacht Event</label>
+    </div>
+
+    <div class="grp-h" style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;margin:16px 0 8px;">Additional suitable uses</div>
+    <div class="grid">
+      <label class="chk"><input type="checkbox"> Engagement</label>
+      <label class="chk"><input type="checkbox"> Meeting</label>
+      <label class="chk"><input type="checkbox"> Training</label>
+      <label class="chk"><input type="checkbox"> Networking Event</label>
+      <label class="chk"><input type="checkbox"> Birthday</label>
+      <label class="chk"><input type="checkbox"> Outdoor Event</label>
+      <label class="chk"><input type="checkbox"> Social Gathering</label>
+    </div>
+
+    <p class="selrow"><b>3 selected.</b> You can save changes now. All The Venues will review event-type tags before publishing.</p>
+    <p class="selrow" style="color:var(--warn);">(When none selected:) No event types selected yet. You can save as draft, but at least one event type is required before publishing.</p>
+    <p class="selrow" style="border-top:1px solid var(--line);padding-top:10px;margin-top:10px;">On an <b>already-published</b> venue, changing these tags creates a change request &mdash; the update is reviewed by All The Venues before it goes live in search and on event-type pages.</p>
+  </div>
+
+  <button class="btn">Save venue</button>
+</main>
+</body>
+</html>

@@ -118,9 +118,10 @@ structured review). **Deployed: U-P0→U-P6b** (all portal units to date). **#9 
 (#9a/b/c — provenance schema, admin classification, needs-review report, publish-gate flip). **#9 image-rights
 flow END-TO-END TESTED by Samer (7 Jul 2026) — works.** **U-P7a + U-P7b SHIPPED + deployed** (provider image
 uploads + admin review), **staging 301→apex SHIPPED**, **U-P8a + U-P8b SHIPPED** (venue claims — submit + admin
-review), **U-P9a SHIPPED** (partner onboarding + email set-password, migration 022 applied). Next: **U-P9b** portal
-event-type editor → **U-P9c** login hardening (Turnstile on `/portal/login`) + footer link → **U-P9d** flip
-`PORTAL_ENABLED` + onboard providers. Known gaps: portal event-type editor (→U-P9b); **`db/001_schema.sql`
+review), **U-P9a + U-P9b SHIPPED** (partner onboarding + email set-password [migration 022]; portal event-type editor).
+Next: **U-P9c** login hardening (Turnstile on `/portal/login`) + footer "Partner login" link → **U-P9d** flip
+`PORTAL_ENABLED` + onboard providers. Fast-follows: published-venue event-type change-request; admin event-type
+editor UI. Known gaps: **`db/001_schema.sql`
 drift** (016/019/020/021 live only as numbered ALTERs — never folded into 001; a fresh import runs 001 + all
 migrations in sequence, so this is fine, but a one-off "sync 001 with 016–021" task would restore true
 single-file parity). Remaining post-launch: rest of #3, U6 passive watch.
@@ -257,8 +258,18 @@ remain.
   email/name/provider, denylist), transactional set + consume + auth_login, **no email enumeration**, noindex.
   Ships safe (no partner accounts until created at U-P9d). **⚠️ Operational:** don't create partner users / send
   invites until U-P9d flips `PORTAL_ENABLED`, or a provider sets a password then hits a 404 portal.
-- **U-P9 remaining:** **U-P9b** portal event-type editor (new-venue + edit forms; removes the "≥1 event type"
-  admin bottleneck) → **U-P9c** login hardening (Turnstile on `/portal/login`) + footer "Partner login" link live +
+- **U-P9b — portal event-type editor SHIPPED + deployed** (commit `4e350be`, no migration). Design lock
+  `docs/atv-portal-eventtypes-preview.html`. **Governance (Samer, overrides plan's LIVE-tier):** event types
+  editable directly only while `venues.status != 'published'` (admin publishes = approval); published venues →
+  read-only chips + "Request a change" pointer. `lib/portal.php` `portal_venue_event_types_save()` = the
+  server-side guard (refuses if not-owned OR published; validates active ids; transactional delete+insert; audit) +
+  `portal_event_type_primary_slugs()` + `portal_venue_event_type_ids()`. Shared `views/portal/event-types-field.php`
+  (Primary/Additional groups, "3–6 recommended", selected-count states) wired into new-venue + edit forms. Closes the
+  U-P6b "providers can't set event types" gap. **Two deliberate fast-follows (not built):** (1) **published-venue
+  event-type change-request** (governed edit for live venues — extend U-P5 submit + U-P5b apply to carry the
+  event-type set); (2) **admin event-type editor UI** (admins still can't set event types except via the seed or now
+  the portal — reuse `portal_venue_event_types_save`'s logic in the admin venue editor).
+- **U-P9 remaining:** **U-P9c** login hardening (Turnstile on `/portal/login`) + footer "Partner login" link live +
   notification-copy pass → **U-P9d** flip `PORTAL_ENABLED` on prod + onboard providers (content). `app.js` per-button
   confirm (`data-confirm-main`) already exists.
 
