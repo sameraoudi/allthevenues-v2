@@ -136,6 +136,14 @@ if (preg_match('#^/providers/([a-z0-9-]+)$#', $path, $m)) {
     exit;
 }
 
+// Public account set-up / password (invite tokens; future staff resets). NOT
+// behind PORTAL_ENABLED — a provider must be able to set their password even
+// before launch. No auth (the one-time token is the credential). Noindex.
+if ($path === '/set-password' || $path === '/set-password/request') {
+    require __DIR__ . '/views/set-password.php';
+    exit;
+}
+
 // Provider portal: /portal and /portal/* → gated behind PORTAL_ENABLED (dark by
 // default). config.php (which defines the flag) is loaded here, only for portal
 // paths, so a normal request pays nothing. Flag off / undefined ⇒ fall through to

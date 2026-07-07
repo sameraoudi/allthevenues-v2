@@ -13,10 +13,27 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/db.php';
 
-/** Assignable roles → label (partner intentionally excluded from the admin UI). */
+/** Assignable roles → label. #3 U-P9a adds Venue Provider (portal accounts). */
 function user_admin_roles(): array
 {
-    return ['admin' => 'Administrator', 'editor' => 'Editor / Assistant'];
+    return ['admin' => 'Administrator', 'editor' => 'Editor / Assistant', 'partner' => 'Venue Provider'];
+}
+
+/** Approved providers (id, org_name) for the partner-account selector. */
+function user_admin_provider_options(PDO $pdo): array
+{
+    return $pdo->query(
+        "SELECT id, org_name FROM partners WHERE status = 'approved' ORDER BY org_name ASC"
+    )->fetchAll();
+}
+
+/** Is $partnerId an approved provider? (partner-account guard) */
+function user_admin_provider_is_approved(PDO $pdo, int $partnerId): bool
+{
+    if ($partnerId <= 0) { return false; }
+    $stmt = $pdo->prepare("SELECT 1 FROM partners WHERE id = :id AND status = 'approved' LIMIT 1");
+    $stmt->execute([':id' => $partnerId]);
+    return $stmt->fetchColumn() !== false;
 }
 
 /** Account statuses → label. */
@@ -38,8 +55,10 @@ function user_admin_list(PDO $pdo): array
 /** One user by id (no password hash), or null. */
 function user_admin_get(PDO $pdo, int $id): ?array
 {
+    // password_hash is selected only to derive a "set / not set" status — the
+    // view never renders it (see password_status_for_user()).
     $stmt = $pdo->prepare(
-        'SELECT id, name, email, role, status, last_login_at, created_at, partner_id
+        'SELECT id, name, email, role, status, last_login_at, created_at, partner_id, password_hash
          FROM users WHERE id = :id LIMIT 1'
     );
     $stmt->execute([':id' => $id]);

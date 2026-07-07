@@ -525,4 +525,30 @@
     form.addEventListener('input', sync);
     sync();
   })();
+
+  // Admin new/edit user (U-P9a): show the Provider selector + scope note for a
+  // Venue Provider account, hide the staff Password panel. Server enforces both.
+  (function () {
+    var role = document.querySelector('[data-role-select]');
+    if (!role) return;
+    function sync() {
+      var partner = role.value === 'partner';
+      document.querySelectorAll('[data-partner-field]').forEach(function (el) { el.hidden = !partner; });
+      document.querySelectorAll('[data-staff-field]').forEach(function (el) { el.hidden = partner; });
+    }
+    role.addEventListener('change', sync);
+    sync();
+  })();
+
+  // Password show/hide toggles (U-P9a set-password + anywhere with data-pw-toggle).
+  document.addEventListener('click', function (ev) {
+    var t = ev.target.closest('[data-pw-toggle]');
+    if (!t) return;
+    ev.preventDefault();
+    var inp = document.getElementById(t.getAttribute('data-pw-toggle'));
+    if (!inp) return;
+    var show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    t.textContent = show ? 'hide' : 'show';
+  });
 })();

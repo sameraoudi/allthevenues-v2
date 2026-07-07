@@ -16,10 +16,44 @@ require_once __DIR__ . '/../../lib/csrf.php';
 require_once __DIR__ . '/../../lib/auth.php';
 require_once __DIR__ . '/../../lib/audit.php';
 require_once __DIR__ . '/../../lib/users_admin.php';
+require_once __DIR__ . '/../../lib/password_token.php';   // #3 U-P9a invite tokens
 
 $me   = auth_current_user();
 $meId = (int)($me['id'] ?? 0);
-$rest = trim(substr((string)$sub, strlen('users')), '/');   // '' | 'new' | 'edit'
+$rest = trim(substr((string)$sub, strlen('users')), '/');   // '' | 'new' | 'edit' | 'resend'
+
+/* ==================== RESEND INVITE (#3 U-P9a) ========================== */
+if ($rest === 'resend') {
+    $id   = (int)($_POST['id'] ?? 0);
+    $user = $id > 0 ? user_admin_get($pdo, $id) : null;
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST' || !csrf_validate() || $user === null) {
+        $_SESSION['admin_flash'] = ['type' => 'error', 'msg' => 'Could not resend the invite.'];
+        redirect($user ? 'admin/users/edit?id=' . $id : 'admin/users');
+    }
+    // Only offered while the password is not yet set OR the invite has expired.
+    $pwStatus = password_status_for_user($user);
+    $inStatus = invite_status_for_user($pdo, $id);
+    if ((string)$user['role'] !== 'partner' || !($pwStatus === 'not_set' || $inStatus === 'expired')) {
+        $_SESSION['admin_flash'] = ['type' => 'error', 'msg' => 'A new invite isn’t needed for this account.'];
+        redirect('admin/users/edit?id=' . $id);
+    }
+    try {
+        $tok = pt_create($pdo, $id, 'invite', $meId ?: null, (string)$user['email']);
+        $providerName = '';
+        if (!empty($user['partner_id'])) {
+            $ps = $pdo->prepare('SELECT org_name FROM partners WHERE id = :id');
+            $ps->execute([':id' => (int)$user['partner_id']]);
+            $providerName = (string)($ps->fetchColumn() ?: '');
+        }
+        send_invite_email($user, $tok['raw'], $providerName);
+        audit_log($pdo, $meId ?: null, 'user.invite_resend', 'user', $id, null, ['email' => $user['email']]);
+        $_SESSION['admin_flash'] = ['type' => 'success', 'msg' => 'Invite re-sent to ' . $user['email'] . '.'];
+    } catch (Throwable $e) {
+        error_log('invite resend failed (user=' . $id . '): ' . $e->getMessage());
+        $_SESSION['admin_flash'] = ['type' => 'error', 'msg' => 'Could not resend the invite. Please try again.'];
+    }
+    redirect('admin/users/edit?id=' . $id);
+}
 
 /* ============================ LIST ====================================== */
 if ($rest === '') {
@@ -86,6 +120,16 @@ if ($rest === 'new' || $rest === 'edit') {
             $status = (string)($_POST['status'] ?? '');
             if (!isset(user_admin_statuses()[$status])) { $errors['status'] = 'Choose a status.'; }
 
+            // --- provider (partner accounts only; forced NULL for staff) ---
+            $partnerId = null;
+            if ($role === 'partner') {
+                $partnerId = (int)($_POST['partner_id'] ?? 0);
+                if (!user_admin_provider_is_approved($pdo, $partnerId)) {
+                    $errors['partner_id'] = 'Choose an approved provider for this account.';
+                    $partnerId = null;
+                }
+            }
+
             // --- self / last-admin safety (edit only) ---
             if (!$isNew && !$errors) {
                 if ($id === $meId && $role !== (string)$user['role']) {
@@ -108,7 +152,11 @@ if ($rest === 'new' || $rest === 'edit') {
             $newHash     = null;
             $tempPlain   = null;
             if (!$errors) {
-                if ($genPassword || ($isNew && $rawPassword === '')) {
+                if ($role === 'partner') {
+                    // Partner accounts set their own password via the emailed link —
+                    // an empty hash is unusable (can't pass password_verify).
+                    if ($isNew) { $newHash = ''; }
+                } elseif ($genPassword || ($isNew && $rawPassword === '')) {
                     $tempPlain = user_generate_temp_password();
                     $newHash   = password_hash($tempPlain, PASSWORD_BCRYPT);
                 } elseif ($rawPassword !== '') {
@@ -124,31 +172,50 @@ if ($rest === 'new' || $rest === 'edit') {
                 try {
                     if ($isNew) {
                         $ins = $pdo->prepare(
-                            'INSERT INTO users (name, email, password_hash, role, status)
-                             VALUES (:name, :email, :hash, :role, :status)'
+                            'INSERT INTO users (name, email, password_hash, role, status, partner_id)
+                             VALUES (:name, :email, :hash, :role, :status, :pid)'
                         );
                         $ins->execute([
                             ':name' => $name, ':email' => $email, ':hash' => $newHash,
-                            ':role' => $role, ':status' => $status,
+                            ':role' => $role, ':status' => $status, ':pid' => $partnerId,
                         ]);
                         $newId = (int)$pdo->lastInsertId();
                         audit_log($pdo, $meId ?: null, 'user.create', 'user', $newId,
-                            null, ['name' => $name, 'email' => $email, 'role' => $role, 'status' => $status]);
-                        if ($tempPlain !== null) {
-                            $_SESSION['admin_user_temppw'] = ['email' => $email, 'password' => $tempPlain];
+                            null, ['name' => $name, 'email' => $email, 'role' => $role, 'status' => $status, 'partner_id' => $partnerId]);
+
+                        if ($role === 'partner') {
+                            // Issue the one-time invite + email the set-password link.
+                            $providerName = '';
+                            if ($partnerId) {
+                                $ps = $pdo->prepare('SELECT org_name FROM partners WHERE id = :id');
+                                $ps->execute([':id' => $partnerId]);
+                                $providerName = (string)($ps->fetchColumn() ?: '');
+                            }
+                            try {
+                                $tok = pt_create($pdo, $newId, 'invite', $meId ?: null, $email);
+                                send_invite_email(['id' => $newId, 'name' => $name, 'email' => $email], $tok['raw'], $providerName);
+                            } catch (Throwable $e) {
+                                error_log('invite send failed on create (user=' . $newId . '): ' . $e->getMessage());
+                            }
+                            $_SESSION['admin_flash'] = ['type' => 'success', 'msg' => 'Provider account created — set-up invite emailed to ' . $email . '.'];
+                        } else {
+                            if ($tempPlain !== null) {
+                                $_SESSION['admin_user_temppw'] = ['email' => $email, 'password' => $tempPlain];
+                            }
+                            $_SESSION['admin_flash'] = ['type' => 'success', 'msg' => 'User created.'];
                         }
-                        $_SESSION['admin_flash'] = ['type' => 'success', 'msg' => 'User created.'];
                     } else {
                         // Diff (audit) — password recorded as "reset", never the value.
                         $changedOld = $changedNew = [];
-                        foreach (['name' => $name, 'email' => $email, 'role' => $role, 'status' => $status] as $col => $val) {
-                            if ((string)$user[$col] !== (string)$val) {
-                                $changedOld[$col] = $user[$col];
+                        foreach (['name' => $name, 'email' => $email, 'role' => $role, 'status' => $status,
+                                  'partner_id' => $partnerId] as $col => $val) {
+                            if ((string)($user[$col] ?? '') !== (string)($val ?? '')) {
+                                $changedOld[$col] = $user[$col] ?? null;
                                 $changedNew[$col] = $val;
                             }
                         }
-                        $sql = 'UPDATE users SET name = :name, email = :email, role = :role, status = :status';
-                        $params = [':name' => $name, ':email' => $email, ':role' => $role, ':status' => $status, ':id' => $id];
+                        $sql = 'UPDATE users SET name = :name, email = :email, role = :role, status = :status, partner_id = :pid';
+                        $params = [':name' => $name, ':email' => $email, ':role' => $role, ':status' => $status, ':pid' => $partnerId, ':id' => $id];
                         if ($newHash !== null) {
                             $sql .= ', password_hash = :hash';
                             $params[':hash'] = $newHash;
@@ -174,7 +241,18 @@ if ($rest === 'new' || $rest === 'edit') {
         }
     }
 
-    $flash = null;
+    // #3 U-P9a — partner-account extras for the form/detail view.
+    $providerOptions = user_admin_provider_options($pdo);
+    $inviteStatus = $passwordStatus = null;
+    $inviteLatest = null;
+    if (!$isNew && (string)($user['role'] ?? '') === 'partner') {
+        $inviteStatus   = invite_status_for_user($pdo, $id);
+        $passwordStatus = password_status_for_user($user);
+        $inviteLatest   = invite_latest_for_user($pdo, $id);
+    }
+    $flash = $_SESSION['admin_flash'] ?? null;
+    unset($_SESSION['admin_flash']);
+
     $admin_active       = 'users';
     $page_title         = ($isNew ? 'Add user' : 'Edit user') . ' — Admin';
     $admin_page_title   = $isNew ? 'Add user' : 'Edit user';
