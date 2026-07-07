@@ -744,6 +744,7 @@ select:focus-visible,
 .lead-flash { border-radius: 8px; padding: 12px 14px; font-size: 14px; margin-bottom: 16px; }
 .lead-flash--success { background: #d7ecdd; color: #1f6a41; border: 1px solid #b6dcc2; }
 .lead-flash--error   { background: #f7e7e5; color: #8f3b33; border: 1px solid #e5c3bf; }
+.lead-flash--info    { background: #f8fbfd; color: #2f5064; border: 1px solid #d6e2ea; }   /* Delist-1 explainer */
 .lead-detail { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
 .lead-detail__main { display: flex; flex-direction: column; gap: 18px; }
 .lead-detail__side { display: flex; flex-direction: column; gap: 18px; }
@@ -1030,6 +1031,7 @@ select:focus-visible,
 .lead-status--pending       { background: #fbeecb; color: #8a6d1b; }
 .lead-status--needs_changes { background: #f1dcda; color: #8f3b33; }
 .lead-status--archived      { background: #e6e2da; color: #6b6357; }
+.lead-status--delisted      { background: #eef1f4; color: #6b7b88; }   /* Delist-1 */
 
 .admin-form .admin-panel { margin-bottom: 18px; }
 .admin-form__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
@@ -1060,6 +1062,8 @@ select:focus-visible,
 .mt-2 { margin-top: 12px; }
 .atv-btn--danger { background: #b4534a; color: #fff; border: 1px solid #b4534a; }
 .atv-btn--danger:hover { background: #9c443c; }
+.atv-btn--ok { background: #2f7d5b; color: #fff; border: 1px solid #2f7d5b; }   /* Delist-1 re-list */
+.atv-btn--ok:hover { background: #276a4d; }
 .img-mgr .img-upload { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
 .img-mgr .img-upload input[type=file] { font-size: 13px; }
 .img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 14px; }

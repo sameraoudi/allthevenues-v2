@@ -59,6 +59,17 @@ if ($sub === 'venues' || strncmp($sub, 'venues/', 7) === 0) {
         require __DIR__ . '/venue-withdraw.php';  // under-review → draft, owner-scoped (POST + CSRF)
         return;
     }
+    if (preg_match('#^venues/(\d+)/delist(?:/(withdraw))?$#', $sub, $mdl)) {
+        $vid          = (int)$mdl[1];
+        $delistAction = $mdl[2] ?? '';   // '' = form/request, 'withdraw' = withdraw request
+        require __DIR__ . '/venue-delist.php';    // published → request delist; owner-scoped
+        return;
+    }
+    if (preg_match('#^venues/(\d+)/relist$#', $sub, $mrl)) {
+        $vid = (int)$mrl[1];
+        require __DIR__ . '/venue-relist.php';     // delisted → published, self-serve (POST + CSRF)
+        return;
+    }
     if (preg_match('#^venues/(\d+)$#', $sub, $mm)) {
         $venue = portal_venue_for_partner($pdo, (int)$mm[1], $partnerId);
         if ($venue === null) {

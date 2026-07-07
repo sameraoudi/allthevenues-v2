@@ -22,6 +22,7 @@ function _portal_venue_select(): string
                    v.website, v.video_url, v.map_embed, v.is_featured, v.highlights,
                    v.description, v.best_for, v.facilities, v.food_beverage, v.av_support,
                    v.restrictions, v.packages, v.special_offer, v.created_at, v.updated_at,
+                   v.delisted_at, v.delist_reason, v.delist_details,
                    vt.name AS venue_type_name, em.name AS emirate_name
             FROM venues v
             LEFT JOIN venue_types vt ON vt.id = v.venue_type_id
@@ -138,6 +139,132 @@ function portal_withdraw_request(PDO $pdo, int $requestId, int $venueId, int $pa
     );
     $stmt->execute([':rid' => $requestId, ':vid' => $venueId, ':pid' => $partnerId]);
     return $stmt->rowCount() > 0;
+}
+
+/* ==========================================================================
+ * Delist-1 (#delisting) — reversible take-down of a PUBLISHED venue. The partner
+ * REQUESTS a delist (admin-approved in Delist-2); re-list is self-serve. The row,
+ * slug, leads + provenance all stay — only visibility changes.
+ * ======================================================================== */
+
+/** Fixed delist reasons: code => label (validated on write, labelled in the UI). */
+function portal_delist_reasons(): array
+{
+    return [
+        'renovation'    => 'Temporarily unavailable / renovation',
+        'not_operating' => 'No longer operating this venue',
+        'fully_booked'  => 'Fully booked / not taking enquiries',
+        'seasonal'      => 'Seasonal closure',
+        'other'         => 'Other (explain below)',
+    ];
+}
+
+/** The open (pending) delist request for an owned venue, or null. Owner-scoped. */
+function portal_pending_delist_request(PDO $pdo, int $venueId, int $partnerId): ?array
+{
+    $stmt = $pdo->prepare(
+        "SELECT * FROM venue_change_requests
+         WHERE venue_id = :vid AND partner_id = :pid AND type = 'delist' AND status = 'pending'
+         ORDER BY id DESC LIMIT 1"
+    );
+    $stmt->execute([':vid' => $venueId, ':pid' => $partnerId]);
+    $row = $stmt->fetch();
+    return $row === false ? null : $row;
+}
+
+/**
+ * Request delisting of an owned PUBLISHED venue. Creates ONE pending 'delist'
+ * change request (the Delist-2 admin flow takes it from there); the venue stays
+ * published until approved. Owner-scoped; one pending delist per venue.
+ * @return array{ok:bool,error?:string}
+ */
+function portal_request_delist(PDO $pdo, int $venueId, int $partnerId, int $userId, string $reason, string $details): array
+{
+    if (!isset(portal_delist_reasons()[$reason])) {
+        return ['ok' => false, 'error' => 'Please choose a reason for delisting.'];
+    }
+    $vs = $pdo->prepare('SELECT status FROM venues WHERE id = :vid AND partner_id = :pid LIMIT 1');
+    $vs->execute([':vid' => $venueId, ':pid' => $partnerId]);
+    $status = $vs->fetchColumn();
+    if ($status === false) {
+        return ['ok' => false, 'error' => 'Not found.'];
+    }
+    if ((string)$status !== 'published') {
+        return ['ok' => false, 'error' => 'Only a published venue can be delisted.'];
+    }
+    if (portal_pending_delist_request($pdo, $venueId, $partnerId) !== null) {
+        return ['ok' => false, 'error' => 'You already have a delisting request pending for this venue.'];
+    }
+
+    $payload = ['reason' => $reason, 'details' => mb_substr(trim($details), 0, 2000)];
+    try {
+        $ins = $pdo->prepare(
+            "INSERT INTO venue_change_requests
+                (venue_id, partner_id, submitted_by, type, proposed_changes_json, status)
+             VALUES (:vid, :pid, :uid, 'delist', :json, 'pending')"
+        );
+        $ins->execute([
+            ':vid' => $venueId, ':pid' => $partnerId, ':uid' => $userId,
+            ':json' => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        ]);
+        $rid = (int)$pdo->lastInsertId();
+    } catch (Throwable $e) {
+        error_log('portal_request_delist failed (venue=' . $venueId . '): ' . $e->getMessage());
+        return ['ok' => false, 'error' => 'Something went wrong submitting your request. Please try again.'];
+    }
+
+    audit_log($pdo, $userId ?: null, 'request_delist', 'venue', $venueId, ['status' => 'published'], $payload + ['request_id' => $rid]);
+    return ['ok' => true];
+}
+
+/** Withdraw the provider's own pending delist request. True if withdrawn. Owner-scoped. */
+function portal_withdraw_delist(PDO $pdo, int $requestId, int $venueId, int $partnerId): bool
+{
+    $stmt = $pdo->prepare(
+        "UPDATE venue_change_requests
+         SET status = 'withdrawn', updated_at = NOW()
+         WHERE id = :rid AND venue_id = :vid AND partner_id = :pid AND type = 'delist' AND status = 'pending'"
+    );
+    $stmt->execute([':rid' => $requestId, ':vid' => $venueId, ':pid' => $partnerId]);
+    return $stmt->rowCount() > 0;
+}
+
+/**
+ * Re-list a delisted venue — SELF-SERVE (no admin approval): it was already
+ * reviewed before it went live. Owner-scoped + status='delisted' guarded. Restores
+ * status='published' and clears the delist_* bookkeeping (the trail lives in
+ * audit). Returns ok; the caller best-effort notifies the team (mail never blocks).
+ * @return array{ok:bool,error?:string}
+ */
+function portal_relist(PDO $pdo, int $venueId, int $partnerId, int $userId): array
+{
+    $vs = $pdo->prepare('SELECT status, name FROM venues WHERE id = :vid AND partner_id = :pid LIMIT 1');
+    $vs->execute([':vid' => $venueId, ':pid' => $partnerId]);
+    $venue = $vs->fetch();
+    if ($venue === false) {
+        return ['ok' => false, 'error' => 'Not found.'];
+    }
+    if ((string)$venue['status'] !== 'delisted') {
+        return ['ok' => false, 'error' => 'This venue is not delisted.'];
+    }
+    try {
+        $upd = $pdo->prepare(
+            "UPDATE venues
+             SET status = 'published', delisted_at = NULL, delisted_by = NULL,
+                 delist_reason = NULL, delist_details = NULL
+             WHERE id = :vid AND partner_id = :pid AND status = 'delisted'"
+        );
+        $upd->execute([':vid' => $venueId, ':pid' => $partnerId]);
+        if ($upd->rowCount() < 1) {
+            return ['ok' => false, 'error' => 'This venue is not delisted.'];
+        }
+    } catch (Throwable $e) {
+        error_log('portal_relist failed (venue=' . $venueId . '): ' . $e->getMessage());
+        return ['ok' => false, 'error' => 'Something went wrong re-listing your venue. Please try again.'];
+    }
+
+    audit_log($pdo, $userId ?: null, 'relist', 'venue', $venueId, ['status' => 'delisted'], ['status' => 'published']);
+    return ['ok' => true, 'name' => (string)$venue['name']];
 }
 
 /**

@@ -93,6 +93,10 @@ $needsChanges = ($vStatus === 'needs_changes')
 $isDraftState = ($vStatus === 'draft');
 $showFlow     = $underReview || $needsChanges || $isDraftState;
 
+// Delist-1 — reversible take-down state (published request / pending / delisted).
+$pendingDelist = portal_pending_delist_request($pdo, $vid, $partnerIdCtx);
+$isDelisted    = ($vStatus === 'delisted');
+
 // Readiness (shared by draft + re-submit), mirrors the server gate exactly.
 $etCount   = count(portal_venue_event_type_ids($pdo, $vid));
 $missing   = portal_venue_missing_required($venue, $etCount);
@@ -182,6 +186,49 @@ if (!$photosOk)  { $blockers[] = 'add at least one photo'; }
       </div>
     <?php endif; ?>
   <?php endif; ?>
+<?php endif; ?>
+
+<?php /* Delist-1 — delist states: delisted (re-list) · pending request (withdraw) · published (request). */ ?>
+<?php if ($isDelisted): ?>
+  <div class="admin-panel">
+    <div class="lead-detail__head">
+      <h2 class="admin-panel__title">This venue is delisted</h2>
+      <span class="lead-status lead-status--delisted">Delisted</span>
+    </div>
+    <?php
+      $dOn     = trim((string)($venue['delisted_at'] ?? ''));
+      $dReason = (string)($venue['delist_reason'] ?? '');
+      $dLabel  = portal_delist_reasons()[$dReason] ?? '';
+    ?>
+    <?php if ($dOn !== '' && strtotime($dOn) !== false): ?><div class="lead-detail__row"><span class="lead-detail__k">Delisted on</span><span class="lead-detail__v"><?= e(date('j M Y', strtotime($dOn))) ?> &middot; by All The Venues</span></div><?php endif; ?>
+    <?php if ($dLabel !== ''): ?><div class="lead-detail__row"><span class="lead-detail__k">Reason</span><span class="lead-detail__v"><?= e($dLabel) ?></span></div><?php endif; ?>
+    <p class="lead-hint mb-2">This venue is hidden from the public site. Re-listing restores it immediately (it was already reviewed) &mdash; our team is notified.</p>
+    <form method="post" action="<?= e(base_url('portal/venues/' . $vid . '/relist')) ?>">
+      <?php csrf_field(); ?>
+      <button type="submit" class="atv-btn atv-btn--ok" data-confirm="Re-list this venue? It goes live on the public site again straight away.">Re-list this venue</button>
+    </form>
+  </div>
+<?php elseif ($pendingDelist !== null): ?>
+  <div class="admin-panel">
+    <div class="lead-detail__head">
+      <h2 class="admin-panel__title">Delisting requested &mdash; pending review</h2>
+      <span class="lead-status lead-status--pending">Pending</span>
+    </div>
+    <p class="lead-hint mb-2">Your delisting request is with All The Venues. The venue stays live until it&rsquo;s approved.</p>
+    <form method="post" action="<?= e(base_url('portal/venues/' . $vid . '/delist/withdraw')) ?>">
+      <?php csrf_field(); ?>
+      <input type="hidden" name="request_id" value="<?= (int)$pendingDelist['id'] ?>">
+      <button type="submit" class="atv-btn atv-btn--ghost atv-btn--sm">Withdraw request</button>
+    </form>
+  </div>
+<?php elseif ($vStatus === 'published'): ?>
+  <div class="admin-panel">
+    <div class="lead-detail__head">
+      <h2 class="admin-panel__title">Delist this venue</h2>
+    </div>
+    <p class="lead-hint mb-2">Temporarily or permanently hide this venue from the public site. It&rsquo;s reversible &mdash; you can re-list it yourself anytime.</p>
+    <a class="atv-btn atv-btn--ghost atv-btn--sm" href="<?= e(base_url('portal/venues/' . $vid . '/delist')) ?>">Request delisting</a>
+  </div>
 <?php endif; ?>
 
 <?php
