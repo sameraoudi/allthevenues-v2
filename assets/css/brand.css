@@ -1299,6 +1299,15 @@ select:focus-visible,
 .portal-thumbs { display: flex; flex-wrap: wrap; gap: 10px; }
 .portal-thumb { width: 140px; height: 96px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
 
+/* PU-D1-fix #16 — styled file-picker: real <input> visually hidden inside an
+   .atv-btn label, with the chosen file name(s) shown alongside. */
+.atv-file { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.atv-file__btn { cursor: pointer; margin: 0; }
+.atv-file__input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* keyboard focus on the hidden input rings the visible button */
+.atv-file__btn:focus-within { outline: 2px solid var(--action); outline-offset: 2px; }
+.atv-file__name { font-style: italic; }
+
 /* #3 U-P7a — provider venue-photos manager (additive). */
 .pimg-consent { display: flex; gap: 10px; align-items: flex-start; background: #f7f9fb; border: 1px solid var(--line); border-radius: 10px; padding: 13px 15px; font-size: 13.5px; line-height: 1.5; cursor: pointer; }
 .pimg-consent input { margin-top: 3px; flex: 0 0 auto; width: 16px; height: 16px; }

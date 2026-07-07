@@ -105,14 +105,33 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         );
         foreach ($layoutErrors as $t => $msg) { $errors['layout_' . $t] = $msg; }
 
+        // PU-D1-fix — two actions: "continue" enforces the FULL required set;
+        // "draft" only needs a name (already enforced in the field validation).
+        $action = ((string)($_POST['action'] ?? 'continue') === 'draft') ? 'draft' : 'continue';
+        if ($action === 'continue') {
+            $etIds   = array_values(array_filter(array_map('intval', (array)($_POST['event_types'] ?? []))));
+            $missMap = [
+                'Name' => 'name', 'Primary emirate' => 'emirate_id', 'Venue type' => 'venue_type_id',
+                'Description' => 'description', 'Capacity' => 'capacity_max',
+                'Area or address' => 'area', 'At least one event type' => 'event_types',
+            ];
+            foreach (portal_venue_missing_required($clean, count($etIds)) as $label) {
+                $errors[$missMap[$label] ?? ('req_' . $label)] = $label . ' is required to continue.';
+            }
+        }
+
         if (!$errors) {
             try {
                 // #15 — create as a DRAFT (no review request yet); save layouts + event types.
                 $vid = portal_create_new_venue($pdo, $partnerId, $userId, $clean);
                 venue_layout_capacity_save($pdo, $vid, (array)($_POST['layout'] ?? []));   // #18
                 portal_venue_event_types_save($pdo, $vid, $partnerId, (array)($_POST['event_types'] ?? []));
-                $_SESSION['portal_flash'] = ['type' => 'success', 'msg' => 'Draft saved — add photos, then submit.'];
-                redirect('portal/venues/' . $vid . '/images');   // Step 2
+                if ($action === 'continue') {
+                    $_SESSION['portal_flash'] = ['type' => 'success', 'msg' => 'Draft saved — add photos, then submit.'];
+                    redirect('portal/venues/' . $vid . '/images');   // Step 2
+                }
+                $_SESSION['portal_flash'] = ['type' => 'success', 'msg' => 'Draft saved. You can finish it any time.'];
+                redirect('portal/venues/' . $vid);                    // resume hub
             } catch (Throwable $e) {
                 error_log('portal new venue failed (partner=' . $partnerId . '): ' . $e->getMessage());
                 $errors['_form'] = 'Something went wrong saving your venue. Please try again.';

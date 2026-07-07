@@ -468,9 +468,15 @@
     var files   = form.querySelector('[data-upload-files]');
     var consent = form.querySelector('[data-upload-consent]');
     var submit  = form.querySelector('[data-upload-submit]');
+    var nameEl  = form.querySelector('[data-upload-filename]');   // #16 chosen-file label
     if (!files || !consent || !submit) return;
     function sync() {
-      submit.disabled = !(consent.checked && files.files && files.files.length > 0);
+      var n = (files.files && files.files.length) || 0;
+      submit.disabled = !(consent.checked && n > 0);
+      if (nameEl) {
+        nameEl.textContent = n === 0 ? 'No files chosen'
+          : (n === 1 ? files.files[0].name : n + ' files chosen');
+      }
     }
     form.addEventListener('change', sync);
     form.addEventListener('input', sync);

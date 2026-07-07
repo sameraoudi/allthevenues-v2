@@ -29,6 +29,10 @@ $richFields = [
     'special_offer' => 'Special offer',
 ];
 $layoutValues = $layoutValues ?? [];
+// PU-D1-fix — a draft/needs_changes venue is not yet public, so identity fields
+// (name/type/emirate) are editable here to finish Step 1. Published venues keep
+// them read-only (governed via "request a change").
+$isDraftEdit = in_array((string)$venue['status'], ['draft', 'needs_changes'], true);
 ?>
 <p><a class="lead-back" href="<?= e(base_url('portal/venues/' . $id)) ?>">&larr; Back to venue</a></p>
 
@@ -44,6 +48,34 @@ $layoutValues = $layoutValues ?? [];
 <form class="admin-form" method="post" action="<?= e(base_url('portal/venues/' . $id . '/edit')) ?>" novalidate data-layout-form>
   <?php csrf_field(); ?>
 
+<?php if ($isDraftEdit): /* PU-D1-fix — draft: identity fields editable to finish Step 1 */ ?>
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">Venue basics</h2>
+    <div class="admin-form__grid">
+      <div class="atv-field atv-field--full">
+        <label for="f-name">Name <span class="req">*</span></label>
+        <input type="text" id="f-name" name="name" value="<?= $v('name') ?>" maxlength="255" class="<?= $has('name') ? 'is-invalid' : '' ?>">
+        <?php $err('name'); ?>
+      </div>
+      <div class="atv-field">
+        <label for="f-type">Venue type <span class="req">*</span></label>
+        <select id="f-type" name="venue_type_id" class="<?= $has('venue_type_id') ? 'is-invalid' : '' ?>">
+          <option value="">—</option>
+          <?php foreach (venue_types_all($pdo) as $t): ?><option value="<?= (int)$t['id'] ?>"<?= $sel('venue_type_id', (int)$t['id']) ?>><?= e((string)$t['name']) ?></option><?php endforeach; ?>
+        </select>
+        <?php $err('venue_type_id'); ?>
+      </div>
+      <div class="atv-field">
+        <label for="f-emirate">Primary emirate <span class="req">*</span></label>
+        <select id="f-emirate" name="emirate_id" class="<?= $has('emirate_id') ? 'is-invalid' : '' ?>">
+          <option value="">—</option>
+          <?php foreach (venue_emirates($pdo) as $em): ?><option value="<?= (int)$em['id'] ?>"<?= $sel('emirate_id', (int)$em['id']) ?>><?= e((string)$em['name']) ?></option><?php endforeach; ?>
+        </select>
+        <?php $err('emirate_id'); ?>
+      </div>
+    </div>
+  </div>
+<?php else: ?>
   <div class="admin-panel">
     <h2 class="admin-panel__title">Managed by All The Venues</h2>
     <p class="lead-hint mb-2">These are managed by All The Venues. To change them, <a href="<?= e(base_url('portal/venues/' . $id . '/request')) ?>">request a change</a>.</p>
@@ -55,11 +87,12 @@ $layoutValues = $layoutValues ?? [];
       <div class="atv-field"><label>Status</label><div class="portal-ro-val"><?= e(venue_admin_status_label((string)$venue['status'])) ?></div></div>
     </div>
   </div>
+<?php endif; ?>
 
   <div class="admin-panel">
     <h2 class="admin-panel__title">Location &amp; basics</h2>
     <div class="admin-form__grid">
-      <div class="atv-field"><label for="f-area">Area</label><input type="text" id="f-area" name="area" value="<?= $v('area') ?>" maxlength="150"></div>
+      <div class="atv-field"><label for="f-area">Area<?php if ($isDraftEdit): ?> <span class="req">*</span> <span class="lead-hint">(area or address)</span><?php endif; ?></label><input type="text" id="f-area" name="area" value="<?= $v('area') ?>" maxlength="150" class="<?= $has('area') ? 'is-invalid' : '' ?>"><?php $err('area'); ?></div>
       <div class="atv-field atv-field--full"><label for="f-address">Address</label><input type="text" id="f-address" name="address" value="<?= $v('address') ?>" maxlength="255"></div>
       <div class="atv-field">
         <label for="f-io">Indoor / outdoor</label>
@@ -76,7 +109,7 @@ $layoutValues = $layoutValues ?? [];
     <h2 class="admin-panel__title">Capacity, size &amp; pricing</h2>
     <div class="admin-form__grid">
       <div class="atv-field"><label for="f-cmin">Minimum guests</label><input type="number" id="f-cmin" name="capacity_min" value="<?= $v('capacity_min') ?>" min="0"></div>
-      <div class="atv-field"><label for="f-cmax">Maximum capacity</label><input type="number" id="f-cmax" name="capacity_max" value="<?= $v('capacity_max') ?>" min="0" data-layout-capmax></div>
+      <div class="atv-field"><label for="f-cmax">Maximum capacity<?php if ($isDraftEdit): ?> <span class="req">*</span><?php endif; ?></label><input type="number" id="f-cmax" name="capacity_max" value="<?= $v('capacity_max') ?>" min="0" data-layout-capmax class="<?= $has('capacity_max') ? 'is-invalid' : '' ?>"><?php $err('capacity_max'); ?></div>
       <div class="atv-field"><label for="f-spend">Minimum spend (AED)</label><input type="number" id="f-spend" name="minimum_spend" value="<?= $v('minimum_spend') ?>" min="0" step="0.01"></div>
       <div class="atv-field">
         <label for="f-price">Pricing level</label>
@@ -124,8 +157,8 @@ $layoutValues = $layoutValues ?? [];
   <div class="admin-panel">
     <h2 class="admin-panel__title">Description &amp; details</h2>
     <p class="lead-hint mb-2">Rich text — only p, br, strong, em, lists and links are kept; everything else is stripped on save.</p>
-    <?php foreach ($richFields as $field => $label): ?>
-      <div class="atv-field"><label for="f-<?= e($field) ?>"><?= e($label) ?></label><textarea id="f-<?= e($field) ?>" name="<?= e($field) ?>" rows="<?= $field === 'description' ? 5 : 3 ?>"><?= $ta($field) ?></textarea></div>
+    <?php foreach ($richFields as $field => $label): $reqd = ($isDraftEdit && $field === 'description'); ?>
+      <div class="atv-field"><label for="f-<?= e($field) ?>"><?= e($label) ?><?php if ($reqd): ?> <span class="req">*</span><?php endif; ?></label><textarea id="f-<?= e($field) ?>" name="<?= e($field) ?>" rows="<?= $field === 'description' ? 5 : 3 ?>" class="<?= $has($field) ? 'is-invalid' : '' ?>"><?= $ta($field) ?></textarea><?php $err($field); ?></div>
     <?php endforeach; ?>
   </div>
 
@@ -138,10 +171,17 @@ $layoutValues = $layoutValues ?? [];
         : (isset($old['event_types']) ? array_map('intval', (array)$old['event_types']) : portal_venue_event_type_ids($pdo, (int)$venue['id']));
     $etVid       = (int)$venue['id'];
     include __DIR__ . '/event-types-field.php';
+    $err('event_types');
   ?>
 
   <div class="admin-form__actions">
-    <button type="submit" class="atv-btn">Save changes</button>
+    <?php if ($isDraftEdit): ?>
+      <button type="submit" class="atv-btn" name="action" value="continue" data-layout-submit>Save &amp; continue to photos &rarr;</button>
+      <button type="submit" class="atv-btn atv-btn--ghost" name="action" value="save">Save draft</button>
+    <?php else: ?>
+      <button type="submit" class="atv-btn">Save changes</button>
+    <?php endif; ?>
     <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('portal/venues/' . $id)) ?>">Cancel</a>
   </div>
+  <?php if ($isDraftEdit): ?><p class="lead-hint mt-2">Fields marked <span class="req">*</span> are required to continue to photos. <strong>Save draft</strong> keeps your progress without submitting.</p><?php endif; ?>
 </form>

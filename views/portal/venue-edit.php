@@ -37,7 +37,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     if (!csrf_validate()) {
         $errors['_form'] = 'Your session expired. Please review and save again.';
     } else {
-        $live  = portal_venue_live_columns();
+        // PU-D1-fix — a DRAFT/needs_changes venue is not yet public, so the
+        // provider may also edit the identity fields (name/type/emirate) to
+        // complete Step 1. A published venue keeps the live-edit allowlist.
+        $isDraftEdit = in_array((string)($venue['status'] ?? ''), ['draft', 'needs_changes'], true);
+        $live  = $isDraftEdit ? portal_new_venue_fields() : portal_venue_live_columns();
         $rich  = venue_richtext_fields();
         $plain = static fn(string $k, int $max) => mb_substr(trim(strip_tags((string)($_POST[$k] ?? ''))), 0, $max);
 
@@ -49,6 +53,20 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 continue;
             }
             switch ($col) {
+                case 'name':
+                    $clean['name'] = $plain('name', 255);
+                    if ($clean['name'] === '') { $errors['name'] = 'Name is required.'; }
+                    break;
+                case 'venue_type_id':
+                    $vt = (int)($_POST['venue_type_id'] ?? 0);
+                    if ($vt > 0) { $s = $pdo->prepare('SELECT 1 FROM venue_types WHERE id = :id'); $s->execute([':id' => $vt]); $clean['venue_type_id'] = $s->fetchColumn() !== false ? $vt : null; }
+                    else { $clean['venue_type_id'] = null; }
+                    break;
+                case 'emirate_id':
+                    $em = (int)($_POST['emirate_id'] ?? 0);
+                    if ($em > 0) { $s = $pdo->prepare('SELECT 1 FROM emirates WHERE id = :id'); $s->execute([':id' => $em]); $clean['emirate_id'] = $s->fetchColumn() !== false ? $em : null; }
+                    else { $clean['emirate_id'] = null; }
+                    break;
                 case 'area':      $clean[$col] = $plain('area', 150) ?: null; break;
                 case 'address':   $clean[$col] = $plain('address', 255) ?: null; break;
                 case 'video_url': $clean[$col] = $plain('video_url', 255) ?: null; break;
@@ -89,6 +107,22 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         );
         foreach ($layoutErrors as $t => $msg) { $errors['layout_' . $t] = $msg; }
 
+        // PU-D1-fix — a draft "Save & continue to photos" enforces the FULL
+        // required set before advancing to Step 2. Plain "Save" persists partial
+        // edits with no completeness gate (name is already enforced above).
+        $action = ((string)($_POST['action'] ?? 'save') === 'continue') ? 'continue' : 'save';
+        if ($isDraftEdit && $action === 'continue') {
+            $etIds   = array_values(array_filter(array_map('intval', (array)($_POST['event_types'] ?? []))));
+            $missMap = [
+                'Name' => 'name', 'Primary emirate' => 'emirate_id', 'Venue type' => 'venue_type_id',
+                'Description' => 'description', 'Capacity' => 'capacity_max',
+                'Area or address' => 'area', 'At least one event type' => 'event_types',
+            ];
+            foreach (portal_venue_missing_required($clean, count($etIds)) as $label) {
+                $errors[$missMap[$label] ?? ('req_' . $label)] = $label . ' is required to continue.';
+            }
+        }
+
         if (!$errors) {
             // Audit diff (only changed live columns).
             $changedOld = $changedNew = [];
@@ -118,6 +152,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
                 if ($changedNew) {
                     audit_log($pdo, (int)(auth_user()['id'] ?? 0) ?: null, 'update', 'venue', $vid, $changedOld, $changedNew);
+                }
+                if ($isDraftEdit && $action === 'continue') {
+                    $_SESSION['portal_flash'] = ['type' => 'success', 'msg' => 'Draft saved — add photos, then submit.'];
+                    redirect('portal/venues/' . $vid . '/images');   // Step 2
                 }
                 $_SESSION['portal_flash'] = ['type' => 'success', 'msg' => 'Saved.'];
                 redirect('portal/venues/' . $vid);

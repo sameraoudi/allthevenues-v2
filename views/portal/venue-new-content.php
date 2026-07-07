@@ -50,25 +50,27 @@ $richFields = [
     <h2 class="admin-panel__title">Venue basics</h2>
     <div class="admin-form__grid">
       <div class="atv-field atv-field--full">
-        <label for="f-name">Name</label>
+        <label for="f-name">Name <span class="req">*</span></label>
         <input type="text" id="f-name" name="name" value="<?= $v('name') ?>" maxlength="255" class="<?= $has('name') ? 'is-invalid' : '' ?>">
         <?php $err('name'); ?>
       </div>
       <div class="atv-field">
-        <label for="f-type">Venue type</label>
-        <select id="f-type" name="venue_type_id">
+        <label for="f-type">Venue type <span class="req">*</span></label>
+        <select id="f-type" name="venue_type_id" class="<?= $has('venue_type_id') ? 'is-invalid' : '' ?>">
           <option value="">—</option>
           <?php foreach (venue_types_all($pdo) as $t): ?><option value="<?= (int)$t['id'] ?>"<?= $sel('venue_type_id', (int)$t['id']) ?>><?= e((string)$t['name']) ?></option><?php endforeach; ?>
         </select>
+        <?php $err('venue_type_id'); ?>
       </div>
       <div class="atv-field">
-        <label for="f-emirate">Primary emirate</label>
-        <select id="f-emirate" name="emirate_id">
+        <label for="f-emirate">Primary emirate <span class="req">*</span></label>
+        <select id="f-emirate" name="emirate_id" class="<?= $has('emirate_id') ? 'is-invalid' : '' ?>">
           <option value="">—</option>
           <?php foreach (venue_emirates($pdo) as $em): ?><option value="<?= (int)$em['id'] ?>"<?= $sel('emirate_id', (int)$em['id']) ?>><?= e((string)$em['name']) ?></option><?php endforeach; ?>
         </select>
+        <?php $err('emirate_id'); ?>
       </div>
-      <div class="atv-field"><label for="f-area">Area</label><input type="text" id="f-area" name="area" value="<?= $v('area') ?>" maxlength="150"></div>
+      <div class="atv-field"><label for="f-area">Area <span class="req">*</span> <span class="lead-hint">(area or address)</span></label><input type="text" id="f-area" name="area" value="<?= $v('area') ?>" maxlength="150" class="<?= $has('area') ? 'is-invalid' : '' ?>"><?php $err('area'); ?></div>
       <div class="atv-field atv-field--full"><label for="f-address">Address</label><input type="text" id="f-address" name="address" value="<?= $v('address') ?>" maxlength="255"></div>
       <div class="atv-field">
         <label for="f-io">Indoor / outdoor</label>
@@ -85,7 +87,7 @@ $richFields = [
     <h2 class="admin-panel__title">Capacity, size &amp; pricing</h2>
     <div class="admin-form__grid">
       <div class="atv-field"><label for="f-cmin">Minimum guests</label><input type="number" id="f-cmin" name="capacity_min" value="<?= $v('capacity_min') ?>" min="0"></div>
-      <div class="atv-field"><label for="f-cmax">Maximum capacity</label><input type="number" id="f-cmax" name="capacity_max" value="<?= $v('capacity_max') ?>" min="0" data-layout-capmax></div>
+      <div class="atv-field"><label for="f-cmax">Maximum capacity <span class="req">*</span></label><input type="number" id="f-cmax" name="capacity_max" value="<?= $v('capacity_max') ?>" min="0" data-layout-capmax class="<?= $has('capacity_max') ? 'is-invalid' : '' ?>"><?php $err('capacity_max'); ?></div>
       <div class="atv-field"><label for="f-spend">Minimum spend (AED)</label><input type="number" id="f-spend" name="minimum_spend" value="<?= $v('minimum_spend') ?>" min="0" step="0.01"></div>
       <div class="atv-field">
         <label for="f-price">Pricing level</label>
@@ -133,8 +135,12 @@ $richFields = [
   <div class="admin-panel">
     <h2 class="admin-panel__title">Description &amp; details</h2>
     <p class="lead-hint mb-2">Rich text — only p, br, strong, em, lists and links are kept; everything else is stripped on save.</p>
-    <?php foreach ($richFields as $field => $label): ?>
-      <div class="atv-field"><label for="f-<?= e($field) ?>"><?= e($label) ?></label><textarea id="f-<?= e($field) ?>" name="<?= e($field) ?>" rows="<?= $field === 'description' ? 5 : 3 ?>"><?= $ta($field) ?></textarea></div>
+    <?php foreach ($richFields as $field => $label): $reqd = ($field === 'description'); ?>
+      <div class="atv-field">
+        <label for="f-<?= e($field) ?>"><?= e($label) ?><?php if ($reqd): ?> <span class="req">*</span><?php endif; ?></label>
+        <textarea id="f-<?= e($field) ?>" name="<?= e($field) ?>" rows="<?= $field === 'description' ? 5 : 3 ?>" class="<?= $has($field) ? 'is-invalid' : '' ?>"><?= $ta($field) ?></textarea>
+        <?php $err($field); ?>
+      </div>
     <?php endforeach; ?>
   </div>
 
@@ -144,11 +150,13 @@ $richFields = [
     $etPublished = false;
     $etVid       = 0;
     include __DIR__ . '/event-types-field.php';
+    $err('event_types');
   ?>
 
   <div class="admin-form__actions">
-    <button type="submit" class="atv-btn" data-layout-submit>Save &amp; continue to photos &rarr;</button>
+    <button type="submit" class="atv-btn" name="action" value="continue" data-layout-submit>Save &amp; continue to photos &rarr;</button>
+    <button type="submit" class="atv-btn atv-btn--ghost" name="action" value="draft">Save as draft</button>
     <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('portal')) ?>">Cancel</a>
-    <span class="lead-hint">Saving keeps this as a <strong>draft</strong> — it isn’t submitted for review yet.</span>
   </div>
+  <p class="lead-hint mt-2">Fields marked <span class="req">*</span> are required to continue to photos. <strong>Save as draft</strong> keeps whatever you’ve entered (only a name is needed) so you can finish later — it isn’t submitted for review yet.</p>
 </form>

@@ -37,11 +37,17 @@ $ago = static function (?string $ts): string {
 </div>
 <?php if ($loc !== ''): ?><p class="portal-sub"><?= e((string)$venue['name']) ?> · <?= e($loc) ?></p><?php endif; ?>
 
-<?php if ($isDraft): /* #15 — Step 2 of the add-venue flow */ ?>
-  <?php $stepActive = 'photos'; $stepDetailsDone = true; $stepPhotosDone = (bool)($pending || $live); require __DIR__ . '/_stepper.php'; ?>
+<?php
+$photoCount = count($pending) + count($live);   // photos that count toward the submit gate
+if ($isDraft): /* #15 — Step 2 of the add-venue flow */ ?>
+  <?php $stepActive = 'photos'; $stepDetailsDone = true; $stepPhotosDone = ($photoCount >= 1); require __DIR__ . '/_stepper.php'; ?>
   <div class="admin-panel">
     <p class="lead-hint mb-2">Step 2 of 3. <strong>At least one photo is required before you can submit</strong> this venue for review. Photos are uploaded with rights confirmation and reviewed by All The Venues.</p>
-    <a class="atv-btn atv-btn--sm" href="<?= e(base_url('portal/venues/' . $vid)) ?>">Continue to submit &rarr;</a>
+    <?php if ($photoCount >= 1): ?>
+      <a class="atv-btn atv-btn--sm" href="<?= e(base_url('portal/venues/' . $vid)) ?>">Continue to submit &rarr;</a>
+    <?php else: ?>
+      <p class="lead-hint mb-0"><strong>Add at least one photo below to continue.</strong></p>
+    <?php endif; ?>
   </div>
 <?php endif; ?>
 
@@ -58,7 +64,13 @@ $ago = static function (?string $ts): string {
 
     <div class="atv-field atv-field--full">
       <label for="pimg-files">Choose images</label>
-      <input type="file" id="pimg-files" name="images[]" accept="image/jpeg,image/png,image/webp" multiple required data-upload-files>
+      <div class="atv-file">
+        <label class="atv-btn atv-btn--ghost atv-file__btn">
+          <span>Choose files&hellip;</span>
+          <input type="file" id="pimg-files" name="images[]" accept="image/jpeg,image/png,image/webp" multiple required data-upload-files class="atv-file__input">
+        </label>
+        <span class="atv-file__name lead-hint" data-upload-filename>No files chosen</span>
+      </div>
       <p class="lead-hint">JPG, PNG or WebP, up to 12&nbsp;MB each — select several at once. Best photos are landscape, well lit, free of text overlays or watermarks, and clearly show the venue (at least 1200px wide). We optimise and re-encode every image automatically.</p>
     </div>
 

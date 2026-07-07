@@ -174,9 +174,35 @@ function portal_create_new_venue(PDO $pdo, int $partnerId, int $userId, array $c
 }
 
 /**
- * #15 — Submit an owned DRAFT (or needs_changes) venue for review. Requires ≥1
- * uploaded photo. On success: flips the venue to 'pending' and creates the
- * new_venue change request (the U-P6b admin flow takes it from there).
+ * PU-D1-fix — the REQUIRED-details set (single source of truth), mirroring
+ * cr_newvenue_completeness minus slug/provider (auto/forced) and the photo
+ * (handled separately). Returns the labels still MISSING; [] = details complete.
+ * @return string[]
+ */
+function portal_venue_missing_required(array $venue, int $eventTypeCount): array
+{
+    $nonEmpty = static fn($v): bool => $v !== null && trim((string)$v) !== '';
+    $posInt   = static fn($v): bool => (int)$v > 0;
+
+    $checks = [
+        ['Name',                    $nonEmpty($venue['name'] ?? null)],
+        ['Primary emirate',         $posInt($venue['emirate_id'] ?? 0)],
+        ['Area or address',         $nonEmpty($venue['area'] ?? null) || $nonEmpty($venue['address'] ?? null)],
+        ['Venue type',              $posInt($venue['venue_type_id'] ?? 0)],
+        ['At least one event type', $eventTypeCount >= 1],
+        ['Capacity',                ((int)($venue['capacity_min'] ?? 0) > 0) || ((int)($venue['capacity_max'] ?? 0) > 0)],
+        ['Description',             $nonEmpty($venue['description'] ?? null)],
+    ];
+    $missing = [];
+    foreach ($checks as [$label, $ok]) { if (!$ok) { $missing[] = $label; } }
+    return $missing;
+}
+
+/**
+ * #15 — Submit an owned DRAFT (or needs_changes) venue for review. Backstop gate:
+ * required details must be complete AND ≥1 photo must exist (blocks an incomplete
+ * submit even if the UI is bypassed). On success flips the venue to 'pending' and
+ * creates the new_venue change request (the U-P6b admin flow takes it from there).
  * @return array{ok:bool,error?:string}
  */
 function portal_submit_venue_for_review(PDO $pdo, int $venueId, int $partnerId, int $userId): array
@@ -191,7 +217,12 @@ function portal_submit_venue_for_review(PDO $pdo, int $venueId, int $partnerId, 
         return ['ok' => false, 'error' => 'This venue has already been submitted.'];
     }
 
-    // GATE: at least one photo must exist (any review_status).
+    // BACKSTOP GATE — required details complete AND ≥1 photo (any review_status).
+    $etCount = count(portal_venue_event_type_ids($pdo, $venueId));
+    $missing = portal_venue_missing_required($venue, $etCount);
+    if ($missing !== []) {
+        return ['ok' => false, 'error' => 'Please complete these details before submitting: ' . implode(', ', $missing) . '.'];
+    }
     $ic = $pdo->prepare('SELECT COUNT(*) FROM venue_images WHERE venue_id = :vid');
     $ic->execute([':vid' => $venueId]);
     if ((int)$ic->fetchColumn() < 1) {
@@ -226,6 +257,60 @@ function portal_submit_venue_for_review(PDO $pdo, int $venueId, int $partnerId, 
 
     audit_log($pdo, $userId, 'submit', 'venue', $venueId, ['status' => 'draft'], ['status' => 'pending', 'request_id' => $requestId]);
     return ['ok' => true];
+}
+
+/**
+ * PU-D1-fix — permanently delete an owned DRAFT venue (only a draft — never a
+ * pending/needs_changes/published/archived one). Owner + status='draft' guarded
+ * in the SELECT, so a forged id on any other status is a no-op. Deletes the
+ * junction/layout/image rows + the venue row in a transaction, then unlinks the
+ * image files (fail-safe). Returns true iff a draft was deleted.
+ */
+function portal_delete_draft_venue(PDO $pdo, int $venueId, int $partnerId, int $userId): bool
+{
+    $sel = $pdo->prepare("SELECT name, slug FROM venues WHERE id = :vid AND partner_id = :pid AND status = 'draft' LIMIT 1");
+    $sel->execute([':vid' => $venueId, ':pid' => $partnerId]);
+    $venue = $sel->fetch();
+    if ($venue === false) {
+        return false;   // not owned / not a draft — never delete
+    }
+
+    // Collect image files to unlink after a successful commit.
+    $imgs = $pdo->prepare('SELECT file_path, thumb_path FROM venue_images WHERE venue_id = :vid');
+    $imgs->execute([':vid' => $venueId]);
+    $files = [];
+    foreach ($imgs->fetchAll() as $r) {
+        foreach ([$r['file_path'] ?? '', $r['thumb_path'] ?? ''] as $p) { if (trim((string)$p) !== '') { $files[] = (string)$p; } }
+    }
+
+    try {
+        $pdo->beginTransaction();
+        $pdo->prepare('DELETE FROM venue_event_types WHERE venue_id = :vid')->execute([':vid' => $venueId]);
+        $pdo->prepare('DELETE FROM venue_layout_capacity WHERE venue_id = :vid')->execute([':vid' => $venueId]);
+        $pdo->prepare('DELETE FROM venue_images WHERE venue_id = :vid')->execute([':vid' => $venueId]);
+        // Re-scope the final delete to draft + owner (defence in depth).
+        $del = $pdo->prepare("DELETE FROM venues WHERE id = :vid AND partner_id = :pid AND status = 'draft'");
+        $del->execute([':vid' => $venueId, ':pid' => $partnerId]);
+        if ($del->rowCount() < 1) {
+            $pdo->rollBack();
+            return false;
+        }
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) { $pdo->rollBack(); }
+        error_log('portal_delete_draft_venue failed (venue=' . $venueId . '): ' . $e->getMessage());
+        return false;
+    }
+
+    // Unlink files from disk (fail-safe — a missing file is fine).
+    foreach ($files as $rel) {
+        $abs = app_path($rel);
+        if (is_file($abs)) { @unlink($abs); }
+    }
+
+    audit_log($pdo, $userId ?: null, 'delete', 'venue', $venueId,
+        ['name' => $venue['name'], 'slug' => $venue['slug'], 'status' => 'draft'], null);
+    return true;
 }
 
 /** All venues owned by a provider (every status), newest-touched first. [] if none. */

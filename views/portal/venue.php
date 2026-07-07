@@ -76,25 +76,60 @@ $photoCount = (int)$phc->fetchColumn();
   </div>
 </div>
 
-<?php if ($isDraft): /* #15 — three-step progress + submit CTA */ ?>
+<?php
+if ($isDraft):
+  /* PU-D1-fix — Step 3 readiness mirrors the server submit gate exactly:
+     required details complete AND >=1 photo. Same source of truth as
+     portal_submit_venue_for_review() so UI and backstop can't diverge. */
+  $etCount    = count(portal_venue_event_type_ids($pdo, $vid));
+  $missing    = portal_venue_missing_required($venue, $etCount);
+  $detailsOk  = ($missing === []);
+  $photosOk   = ($photoCount > 0);
+  $canSubmit  = $detailsOk && $photosOk;
+  $blockers   = [];
+  if (!$detailsOk) { $blockers[] = 'complete required details (' . implode(', ', $missing) . ')'; }
+  if (!$photosOk)  { $blockers[] = 'add at least one photo'; }
+?>
   <div class="admin-panel">
     <h2 class="admin-panel__title">Finish adding this venue</h2>
-    <?php $stepActive = 'submit'; $stepDetailsDone = true; $stepPhotosDone = ($photoCount > 0); require __DIR__ . '/_stepper.php'; ?>
+    <?php $stepActive = 'submit'; $stepDetailsDone = $detailsOk; $stepPhotosDone = $photosOk; require __DIR__ . '/_stepper.php'; ?>
     <ul class="pd-prog">
-      <li class="pd-prog__i pd-prog__i--ok"><span class="pd-tick">&#10003;</span> Details saved</li>
-      <li class="pd-prog__i <?= $photoCount > 0 ? 'pd-prog__i--ok' : 'pd-prog__i--todo' ?>">
-        <span class="pd-tick"><?= $photoCount > 0 ? '&#10003;' : '2' ?></span>
-        <?= $photoCount > 0 ? e((string)$photoCount) . ' photo' . ($photoCount === 1 ? '' : 's') . ' uploaded' : 'Add at least one photo' ?>
-        <a href="<?= e(base_url('portal/venues/' . $vid . '/images')) ?>">Manage photos</a>
+      <li class="pd-prog__i <?= $detailsOk ? 'pd-prog__i--ok' : 'pd-prog__i--todo' ?>">
+        <span class="pd-tick"><?= $detailsOk ? '&#10003;' : '1' ?></span>
+        <?php if ($detailsOk): ?>
+          Required details complete
+        <?php else: ?>
+          Required details missing: <?= e(implode(', ', $missing)) ?>
+          <a href="<?= e(base_url('portal/venues/' . $vid . '/edit')) ?>">Edit details</a>
+        <?php endif; ?>
       </li>
-      <li class="pd-prog__i pd-prog__i--todo"><span class="pd-tick">3</span> Submit for review</li>
+      <li class="pd-prog__i <?= $photosOk ? 'pd-prog__i--ok' : 'pd-prog__i--todo' ?>">
+        <span class="pd-tick"><?= $photosOk ? '&#10003;' : '2' ?></span>
+        <?= $photosOk ? e((string)$photoCount) . ' photo' . ($photoCount === 1 ? '' : 's') . ' uploaded' : 'Add at least one photo' ?>
+        <a href="<?= e(base_url('portal/venues/' . $vid . '/images')) ?>">Add photos (Step 2)</a>
+      </li>
+      <li class="pd-prog__i <?= $canSubmit ? 'pd-prog__i--ok' : 'pd-prog__i--todo' ?>"><span class="pd-tick">3</span> Submit for review</li>
     </ul>
     <p class="lead-hint mb-2">Draft venues are private and never public. When you submit, All The Venues reviews the venue and its photos.</p>
     <form method="post" action="<?= e(base_url('portal/venues/' . $vid . '/submit')) ?>">
       <?php csrf_field(); ?>
-      <button type="submit" class="atv-btn"<?= $photoCount > 0 ? '' : ' disabled title="Add at least one photo first"' ?>>Submit for review</button>
+      <button type="submit" class="atv-btn"<?= $canSubmit ? '' : ' disabled title="Before submitting: ' . e(implode('; ', $blockers)) . '"' ?>>Submit for review</button>
     </form>
+    <?php if (!$canSubmit): ?><p class="lead-hint mt-2">Before you can submit: <?= e(implode('; ', $blockers)) ?>.</p><?php endif; ?>
   </div>
+
+  <?php /* PU-D1-fix Part F — delete is offered ONLY for a true draft (never
+           pending/needs_changes/published/archived). needs_changes is NOT a draft. */ ?>
+  <?php if ((string)$venue['status'] === 'draft'): ?>
+    <div class="admin-panel">
+      <h2 class="admin-panel__title">Delete this draft</h2>
+      <p class="lead-hint mb-2">This draft hasn&rsquo;t been submitted. Deleting it removes it and any photos you&rsquo;ve uploaded — this can&rsquo;t be undone.</p>
+      <form method="post" action="<?= e(base_url('portal/venues/' . $vid . '/delete')) ?>">
+        <?php csrf_field(); ?>
+        <button type="submit" class="atv-btn atv-btn--ghost atv-btn--sm atv-btn--danger" data-confirm="Delete this draft? This can't be undone.">Delete draft</button>
+      </form>
+    </div>
+  <?php endif; ?>
 <?php endif; ?>
 
 <?php
