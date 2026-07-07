@@ -107,6 +107,27 @@ if (preg_match('#^(\d+)$#', $rest, $m)) {
                 }
                 $noteError = $res['error'] ?? 'Could not complete that action.';
             }
+        } elseif ($type === 'claim') {
+            /* ---- U-P8b: claim decisions -------------------------------- */
+            $in = [
+                'evidence_status'  => (string)($_POST['evidence_status'] ?? ''),
+                'evidence_type'    => (string)($_POST['evidence_type'] ?? ''),
+                'internal_note'    => (string)($_POST['internal_note'] ?? ''),
+                'verified_confirm' => (string)($_POST['verified_confirm'] ?? ''),
+                'notify'           => (string)($_POST['notify'] ?? 'before'),
+                'note'             => $note,
+            ];
+            $res = cr_claim_decide($pdo, $req, $uid, $decision, $in);
+            if (!empty($res['ok'])) {
+                $labels = ['approve' => 'Claim approved — venue reassigned to the claimant.',
+                           'request_proof' => 'Proof requested from the claimant.',
+                           'reject' => 'Claim rejected.'];
+                $msg = $labels[$decision] ?? 'Done.';
+                if (!empty($res['warning'])) { $msg .= ' ' . $res['warning']; }
+                $_SESSION['admin_flash'] = ['type' => (!empty($res['warning']) ? 'warning' : 'success'), 'msg' => $msg];
+                redirect(base_url('admin/change-requests'));
+            }
+            $noteError = $res['error'] ?? 'Could not complete that action.';
         } else {
             $_SESSION['admin_flash'] = ['type' => 'error', 'msg' => 'This request type is reviewed in a later unit.'];
             redirect($detailUrl);
@@ -126,6 +147,9 @@ if (preg_match('#^(\d+)$#', $rest, $m)) {
             ? cr_newvenue_completeness($nv['venue'], count($nv['event_types']), $nv['image_count'])
             : ['score' => 0, 'missing' => ['Venue not found'], 'can_publish' => false, 'checks' => []];
         $admin_content_view = __DIR__ . '/change-request-newvenue.php';
+    } elseif ($type === 'claim') {
+        $cl = cr_load_claim($pdo, $req);
+        $admin_content_view = __DIR__ . '/change-request-claim.php';
     } else {
         $admin_content_view = __DIR__ . '/change-request-detail.php';
     }

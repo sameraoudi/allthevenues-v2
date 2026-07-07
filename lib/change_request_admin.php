@@ -166,9 +166,9 @@ function cr_admin_list(PDO $pdo, array $filters): array
         $changes        = cr_decode_changes($r['proposed_changes_json']);
         $r['changes']   = $changes;
         $r['change_count'] = count($changes);
-        // new_venue has no changed-field list — a whole new listing is inherently high-risk.
+        // new_venue / claim have no changed-field list — inherently high-risk.
         $r['risk']      = ($r['type'] === 'edit') ? cr_request_risk(array_keys($changes))
-                        : (($r['type'] === 'new_venue') ? 'high' : 'low');
+                        : (in_array($r['type'], ['new_venue', 'claim'], true) ? 'high' : 'low');
     }
     unset($r);
     return $rows;
@@ -214,7 +214,7 @@ function cr_admin_get(PDO $pdo, int $id): ?array
     $req['changes']      = $changes;
     $req['change_rows']  = $rows;
     $req['risk']         = ($req['type'] === 'edit') ? cr_request_risk(array_keys($changes))
-                         : (($req['type'] === 'new_venue') ? 'high' : 'low');
+                         : (in_array($req['type'], ['new_venue', 'claim'], true) ? 'high' : 'low');
     $req['recipient']    = trim((string)($req['submitter_email'] ?? '')) !== ''
         ? (string)$req['submitter_email'] : (string)($req['provider_email'] ?? '');
     return $req;
@@ -562,11 +562,238 @@ function cr_newvenue_decide(PDO $pdo, array $req, int $adminUserId, string $deci
     return $out;
 }
 
+/* ==========================================================================
+ * #3 U-P8b — CLAIM review (approve/reassign · request-proof · reject).
+ * ======================================================================== */
+
+/** Host of a URL/email-domain, lowercased, without a leading www. */
+function _cr_norm_host(string $s): string
+{
+    $s = trim(strtolower($s));
+    if ($s === '') { return ''; }
+    if (strpos($s, '@') !== false) { $s = substr($s, strpos($s, '@') + 1); }   // email → domain
+    elseif (preg_match('~^https?://~', $s)) { $s = (string)(parse_url($s, PHP_URL_HOST) ?: ''); }
+    $s = preg_replace('~^www\.~', '', $s);
+    return (string)$s;
+}
+
+/**
+ * Full claim context for the review screen. Decodes proposed_changes_json.claim +
+ * .review, resolves target venue + current assignment + claimant + requester, and
+ * computes contested + a work-email/website domain check.
+ */
+function cr_load_claim(PDO $pdo, array $req): array
+{
+    $data   = cr_decode_changes($req['proposed_changes_json']);
+    $claim  = (is_array($data) && isset($data['claim']) && is_array($data['claim'])) ? $data['claim'] : [];
+    $review = (is_array($data) && isset($data['review']) && is_array($data['review'])) ? $data['review'] : [];
+
+    $venueId  = (int)($req['venue_id'] ?? 0);
+    $claimant = (int)($req['partner_id'] ?? 0);
+
+    $vs = $pdo->prepare(
+        'SELECT v.id, v.name, v.slug, v.status, v.website, v.partner_id,
+                v.management_source, v.provider_assigned_at,
+                cur.org_name AS current_owner_name, cur.email AS current_owner_email
+         FROM venues v LEFT JOIN partners cur ON cur.id = v.partner_id
+         WHERE v.id = :vid LIMIT 1'
+    );
+    $vs->execute([':vid' => $venueId]);
+    $venue = $vs->fetch() ?: null;
+
+    $currentOwnerId = $venue !== null ? (int)($venue['partner_id'] ?? 0) : 0;
+    $contested      = ($currentOwnerId > 0 && $currentOwnerId !== $claimant);
+
+    // Domain check: work_email domain vs venue website host.
+    $emailHost = _cr_norm_host((string)($claim['work_email'] ?? ''));
+    $siteHost  = _cr_norm_host((string)($venue['website'] ?? ''));
+    if ($emailHost === '' || $siteHost === '') { $domainCheck = 'unknown'; }
+    else { $domainCheck = ($emailHost === $siteHost) ? 'match' : 'no_match'; }
+
+    return [
+        'claim'          => $claim,
+        'review'         => $review,
+        'venue'          => $venue,
+        'claimant_name'  => (string)($req['provider_name'] ?? ''),
+        'requester_name' => (string)($req['submitter_name'] ?? ''),
+        'requester_email' => (string)($req['submitter_email'] ?? ''),
+        'contested'      => $contested,
+        'current_owner_name'  => $venue['current_owner_name'] ?? null,
+        'current_owner_email' => $venue['current_owner_email'] ?? null,
+        'management_source'   => $venue['management_source'] ?? null,
+        'assigned_at'         => $venue['provider_assigned_at'] ?? null,
+        'domain_check'   => $domainCheck,
+        'email_host'     => $emailHost,
+        'site_host'      => $siteHost,
+    ];
+}
+
+/** Note required on reject + request-proof. */
+function cr_claim_reject_note_required(): bool { return true; }
+
+/** Allowed evidence enums (value => label) for the review record. */
+function cr_claim_evidence_statuses(): array
+{
+    return ['not_verified' => 'Not verified', 'verified' => 'Verified',
+            'insufficient' => 'Insufficient', 'conflicting' => 'Conflicting'];
+}
+function cr_claim_evidence_types(): array
+{
+    return ['website_link' => 'Website link', 'email_domain' => 'Email domain',
+            'management_agreement' => 'Management agreement', 'brand_owned_page' => 'Brand-owned page',
+            'manual_confirmation' => 'Manual confirmation'];
+}
+
+/**
+ * Decide a claim. $decision ∈ approve | request_proof | reject. $in carries the
+ * evidence review + (approve) verified_confirm + notify, and the review note.
+ * Approve reassigns the venue to the claimant (management_source='provider_claimed')
+ * inside a transaction, gated server-side on a verification confirm when contested.
+ * @return array{ok:bool,error?:string,warning?:string}
+ */
+function cr_claim_decide(PDO $pdo, array $req, int $adminUserId, string $decision, array $in): array
+{
+    if (($req['type'] ?? '') !== 'claim' || (string)($req['status'] ?? '') !== 'pending') {
+        return ['ok' => false, 'error' => 'This claim can no longer be reviewed.'];
+    }
+    if (!in_array($decision, ['approve', 'request_proof', 'reject'], true)) {
+        return ['ok' => false, 'error' => 'Unknown decision.'];
+    }
+    $note = trim((string)($in['note'] ?? ''));
+    if (in_array($decision, ['request_proof', 'reject'], true) && $note === '') {
+        return ['ok' => false, 'error' => 'A note to the provider is required for this decision.'];
+    }
+
+    $ctx      = cr_load_claim($pdo, $req);
+    $rid      = (int)$req['id'];
+    $venueId  = (int)$req['venue_id'];
+    $claimant = (int)$req['partner_id'];
+
+    // Evidence review record (admin-only; stored under the "review" json key).
+    $evStatus = isset(cr_claim_evidence_statuses()[$in['evidence_status'] ?? '']) ? (string)$in['evidence_status'] : 'not_verified';
+    $evType   = isset(cr_claim_evidence_types()[$in['evidence_type'] ?? '']) ? (string)$in['evidence_type'] : 'manual_confirmation';
+    $review = [
+        'evidence_status' => $evStatus,
+        'evidence_type'   => $evType,
+        'internal_note'   => mb_substr(trim(strip_tags((string)($in['internal_note'] ?? ''))), 0, 2000),
+        'decision'        => $decision,
+        'decided_by'      => $adminUserId,
+        'decided_at'      => date('Y-m-d H:i:s'),
+    ];
+    $data = cr_decode_changes($req['proposed_changes_json']);
+    if (!is_array($data)) { $data = []; }
+    $data['review'] = $review;
+    $mergedJson = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+    /* ---------------- APPROVE (reassign) ---------------- */
+    if ($decision === 'approve') {
+        if ($ctx['venue'] === null) {
+            return ['ok' => false, 'error' => 'The venue no longer exists.'];
+        }
+        // Server-side conflict gate.
+        if ($ctx['contested'] && (string)($in['verified_confirm'] ?? '') !== '1') {
+            return ['ok' => false, 'error' => 'Tick the verification confirmation before approving a contested claim.'];
+        }
+        $previousOwner = (int)($ctx['venue']['partner_id'] ?? 0) ?: null;
+        if ($previousOwner === $claimant) {
+            return ['ok' => false, 'error' => 'This venue is already managed by the claimant.'];
+        }
+
+        $notify = in_array((string)($in['notify'] ?? 'before'), ['before', 'after', 'none'], true) ? (string)$in['notify'] : 'before';
+
+        try {
+            $pdo->beginTransaction();
+            $uv = $pdo->prepare(
+                "UPDATE venues SET partner_id = :cl, management_source = 'provider_claimed',
+                        provider_assigned_at = NOW(), provider_assigned_by = :admin
+                 WHERE id = :vid"
+            );
+            $uv->execute([':cl' => $claimant, ':admin' => $adminUserId, ':vid' => $venueId]);
+
+            $ur = $pdo->prepare(
+                "UPDATE venue_change_requests
+                 SET status='approved', reviewed_by=:by, reviewed_at=NOW(), review_note=:note,
+                     proposed_changes_json=:json, updated_at=NOW()
+                 WHERE id=:rid AND status='pending'"
+            );
+            $ur->execute([':by' => $adminUserId, ':note' => ($note !== '' ? $note : null),
+                          ':json' => $mergedJson, ':rid' => $rid]);
+            if ($ur->rowCount() < 1) {
+                $pdo->rollBack();
+                return ['ok' => false, 'error' => 'This claim can no longer be reviewed.'];
+            }
+            $pdo->commit();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) { $pdo->rollBack(); }
+            error_log('cr_claim_decide approve failed (request=' . $rid . '): ' . $e->getMessage());
+            return ['ok' => false, 'error' => 'Something went wrong approving the claim. Please try again.'];
+        }
+
+        $mailClaimant = cr_notify_provider($req, 'claim_approved', $note);
+        $mailIncumbent = null;
+        if ($notify !== 'none' && $previousOwner && trim((string)($ctx['current_owner_email'] ?? '')) !== '') {
+            $mailIncumbent = _cr_notify_incumbent((string)$ctx['current_owner_email'],
+                (string)($ctx['venue']['name'] ?? 'a venue'), (string)($ctx['claimant_name'] ?? ''));
+        }
+        audit_log($pdo, $adminUserId, 'approve', 'change_request', $rid,
+            ['venue_id' => $venueId, 'previous_owner' => $previousOwner],
+            ['new_owner' => $claimant, 'evidence_status' => $evStatus, 'decision' => 'approve',
+             'notify' => $notify, 'notified_claimant' => $mailClaimant, 'notified_incumbent' => $mailIncumbent]);
+
+        $out = ['ok' => true];
+        if (!$mailClaimant) { $out['warning'] = 'Reassigned, but the claimant notification email failed to send.'; }
+        return $out;
+    }
+
+    /* ---------------- REQUEST PROOF / REJECT (no reassign) ---------------- */
+    $status   = ($decision === 'reject') ? 'rejected' : 'needs_changes';
+    $mailKey  = ($decision === 'reject') ? 'claim_rejected' : 'claim_proof';
+    try {
+        $ur = $pdo->prepare(
+            "UPDATE venue_change_requests
+             SET status=:st, reviewed_by=:by, reviewed_at=NOW(), review_note=:note,
+                 proposed_changes_json=:json, updated_at=NOW()
+             WHERE id=:rid AND status='pending'"
+        );
+        $ur->execute([':st' => $status, ':by' => $adminUserId, ':note' => $note, ':json' => $mergedJson, ':rid' => $rid]);
+        if ($ur->rowCount() < 1) {
+            return ['ok' => false, 'error' => 'This claim can no longer be reviewed.'];
+        }
+    } catch (Throwable $e) {
+        error_log('cr_claim_decide ' . $decision . ' failed (request=' . $rid . '): ' . $e->getMessage());
+        return ['ok' => false, 'error' => 'Something went wrong recording the decision. Please try again.'];
+    }
+
+    $mailOk = cr_notify_provider($req, $mailKey, $note);
+    audit_log($pdo, $adminUserId, $decision, 'change_request', $rid, null,
+        ['decision' => $decision, 'evidence_status' => $evStatus, 'note' => $note, 'notified' => $mailOk]);
+
+    $out = ['ok' => true];
+    if (!$mailOk) { $out['warning'] = 'Saved, but the claimant notification email failed to send.'; }
+    return $out;
+}
+
+/** Email the incumbent provider that their venue was reassigned. */
+function _cr_notify_incumbent(string $to, string $venueName, string $newOwner): bool
+{
+    $to = trim($to);
+    if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) { return false; }
+    $esc = static fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+    $body = '<div style="font-family:Arial,sans-serif;color:#0E1B2A;line-height:1.5;">'
+          . '<h2 style="font-size:18px;">All The Venues</h2>'
+          . '<p>Management of <strong>' . $esc($venueName) . '</strong> on All The Venues has been reassigned'
+          . ($newOwner !== '' ? ' to <strong>' . $esc($newOwner) . '</strong>' : '')
+          . ' following a verified ownership claim. It no longer appears in your provider portal.</p>'
+          . '<p>If you believe this is a mistake, please contact All The Venues support.</p></div>';
+    return send_mail($to, 'A venue was reassigned — All The Venues', $body);
+}
+
 /**
  * Email the submitting provider about a decision. $decision ∈ approved |
  * changes-requested | rejected  (edit requests), or  nv_published | nv_draft |
- * nv_changes | nv_rejected  (new-venue submissions). send_mail() never throws
- * (returns bool). Returns false (and logs) when there is no recipient / send failed.
+ * nv_changes | nv_rejected  (new-venue submissions), or  claim_approved |
+ * claim_proof | claim_rejected  (claims). send_mail() never throws (returns bool).
+ * Returns false (and logs) when there is no recipient / send failed.
  */
 function cr_notify_provider(array $req, string $decision, string $note): bool
 {
@@ -580,9 +807,27 @@ function cr_notify_provider(array $req, string $decision, string $note): bool
     $link    = base_url('portal/venues/' . (int)($req['venue_id'] ?? 0));
 
     // Decisions that are pure approvals (no reviewer note shown to the provider).
-    $positive = ['approved', 'nv_published', 'nv_draft'];
+    $positive = ['approved', 'nv_published', 'nv_draft', 'claim_approved'];
 
     switch ($decision) {
+        case 'claim_approved':
+            $subject = 'Your venue claim was approved — ' . $venue;
+            $intro   = 'Good news — your claim for <strong>' . $esc($venue)
+                     . '</strong> has been approved. It now appears in your provider portal and you can manage it.';
+            $link    = base_url('portal/venues/' . (int)($req['venue_id'] ?? 0));
+            break;
+        case 'claim_proof':
+            $subject = 'More information needed for your venue claim — ' . $venue;
+            $intro   = 'We reviewed your claim for <strong>' . $esc($venue)
+                     . '</strong> and need proof of authorisation before we can approve it. You can add proof from your provider portal.';
+            $link    = base_url('portal/claim');
+            break;
+        case 'claim_rejected':
+            $subject = 'Your venue claim was declined — ' . $venue;
+            $intro   = 'Your claim for <strong>' . $esc($venue)
+                     . '</strong> was reviewed and could not be approved. The current venue assignment is unchanged.';
+            $link    = base_url('portal/claim');
+            break;
         case 'approved':
             $subject = 'Your change request was approved — ' . $venue;
             $intro   = 'Good news — your requested changes to <strong>' . $esc($venue)

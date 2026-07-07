@@ -41,7 +41,7 @@ $types = ['edit' => 'Edit', 'new_venue' => 'New venue', 'image' => 'Image', 'cla
       <tbody>
         <?php foreach ($rows as $r):
           [$stLabel, $stClass] = cr_status_meta((string)$r['status']);
-          $reviewable = in_array((string)$r['type'], ['edit', 'new_venue'], true);   // U-P5b + U-P6b
+          $reviewable = in_array((string)$r['type'], ['edit', 'new_venue', 'claim'], true);   // U-P5b + U-P6b + U-P8b
           $detail = base_url('admin/change-requests/' . (int)$r['id']);
         ?>
           <tr>

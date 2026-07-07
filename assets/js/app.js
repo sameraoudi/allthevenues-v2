@@ -551,4 +551,24 @@
     inp.type = show ? 'text' : 'password';
     t.textContent = show ? 'hide' : 'show';
   });
+
+  // Claim review (U-P8b): gate Approve behind the verification checkbox when the
+  // claim is contested (server enforces regardless), and copy each decision
+  // button's confirm copy onto the form so the form-level confirm handler uses it.
+  (function () {
+    var form = document.querySelector('[data-claim-form]');
+    if (!form) return;
+    if (form.getAttribute('data-claim-contested') === '1') {
+      var gate = form.querySelector('[data-claim-gate]');
+      var approve = form.querySelector('[data-claim-approve]');
+      if (gate && approve) {
+        var sync = function () { approve.disabled = !gate.checked; };
+        gate.addEventListener('change', sync); sync();
+      }
+    }
+  })();
+  document.addEventListener('click', function (ev) {
+    var btn = ev.target.closest('[data-claim-form] button[type=submit][data-confirm]');
+    if (btn && btn.form) { btn.form.setAttribute('data-confirm', btn.getAttribute('data-confirm')); }
+  });
 })();
