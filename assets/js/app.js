@@ -577,7 +577,7 @@
     if (!inp) return;
     var show = inp.type === 'password';
     inp.type = show ? 'text' : 'password';
-    t.textContent = show ? 'hide' : 'show';
+    t.textContent = show ? 'Hide' : 'Show';
   });
 
   // Claim review (U-P8b): gate Approve behind the verification checkbox when the

@@ -25,7 +25,7 @@ $requestUrl = base_url('set-password/request');
           <?php csrf_field(); ?>
           <input type="hidden" name="token" value="<?= e($spToken) ?>">
           <div class="atv-field">
-            <label for="sp-pw">New password <button type="button" class="onb-toggle" data-pw-toggle="sp-pw">show</button></label>
+            <label for="sp-pw">New password <button type="button" class="onb-toggle" data-pw-toggle="sp-pw">Show</button></label>
             <input type="password" id="sp-pw" name="password" required autocomplete="new-password" minlength="10">
           </div>
           <div class="atv-field">

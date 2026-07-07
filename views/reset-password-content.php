@@ -25,7 +25,7 @@ $requestUrl = base_url('forgot-password');
           <?php csrf_field(); ?>
           <input type="hidden" name="token" value="<?= e($rpToken) ?>">
           <div class="atv-field">
-            <label for="rp-pw">New password <button type="button" class="onb-toggle" data-pw-toggle="rp-pw">show</button></label>
+            <label for="rp-pw">New password <button type="button" class="onb-toggle" data-pw-toggle="rp-pw">Show</button></label>
             <input type="password" id="rp-pw" name="password" required autocomplete="new-password" minlength="10">
           </div>
           <div class="atv-field">

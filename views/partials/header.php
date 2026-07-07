@@ -17,7 +17,7 @@
     <ul class="main-nav" id="mainNav">
       <li><a href="<?= e(base_url('venues')) ?>">Venues</a></li>
       <li><a href="<?= e(base_url('providers')) ?>">Venue Providers</a></li>
-      <li><a href="<?= e(base_url('event-types')) ?>">Event types</a></li>
+      <li><a href="<?= e(base_url('event-types')) ?>">Event Types</a></li>
       <li><a href="<?= e(base_url('locations')) ?>">Locations</a></li>
       <li><a href="<?= e(base_url('become-a-venue-partner')) ?>">Become a Venue Partner</a></li>
     </ul>
