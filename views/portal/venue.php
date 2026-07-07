@@ -174,16 +174,19 @@ if (!empty($pending)):
   </div>
 <?php endif; ?>
 
-<?php if ($images): ?>
-  <div class="admin-panel">
+<div class="admin-panel">
+  <div class="lead-detail__head">
     <h2 class="admin-panel__title">Images</h2>
+    <a class="atv-btn atv-btn--sm" href="<?= e(base_url('portal/venues/' . (int)$venue['id'] . '/images')) ?>">Manage photos</a>
+  </div>
+  <?php if ($images): ?>
     <div class="portal-thumbs">
       <?php foreach ($images as $img): ?>
         <img class="portal-thumb" src="<?= e(venue_img_src($img['file_path'] ?? null)) ?>" alt="<?= e((string)($img['alt_text'] ?? '')) ?>" loading="lazy">
       <?php endforeach; ?>
     </div>
-  </div>
-<?php endif; ?>
+  <?php endif; ?>
+</div>
 
 <?php if ($layouts): ?>
   <div class="admin-panel">

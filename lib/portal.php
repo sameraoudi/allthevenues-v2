@@ -224,3 +224,162 @@ function portal_venue_event_types(PDO $pdo, int $venueId): array
     $stmt->execute([':vid' => $venueId]);
     return array_map(static fn($r) => (string)$r['name'], $stmt->fetchAll());
 }
+
+/* ==========================================================================
+ * #3 U-P7a — provider venue-image uploads (submit + withdraw side).
+ * Every query is owner-scoped via JOIN venues v ON v.id = vi.venue_id AND
+ * v.partner_id = :pid (fail closed — a client id is never trusted). Uploads land
+ * review_status='pending_review' + status='hidden' (invisible publicly, cannot
+ * satisfy any publish gate) until an admin approves them in U-P7b. The provider's
+ * rights confirmation (rights_confirmed*) is SEPARATE from ATV editorial approval
+ * (#9 permission_status, admin-owned).
+ * ======================================================================== */
+
+/** Pending (awaiting-review) images the provider submitted for this owned venue. */
+function portal_venue_images_pending(PDO $pdo, int $venueId, int $partnerId): array
+{
+    $stmt = $pdo->prepare(
+        "SELECT vi.* FROM venue_images vi
+         JOIN venues v ON v.id = vi.venue_id AND v.partner_id = :pid
+         WHERE vi.venue_id = :vid AND vi.review_status = 'pending_review'
+         ORDER BY vi.id DESC"
+    );
+    $stmt->execute([':vid' => $venueId, ':pid' => $partnerId]);
+    return $stmt->fetchAll();
+}
+
+/** Rejected images for this owned venue (the "Not approved" section; empty until U-P7b). */
+function portal_venue_images_rejected(PDO $pdo, int $venueId, int $partnerId): array
+{
+    $stmt = $pdo->prepare(
+        "SELECT vi.* FROM venue_images vi
+         JOIN venues v ON v.id = vi.venue_id AND v.partner_id = :pid
+         WHERE vi.venue_id = :vid AND vi.review_status = 'rejected'
+         ORDER BY vi.id DESC"
+    );
+    $stmt->execute([':vid' => $venueId, ':pid' => $partnerId]);
+    return $stmt->fetchAll();
+}
+
+/** Live (public) images for this owned venue — read-only display. */
+function portal_venue_images_live(PDO $pdo, int $venueId, int $partnerId): array
+{
+    $stmt = $pdo->prepare(
+        "SELECT vi.* FROM venue_images vi
+         JOIN venues v ON v.id = vi.venue_id AND v.partner_id = :pid
+         WHERE vi.venue_id = :vid AND vi.status = 'active' AND vi.review_status = 'approved'
+         ORDER BY vi.is_primary DESC, vi.sort_order ASC, vi.id ASC"
+    );
+    $stmt->execute([':vid' => $venueId, ':pid' => $partnerId]);
+    return $stmt->fetchAll();
+}
+
+/**
+ * Add ONE provider-submitted image as pending review (hidden). Re-verifies
+ * ownership; captures original filename + dimensions + size BEFORE upload
+ * re-encodes; records the provider's rights confirmation. Returns
+ * ['ok'=>bool, 'id'=>int] or ['ok'=>false,'error'=>string].
+ */
+function portal_add_pending_image(PDO $pdo, int $venueId, int $partnerId, int $userId,
+                                  string $uploaderName, array $file, string $alt): array
+{
+    // Fail-closed ownership re-check.
+    $own = $pdo->prepare('SELECT 1 FROM venues WHERE id = :vid AND partner_id = :pid');
+    $own->execute([':vid' => $venueId, ':pid' => $partnerId]);
+    if ($own->fetchColumn() === false) {
+        return ['ok' => false, 'error' => 'Not found.'];
+    }
+
+    // Capture provenance metadata BEFORE upload_venue_image renames/re-encodes.
+    $originalName = mb_substr((string)($file['name'] ?? ''), 0, 255);
+    $fileSize     = (int)($file['size'] ?? 0);
+    $width = $height = null;
+    $tmp = (string)($file['tmp_name'] ?? '');
+    if ($tmp !== '' && is_uploaded_file($tmp)) {
+        $dim = @getimagesize($tmp);
+        if (is_array($dim)) { $width = (int)$dim[0]; $height = (int)$dim[1]; }
+    }
+
+    $res = upload_venue_image($file, $venueId);
+    if (empty($res['ok'])) {
+        return $res;   // verbatim upload-lib error
+    }
+
+    // sort_order over ALL statuses to avoid collisions with live/hidden rows.
+    $so = $pdo->prepare('SELECT COALESCE(MAX(sort_order), -1) + 1 FROM venue_images WHERE venue_id = :vid');
+    $so->execute([':vid' => $venueId]);
+    $sort = (int)$so->fetchColumn();
+
+    $ins = $pdo->prepare(
+        "INSERT INTO venue_images
+            (venue_id, file_path, thumb_path, alt_text, is_primary, sort_order, status,
+             review_status, rights_confirmed, rights_confirmed_by, rights_confirmed_at,
+             uploaded_by, image_source, original_filename, file_size, img_width, img_height)
+         VALUES
+            (:vid, :fp, :tp, :alt, 0, :sort, 'hidden',
+             'pending_review', 1, :rby, NOW(),
+             :uid, 'provider_upload', :ofn, :sz, :w, :h)"
+    );
+    $ins->execute([
+        ':vid'  => $venueId,
+        ':fp'   => $res['file_path'],
+        ':tp'   => $res['thumb_path'] !== '' ? $res['thumb_path'] : null,
+        ':alt'  => $alt !== '' ? $alt : null,
+        ':sort' => $sort,
+        ':rby'  => $uploaderName !== '' ? $uploaderName : null,
+        ':uid'  => $userId ?: null,
+        ':ofn'  => $originalName !== '' ? $originalName : null,
+        ':sz'   => $fileSize ?: null,
+        ':w'    => $width,
+        ':h'    => $height,
+    ]);
+    $newId = (int)$pdo->lastInsertId();
+
+    audit_log($pdo, $userId ?: null, 'create', 'venue_image', $newId, null,
+        ['venue_id' => $venueId, 'review_status' => 'pending_review', 'source' => 'provider_upload']);
+
+    return ['ok' => true, 'id' => $newId];
+}
+
+/**
+ * Withdraw a still-pending provider image (owner-scoped). Marks it withdrawn,
+ * unlinks the files (fail-safe), audits. Returns false for a non-owned / already-
+ * reviewed image (no-op, no leak).
+ */
+function portal_withdraw_image(PDO $pdo, int $imageId, int $venueId, int $partnerId): bool
+{
+    $sel = $pdo->prepare(
+        "SELECT vi.file_path, vi.thumb_path FROM venue_images vi
+         JOIN venues v ON v.id = vi.venue_id AND v.partner_id = :pid
+         WHERE vi.id = :iid AND vi.venue_id = :vid AND vi.review_status = 'pending_review' LIMIT 1"
+    );
+    $sel->execute([':iid' => $imageId, ':vid' => $venueId, ':pid' => $partnerId]);
+    $row = $sel->fetch();
+    if ($row === false) {
+        return false;
+    }
+
+    $upd = $pdo->prepare(
+        "UPDATE venue_images
+         SET review_status = 'withdrawn', reviewed_at = NOW()
+         WHERE id = :iid AND venue_id = :vid AND review_status = 'pending_review'
+           AND venue_id IN (SELECT id FROM venues WHERE partner_id = :pid)"
+    );
+    $upd->execute([':iid' => $imageId, ':vid' => $venueId, ':pid' => $partnerId]);
+    if ($upd->rowCount() < 1) {
+        return false;
+    }
+
+    // Remove files from disk (fail-safe — a missing file is fine).
+    foreach ([$row['file_path'] ?? '', $row['thumb_path'] ?? ''] as $rel) {
+        $rel = trim((string)$rel);
+        if ($rel !== '') {
+            $abs = app_path($rel);
+            if (is_file($abs)) { @unlink($abs); }
+        }
+    }
+
+    audit_log($pdo, null, 'update', 'venue_image', $imageId,
+        ['review_status' => 'pending_review'], ['venue_id' => $venueId, 'review_status' => 'withdrawn']);
+    return true;
+}

@@ -458,4 +458,22 @@
     span.setAttribute('data-unit', next);
     btn.textContent = next === 'sqm' ? 'ft²' : 'm²';   // button shows the OTHER unit
   });
+
+  // Provider portal photo upload (U-P7a): enable the submit only once a file is
+  // chosen AND the rights box is ticked. Progressive enhancement — the server
+  // enforces both regardless; without JS the button is simply always enabled.
+  (function () {
+    var form = document.querySelector('[data-upload-form]');
+    if (!form) return;
+    var files   = form.querySelector('[data-upload-files]');
+    var consent = form.querySelector('[data-upload-consent]');
+    var submit  = form.querySelector('[data-upload-submit]');
+    if (!files || !consent || !submit) return;
+    function sync() {
+      submit.disabled = !(consent.checked && files.files && files.files.length > 0);
+    }
+    form.addEventListener('change', sync);
+    form.addEventListener('input', sync);
+    sync();
+  })();
 })();

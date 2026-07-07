@@ -1298,3 +1298,23 @@ select:focus-visible,
 .portal-sub { color: var(--muted); font-size: 14px; margin-top: 2px; }
 .portal-thumbs { display: flex; flex-wrap: wrap; gap: 10px; }
 .portal-thumb { width: 140px; height: 96px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+
+/* #3 U-P7a — provider venue-photos manager (additive). */
+.pimg-consent { display: flex; gap: 10px; align-items: flex-start; background: #f7f9fb; border: 1px solid var(--line); border-radius: 10px; padding: 13px 15px; font-size: 13.5px; line-height: 1.5; cursor: pointer; }
+.pimg-consent input { margin-top: 3px; flex: 0 0 auto; width: 16px; height: 16px; }
+.pimg-consent strong { color: #a12f24; }
+.pimg-people { background: #fbf7ef; border: 1px dashed var(--sand); border-radius: 8px; padding: 9px 12px; }
+.pimg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+.pimg { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; display: flex; flex-direction: column; }
+.pimg__img { position: relative; aspect-ratio: 4 / 3; background: var(--navy); }
+.pimg__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pimg__img--rejected img { filter: grayscale(.5); opacity: .75; }
+.pimg__tag { position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.pimg__tag--pending { background: #fbeecb; color: #8a6d1b; }
+.pimg__tag--rejected { background: #f7d9d5; color: #a12f24; }
+.pimg__tag--primary { background: var(--navy); color: #fff; }
+.pimg__body { padding: 9px 11px; font-size: 12px; color: var(--muted); flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.pimg__cap { color: var(--ink); }
+.pimg__row { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: auto; }
+.pimg__row form { margin: 0; }
+.pimg-reason { color: #a12f24; font-weight: 600; }
