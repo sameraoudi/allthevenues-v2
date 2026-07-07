@@ -102,7 +102,7 @@ $myClaims = portal_my_claims($pdo, $partnerId);
 $flash    = $_SESSION['portal_flash'] ?? null;
 unset($_SESSION['portal_flash']);
 
-$page_title          = 'Claim a venue — Provider Portal';
-$portal_active       = 'venues';
+$page_title          = 'Claim a venue — Partner Portal';
+$portal_active       = 'claims';
 $portal_content_view = __DIR__ . '/claim-content.php';
 require __DIR__ . '/layout.php';

@@ -23,7 +23,7 @@ $userId = (int)(auth_user()['id'] ?? 0);
 $venue = portal_venue_for_partner($pdo, $vid, $partnerId);
 if ($venue === null) {
     http_response_code(404);   // not owned / not found — existence never revealed
-    $page_title          = 'Not found — Provider Portal';
+    $page_title          = 'Not found — Partner Portal';
     $portal_content_view = __DIR__ . '/../content/404_content.php';
     require __DIR__ . '/layout.php';
     return;
@@ -168,7 +168,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     }
 }
 
-$page_title          = 'Request changes — Provider Portal';
+$page_title          = 'Request changes — Partner Portal';
 $portal_active       = 'venues';
 $portal_content_view = __DIR__ . '/venue-request-content.php';
 require __DIR__ . '/layout.php';

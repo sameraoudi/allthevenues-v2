@@ -11,7 +11,7 @@ $old = $old ?? [];
   <div class="atv-wrap atv-enq__wrap">
     <div class="atv-enq__card admin-login">
       <header class="atv-enq__head">
-        <h1>Provider sign in</h1>
+        <h1>Partner sign in</h1>
         <p class="atv-enq__intro">Sign in to manage your venues on All The Venues.</p>
       </header>
 

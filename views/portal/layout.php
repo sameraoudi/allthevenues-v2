@@ -2,20 +2,51 @@
 declare(strict_types=1);
 
 /**
- * #3 U-P3 — Provider portal chrome (simplified admin shell). A top bar (brand →
- * /portal, signed-in provider name, Sign out) + a content container. Every portal
- * page is noindex. Self-hosted assets only (no CDN). Expects in scope:
+ * PU-A1 — Partner portal shell: a two-column app layout (navy left sidebar + main
+ * content + minimal footer), built to docs/atv-portal-shell-preview.html. The
+ * sidebar owns nav (Dashboard · My Venues · Add Venue · Claims) with active
+ * highlighting ($portal_active) and count pills, plus the signed-in partner block
+ * and Sign out. Every portal page is noindex. Self-hosted assets only; no inline
+ * styles/scripts (classes in brand.css, the mobile toggle in app.js). Expects:
  *   string $portal_content_view (required), $page_title, ?string $portal_active.
  */
 
 require_once __DIR__ . '/../../lib/helpers.php';
 require_once __DIR__ . '/../../lib/icons.php';
 require_once __DIR__ . '/../../lib/auth.php';
+require_once __DIR__ . '/../../lib/portal.php';
 
-$page_title = $page_title ?? 'Provider Portal — All The Venues';
+$page_title = $page_title ?? 'Partner Portal — All The Venues';
 $robots     = 'noindex, nofollow';   // the portal is never indexed
 $me         = auth_user();
+$active     = $portal_active ?? '';
 $portal_content_view = $portal_content_view ?? null;
+
+// Sidebar context: partner org name + nav pill counts (owns its own queries).
+$partnerId = (int)($me['partner_id'] ?? 0);
+$orgName   = '';
+$navVenues = 0;
+$navClaims = 0;
+if ($partnerId > 0) {
+    try {
+        $pdoNav = db_pdo();
+        $os = $pdoNav->prepare('SELECT org_name FROM partners WHERE id = :id LIMIT 1');
+        $os->execute([':id' => $partnerId]);
+        $orgName   = (string)($os->fetchColumn() ?: '');
+        $navVenues = portal_owned_venue_count($pdoNav, $partnerId);
+        $navClaims = portal_open_claims_count($pdoNav, $partnerId);
+    } catch (Throwable $e) {
+        error_log('portal shell nav counts failed: ' . $e->getMessage());
+    }
+}
+
+$nav = [
+    ['key' => 'dashboard', 'label' => 'Dashboard', 'href' => base_url('portal'),            'ico' => 'grid'],
+    ['key' => 'venues',    'label' => 'My Venues',  'href' => base_url('portal/venues'),     'ico' => 'building', 'pill' => $navVenues],
+    ['key' => 'add',       'label' => 'Add Venue',  'href' => base_url('portal/venues/new'), 'ico' => 'plus'],
+    ['key' => 'claims',    'label' => 'Claims',     'href' => base_url('portal/claim'),      'ico' => 'shield',   'pill' => $navClaims],
+];
+$year = (int)date('Y');
 ?>
 <!doctype html>
 <html lang="en">
@@ -29,22 +60,58 @@ $portal_content_view = $portal_content_view ?? null;
     <link rel="stylesheet" href="<?= e(base_url('assets/css/brand.css')) ?>">
     <link rel="stylesheet" href="<?= e(base_url('assets/css/app.css')) ?>">
 </head>
-<body class="admin-body">
-  <header class="portal-topbar">
-    <a class="portal-brand" href="<?= e(base_url('portal')) ?>">All The <span>Venues</span> <em>· Provider</em></a>
-    <div class="portal-topbar__right">
-      <span class="portal-user"><?= e($me['name'] ?? 'Provider') ?></span>
-      <a class="atv-btn atv-btn--sm atv-btn--ghost" href="<?= e(base_url('portal/logout')) ?>"><?= icon('logout') ?> Sign out</a>
-    </div>
-  </header>
+<body class="admin-body portal-shell-body">
+  <div class="pshell" data-portal-shell>
+    <aside class="pside" id="portalNav">
+      <div class="pside__brand">
+        <a class="pside__mark" href="<?= e(base_url('portal')) ?>" aria-label="All The Venues — Partner Portal">
+          <img class="pside__icon" src="<?= e(base_url('assets/brand/web_exports/icon_light/icon_light_512x512.png')) ?>" alt="" width="512" height="512" aria-hidden="true">
+          <span class="pside__word">All The <span class="pside__accent">Venues</span></span>
+        </a>
+        <span class="pside__tag">Partner Portal</span>
+      </div>
 
-  <main class="portal-main atv-wrap">
-    <?php
-    if ($portal_content_view !== null && is_file($portal_content_view)) {
-        require $portal_content_view;
-    }
-    ?>
-  </main>
+      <nav class="pside__nav" aria-label="Portal">
+        <?php foreach ($nav as $item): ?>
+          <a class="pside__link<?= $active === $item['key'] ? ' is-active' : '' ?>" href="<?= e($item['href']) ?>"<?= $active === $item['key'] ? ' aria-current="page"' : '' ?>>
+            <?= icon($item['ico'], 'pside__ico') ?>
+            <span class="pside__label"><?= e($item['label']) ?></span>
+            <?php if (isset($item['pill']) && (int)$item['pill'] > 0): ?><span class="pside__pill"><?= (int)$item['pill'] ?></span><?php endif; ?>
+          </a>
+        <?php endforeach; ?>
+      </nav>
+
+      <div class="pside__who">
+        <b><?= e((string)($me['name'] ?? 'Partner')) ?></b>
+        <?php if ($orgName !== ''): ?><span class="pside__org"><?= e($orgName) ?></span><?php endif; ?>
+        <a class="pside__signout" href="<?= e(base_url('portal/logout')) ?>"><?= icon('logout', 'pside__ico') ?> Sign out</a>
+      </div>
+    </aside>
+
+    <div class="pmain">
+      <header class="ptopbar">
+        <button class="ptopbar__toggle" type="button" aria-label="Toggle menu" data-portal-nav-toggle aria-controls="portalNav" aria-expanded="false"><?= icon('menu') ?></button>
+        <a class="ptopbar__brand" href="<?= e(base_url('portal')) ?>">All The <span>Venues</span> <em>Partner Portal</em></a>
+      </header>
+
+      <main class="pcontent">
+        <?php
+        if ($portal_content_view !== null && is_file($portal_content_view)) {
+            require $portal_content_view;
+        }
+        ?>
+      </main>
+
+      <footer class="pfoot">
+        <span>&copy; <?= e((string)$year) ?> All The Venues &middot; Partner Portal</span>
+        <span class="pfoot__links">
+          <a href="<?= e(base_url('privacy-policy')) ?>">Privacy Policy</a>
+          <a href="<?= e(base_url('terms-of-use')) ?>">Terms of Use</a>
+          <a href="<?= e(base_url('contact')) ?>">Contact</a>
+        </span>
+      </footer>
+    </div>
+  </div>
 
   <script src="<?= e(base_url('assets/js/app.js')) ?>"></script>
 </body>

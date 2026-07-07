@@ -17,6 +17,17 @@
       return;
     }
 
+    // PU-A1 — partner portal: mobile sidebar toggle (slides the .pside in/out).
+    var pNavBtn = ev.target.closest('[data-portal-nav-toggle]');
+    if (pNavBtn) {
+      var shell = document.querySelector('[data-portal-shell]');
+      if (shell) {
+        var pOpen = shell.classList.toggle('is-nav-open');
+        pNavBtn.setAttribute('aria-expanded', pOpen ? 'true' : 'false');
+      }
+      return;
+    }
+
     // Listing: mobile filters toggle.
     var fBtn = ev.target.closest('[data-filters-toggle]');
     if (fBtn) {

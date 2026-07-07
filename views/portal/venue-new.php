@@ -148,7 +148,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     }
 }
 
-$page_title          = 'Submit a venue — Provider Portal';
-$portal_active       = 'venues';
+$page_title          = 'Submit a venue — Partner Portal';
+$portal_active       = 'add';
 $portal_content_view = __DIR__ . '/venue-new-content.php';
 require __DIR__ . '/layout.php';

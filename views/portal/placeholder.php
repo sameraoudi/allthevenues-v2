@@ -5,7 +5,7 @@ declare(strict_types=1);
  *  reuses existing .atv-legal prose + .lead-hint classes). */
 ?>
 <section class="atv-wrap atv-legal">
-  <p class="lead-hint">Provider Portal</p>
+  <p class="lead-hint">Partner Portal</p>
   <h1>Coming soon</h1>
-  <p>This is where venue providers will manage their venues.</p>
+  <p>This is where venue partners will manage their venues.</p>
 </section>

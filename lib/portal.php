@@ -560,6 +560,160 @@ function portal_venue_for_partner(PDO $pdo, int $venueId, int $partnerId): ?arra
     return $row === false ? null : $row;
 }
 
+/* ==========================================================================
+ * PU-A1 — portal shell: sidebar counts, dashboard tiles, My-Venues badges.
+ * ======================================================================== */
+
+/** Count of a partner's own active (non-archived) venues — the sidebar pill / tile. */
+function portal_owned_venue_count(PDO $pdo, int $partnerId): int
+{
+    $s = $pdo->prepare("SELECT COUNT(*) FROM venues WHERE partner_id = :pid AND status <> 'archived'");
+    $s->execute([':pid' => $partnerId]);
+    return (int)$s->fetchColumn();
+}
+
+/** Open claims (pending or needs_changes) submitted by this partner — sidebar pill / tile. */
+function portal_open_claims_count(PDO $pdo, int $partnerId): int
+{
+    $s = $pdo->prepare("SELECT COUNT(*) FROM venue_change_requests
+                        WHERE partner_id = :pid AND type = 'claim' AND status IN ('pending','needs_changes')");
+    $s->execute([':pid' => $partnerId]);
+    return (int)$s->fetchColumn();
+}
+
+/**
+ * Pending change requests on a partner's OWN venues, grouped for badge logic:
+ * [venue_id => ['new_venue'=>true,'edit'=>true,'delist'=>true]] (only present types).
+ */
+function portal_owned_pending_crs(PDO $pdo, int $partnerId): array
+{
+    $s = $pdo->prepare(
+        "SELECT venue_id, type FROM venue_change_requests
+         WHERE partner_id = :pid AND status = 'pending' AND type IN ('new_venue','edit','delist')"
+    );
+    $s->execute([':pid' => $partnerId]);
+    $map = [];
+    foreach ($s->fetchAll() as $r) { $map[(int)$r['venue_id']][(string)$r['type']] = true; }
+    return $map;
+}
+
+/**
+ * #7b — the status chip + request badge for one owned venue. $pendingCrs is the
+ * map from portal_owned_pending_crs(). Returns
+ * ['chip_label','chip_class','badge_label','badge_class'] (badge_* '' when none).
+ */
+function portal_venue_state_badge(array $venue, array $pendingCrs): array
+{
+    $status = (string)($venue['status'] ?? '');
+    $cr     = $pendingCrs[(int)($venue['id'] ?? 0)] ?? [];
+    $badgeLabel = $badgeClass = '';
+
+    switch ($status) {
+        case 'draft':
+            $chipLabel = 'Draft';             $chipClass = 'draft'; break;
+        case 'pending':
+            $chipLabel = 'Under review';      $chipClass = 'review'; break;
+        case 'needs_changes':
+            $chipLabel = 'Changes requested'; $chipClass = 'changes'; break;
+        case 'delisted':
+            $chipLabel = 'Delisted';          $chipClass = 'delisted'; break;
+        case 'published':
+            $chipLabel = 'Live';              $chipClass = 'live';
+            if (!empty($cr['delist']))   { $badgeLabel = 'Delist requested';  $badgeClass = 'delist'; }
+            elseif (!empty($cr['edit'])) { $badgeLabel = 'Edit under review'; $badgeClass = 'review'; }
+            break;
+        default:
+            $chipLabel = venue_admin_status_label($status); $chipClass = 'draft';
+    }
+    return ['chip_label' => $chipLabel, 'chip_class' => $chipClass,
+            'badge_label' => $badgeLabel, 'badge_class' => $badgeClass];
+}
+
+/** The five dashboard tile counts for a partner. */
+function portal_dashboard_counts(PDO $pdo, int $partnerId): array
+{
+    $pendingReview = $pdo->prepare(
+        "SELECT COUNT(DISTINCT v.id) FROM venues v
+         JOIN venue_change_requests cr ON cr.venue_id = v.id AND cr.type = 'new_venue' AND cr.status = 'pending'
+         WHERE v.partner_id = :pid AND v.status = 'pending'"
+    );
+    $pendingReview->execute([':pid' => $partnerId]);
+
+    $openCrs = $pdo->prepare(
+        "SELECT COUNT(*) FROM venue_change_requests
+         WHERE partner_id = :pid AND type IN ('edit','delist') AND status = 'pending'"
+    );
+    $openCrs->execute([':pid' => $partnerId]);
+
+    $photos = $pdo->prepare(
+        "SELECT COUNT(*) FROM venue_images vi JOIN venues v ON v.id = vi.venue_id
+         WHERE v.partner_id = :pid AND v.status <> 'archived' AND vi.review_status = 'pending_review'"
+    );
+    $photos->execute([':pid' => $partnerId]);
+
+    return [
+        'managed'        => portal_owned_venue_count($pdo, $partnerId),
+        'pending_review' => (int)$pendingReview->fetchColumn(),
+        'open_crs'       => (int)$openCrs->fetchColumn(),
+        'claims'         => portal_open_claims_count($pdo, $partnerId),
+        'photos'         => (int)$photos->fetchColumn(),
+    ];
+}
+
+/**
+ * Actionable "Next steps" for the dashboard: needs_changes venues (resubmit),
+ * drafts missing a photo (add photos), claims needing proof (add proof). Each item
+ * is ['name','text','action','href']. Capped for a tidy panel.
+ */
+function portal_dashboard_next_steps(PDO $pdo, int $partnerId): array
+{
+    $steps = [];
+
+    $s = $pdo->prepare("SELECT id, name FROM venues
+                        WHERE partner_id = :pid AND status = 'needs_changes'
+                        ORDER BY updated_at DESC LIMIT 5");
+    $s->execute([':pid' => $partnerId]);
+    foreach ($s->fetchAll() as $r) {
+        $steps[] = ['name' => (string)$r['name'], 'text' => 'changes requested by All The Venues',
+                    'action' => 'Review &amp; resubmit', 'href' => base_url('portal/venues/' . (int)$r['id'])];
+    }
+
+    $s = $pdo->prepare("SELECT v.id, v.name FROM venues v
+                        WHERE v.partner_id = :pid AND v.status = 'draft'
+                          AND NOT EXISTS (SELECT 1 FROM venue_images vi WHERE vi.venue_id = v.id)
+                        ORDER BY v.updated_at DESC LIMIT 5");
+    $s->execute([':pid' => $partnerId]);
+    foreach ($s->fetchAll() as $r) {
+        $steps[] = ['name' => (string)$r['name'], 'text' => 'draft — add a photo to submit',
+                    'action' => 'Add photos', 'href' => base_url('portal/venues/' . (int)$r['id'] . '/images')];
+    }
+
+    $s = $pdo->prepare("SELECT v.name FROM venue_change_requests cr
+                        LEFT JOIN venues v ON v.id = cr.venue_id
+                        WHERE cr.partner_id = :pid AND cr.type = 'claim' AND cr.status = 'needs_changes'
+                        ORDER BY cr.updated_at DESC LIMIT 5");
+    $s->execute([':pid' => $partnerId]);
+    foreach ($s->fetchAll() as $r) {
+        $steps[] = ['name' => (string)($r['name'] ?? 'a venue'), 'text' => 'claim — proof requested',
+                    'action' => 'Add proof', 'href' => base_url('portal/claim')];
+    }
+
+    return $steps;
+}
+
+/** Recent decisions (approved/rejected change requests) for the dashboard. [] if none. */
+function portal_dashboard_recent(PDO $pdo, int $partnerId): array
+{
+    $s = $pdo->prepare(
+        "SELECT cr.type, cr.status, cr.reviewed_at, v.name AS venue_name
+         FROM venue_change_requests cr LEFT JOIN venues v ON v.id = cr.venue_id
+         WHERE cr.partner_id = :pid AND cr.status IN ('approved','rejected') AND cr.reviewed_at IS NOT NULL
+         ORDER BY cr.reviewed_at DESC LIMIT 5"
+    );
+    $s->execute([':pid' => $partnerId]);
+    return $s->fetchAll();
+}
+
 /** Event-type names linked to a venue (ownership already verified by the caller). */
 function portal_venue_event_types(PDO $pdo, int $venueId): array
 {

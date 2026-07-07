@@ -17,6 +17,7 @@ function _icon_paths(string $name): ?string
             'chevron-down' => '<path d="M6 9l6 6 6-6"/>',
             'arrow-right'  => '<path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>',
             'menu'         => '<path d="M4 7h16M4 12h16M4 17h16"/>',
+            'plus'         => '<path d="M12 5v14M5 12h14"/>',
             'chart'        => '<path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/>',
             'download'     => '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>',
             // Venue layout glyphs (simple, distinct hints — refine later).

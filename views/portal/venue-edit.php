@@ -21,7 +21,7 @@ require_once __DIR__ . '/../../lib/portal.php';      // allowlist + owner-scoped
 $venue = portal_venue_for_partner($pdo, $vid, $partnerId);
 if ($venue === null) {
     http_response_code(404);   // not owned / not found — existence never revealed
-    $page_title          = 'Not found — Provider Portal';
+    $page_title          = 'Not found — Partner Portal';
     $portal_content_view = __DIR__ . '/../content/404_content.php';
     require __DIR__ . '/layout.php';
     return;
@@ -179,7 +179,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 $layoutValues = [];
 foreach (venue_layout_capacity($pdo, $vid) as $lr) { $layoutValues[(string)$lr['layout_type']] = (int)$lr['capacity']; }
 
-$page_title          = 'Edit venue — Provider Portal';
+$page_title          = 'Edit venue — Partner Portal';
 $portal_active       = 'venues';
 $portal_content_view = __DIR__ . '/venue-edit-content.php';
 require __DIR__ . '/layout.php';

@@ -991,11 +991,11 @@ function _cr_notify_incumbent(string $to, string $venueName, string $newOwner): 
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) { return false; }
     $esc = static fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
     $body = '<div style="font-family:Arial,sans-serif;color:#0E1B2A;line-height:1.5;">'
-          . '<h2 style="font-size:18px;">All The Venues — Provider Portal</h2>'
+          . '<h2 style="font-size:18px;">All The Venues — Partner Portal</h2>'
           . '<p>Hello,</p>'
           . '<p>Management of <strong>' . $esc($venueName) . '</strong> on All The Venues has been reassigned'
           . ($newOwner !== '' ? ' to <strong>' . $esc($newOwner) . '</strong>' : '')
-          . ' following a verified ownership claim. It no longer appears in your provider portal.</p>'
+          . ' following a verified ownership claim. It no longer appears in your partner portal.</p>'
           . '<p>If you believe this is a mistake, please contact All The Venues support.</p>'
           . '<p style="color:#6b7b88;">— The All The Venues team</p></div>';
     return send_mail($to, 'A venue was reassigned — All The Venues', $body);
@@ -1027,7 +1027,7 @@ function cr_notify_provider(array $req, string $decision, string $note): bool
             $subject = 'Your venue has been delisted — ' . $venue;
             $intro   = 'As requested, <strong>' . $esc($venue) . '</strong> has been delisted and is now hidden '
                      . 'from the public site. Your data, photos and past enquiries are kept — you can re-list it '
-                     . 'yourself anytime from your provider portal.';
+                     . 'yourself anytime from your partner portal.';
             break;
         case 'delist_rejected':
             $subject = 'Your delisting request was declined — ' . $venue;
@@ -1037,13 +1037,13 @@ function cr_notify_provider(array $req, string $decision, string $note): bool
         case 'claim_approved':
             $subject = 'Your venue claim was approved — ' . $venue;
             $intro   = 'Good news — your claim for <strong>' . $esc($venue)
-                     . '</strong> has been approved. It now appears in your provider portal and you can manage it.';
+                     . '</strong> has been approved. It now appears in your partner portal and you can manage it.';
             $link    = base_url('portal/venues/' . (int)($req['venue_id'] ?? 0));
             break;
         case 'claim_proof':
             $subject = 'More information needed for your venue claim — ' . $venue;
             $intro   = 'We reviewed your claim for <strong>' . $esc($venue)
-                     . '</strong> and need proof of authorisation before we can approve it. You can add proof from your provider portal.';
+                     . '</strong> and need proof of authorisation before we can approve it. You can add proof from your partner portal.';
             $link    = base_url('portal/claim');
             break;
         case 'claim_rejected':
@@ -1094,7 +1094,7 @@ function cr_notify_provider(array $req, string $decision, string $note): bool
         : '';
 
     $body = '<div style="font-family:Arial,sans-serif;color:#0E1B2A;line-height:1.5;">'
-          . '<h2 style="font-size:18px;">All The Venues — Provider Portal</h2>'
+          . '<h2 style="font-size:18px;">All The Venues — Partner Portal</h2>'
           . '<p>Hello,</p>'
           . '<p>' . $intro . '</p>'
           . $noteHtml

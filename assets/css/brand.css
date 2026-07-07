@@ -1313,6 +1313,95 @@ select:focus-visible,
 .portal-thumbs { display: flex; flex-wrap: wrap; gap: 10px; }
 .portal-thumb { width: 140px; height: 96px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
 
+/* ==========================================================================
+ * PU-A1 — Partner portal shell (sidebar + main + footer). Built to
+ * docs/atv-portal-shell-preview.html. CSP-safe (no inline styles).
+ * ======================================================================== */
+.pshell { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+
+/* ---- Sidebar ---- */
+.pside { background: var(--navy); color: #c7d0d8; display: flex; flex-direction: column; }
+.pside__brand { padding: 20px 18px 16px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.pside__mark { display: flex; align-items: center; gap: 9px; }
+.pside__icon { width: 26px; height: 26px; flex: 0 0 auto; }
+.pside__word { font-family: var(--font-heading); font-size: 18px; color: #fff; line-height: 1.1; }
+.pside__accent { color: var(--blue); }
+.pside__tag { display: block; font-size: 11px; letter-spacing: .5px; text-transform: uppercase; color: var(--sand); margin-top: 6px; }
+.pside__nav { display: flex; flex-direction: column; padding: 12px; gap: 2px; flex: 1; }
+.pside__link { color: #c7d0d8; padding: 9px 12px; border-radius: 8px; font-size: 13.5px; display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.pside__link:hover { background: rgba(255,255,255,.06); color: #fff; }
+.pside__link.is-active { background: var(--action); color: #fff; }
+.pside__ico { width: 16px; height: 16px; flex: 0 0 auto; opacity: .9; }
+.pside__label { flex: 1; }
+.pside__pill { background: var(--sand); color: var(--navy); font-size: 11px; font-weight: 700; border-radius: 20px; padding: 1px 8px; }
+.pside__who { padding: 14px 16px; border-top: 1px solid rgba(255,255,255,.08); font-size: 12px; color: #9fb0bd; }
+.pside__who b { color: #fff; display: block; font-size: 13px; }
+.pside__org { display: block; margin-bottom: 8px; }
+.pside__signout { display: inline-flex; align-items: center; gap: 6px; color: var(--sand); font-size: 12.5px; }
+.pside__signout:hover { color: #fff; }
+
+/* ---- Main column ---- */
+.pmain { display: flex; flex-direction: column; min-height: 100vh; }
+.ptopbar { display: none; }   /* mobile-only hamburger bar (shown < 860px) */
+.ptopbar__brand { font-family: var(--font-heading); font-size: 18px; color: #fff; text-decoration: none; }
+.ptopbar__brand span { color: var(--sand); }
+.ptopbar__brand em { font-style: normal; font-size: 12px; color: #c7d0d8; font-family: var(--font-body); margin-left: 4px; }
+.ptopbar__toggle { background: transparent; border: 0; color: #fff; cursor: pointer; padding: 4px; display: inline-flex; }
+.ptopbar__toggle svg { width: 24px; height: 24px; }
+.pcontent { padding: 26px 30px; flex: 1; max-width: 980px; width: 100%; }
+.pcontent__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.pcontent__title { font-size: 27px; }
+.pcontent__sub { color: var(--muted); font-size: 13px; margin-top: 3px; }
+.pcontent__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.atv-btn__ico { width: 15px; height: 15px; }
+
+/* ---- Tiles ---- */
+.ptiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 22px; }
+.ptile { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 15px 17px; box-shadow: 0 6px 16px rgba(14,27,42,.05); }
+.ptile__n { font-size: 26px; font-weight: 700; color: var(--navy); }
+.ptile__l { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.ptile--alert .ptile__n { color: var(--warn); }
+
+/* ---- Next steps / recent ---- */
+.psteps { list-style: none; margin: 0; padding: 0; }
+.psteps__i { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid #f4f2ee; font-size: 13.5px; }
+.psteps__i:last-child { border-bottom: 0; }
+.psteps__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); flex: 0 0 auto; }
+.psteps__txt { flex: 1; }
+.psteps__act { margin-left: auto; font-size: 12.5px; white-space: nowrap; }
+.psteps__when { margin-left: auto; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.psteps__tick { flex: 0 0 auto; width: 18px; text-align: center; font-weight: 700; }
+.psteps__tick--ok { color: #1f6a41; }
+.psteps__tick--no { color: #a5433b; }
+
+/* ---- My Venues status chip + request badge (#7b) ---- */
+.pv-chip { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; }
+.pv-chip--live     { background: #e7f3ec; color: #2f7d5b; }
+.pv-chip--draft    { background: #eef1f4; color: var(--muted); }
+.pv-chip--review   { background: #e7eef4; color: var(--action); }
+.pv-chip--changes  { background: #f6efdb; color: #8a6d1f; }
+.pv-chip--delisted { background: #eef1f4; color: var(--muted); }
+.pv-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; margin-left: 6px; }
+.pv-badge--review  { background: #e7eef4; color: var(--action); }
+.pv-badge--changes { background: #f6efdb; color: #8a6d1f; }
+.pv-badge--delist  { background: #f6e7e5; color: #a5433b; }
+
+/* ---- Footer ---- */
+.pfoot { border-top: 1px solid var(--line); padding: 14px 30px; font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.pfoot a { color: var(--muted); }
+.pfoot a:hover { color: var(--action); }
+.pfoot__links a { margin-left: 14px; }
+
+/* ---- Mobile: collapse the sidebar behind a hamburger ---- */
+@media (max-width: 860px) {
+  .pshell { grid-template-columns: 1fr; }
+  .ptopbar { display: flex; align-items: center; gap: 12px; background: var(--navy); padding: 12px 18px; }
+  .pside { position: fixed; top: 0; left: 0; bottom: 0; width: 240px; z-index: 60; transform: translateX(-100%); transition: transform .2s ease; }
+  .pshell.is-nav-open .pside { transform: translateX(0); box-shadow: 0 0 40px rgba(0,0,0,.4); }
+  .pcontent { padding: 20px 18px; }
+  .pfoot { padding: 14px 18px; }
+}
+
 /* PU-D1-fix #16 — styled file-picker: real <input> visually hidden inside an
    .atv-btn label, with the chosen file name(s) shown alongside. */
 .atv-file { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }

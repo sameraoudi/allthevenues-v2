@@ -24,6 +24,16 @@ $robots = 'noindex, nofollow';   // the portal is never indexed
 if ($sub === 'venues' || strncmp($sub, 'venues/', 7) === 0) {
     auth_require_partner();
     $partnerId = (int)(auth_user()['partner_id']);
+    // PU-A1 — /portal/venues is now the My Venues list (dashboard is /portal).
+    if ($sub === 'venues') {
+        $myVenues            = portal_my_venues($pdo, $partnerId);
+        $pendingCrs          = portal_owned_pending_crs($pdo, $partnerId);
+        $page_title          = 'My Venues — Partner Portal';
+        $portal_active       = 'venues';
+        $portal_content_view = __DIR__ . '/venues-list.php';
+        require __DIR__ . '/layout.php';
+        return;
+    }
     if ($sub === 'venues/new') {
         require __DIR__ . '/venue-new.php';
         return;
@@ -74,7 +84,7 @@ if ($sub === 'venues' || strncmp($sub, 'venues/', 7) === 0) {
         $venue = portal_venue_for_partner($pdo, (int)$mm[1], $partnerId);
         if ($venue === null) {
             http_response_code(404);
-            $page_title          = 'Not found — Provider Portal';
+            $page_title          = 'Not found — Partner Portal';
             $portal_content_view = __DIR__ . '/../content/404_content.php';
             require __DIR__ . '/layout.php';
             return;
@@ -86,7 +96,7 @@ if ($sub === 'venues' || strncmp($sub, 'venues/', 7) === 0) {
         $pending   = portal_pending_edit_request($pdo, $vid, $partnerId);
         $flash     = $_SESSION['portal_flash'] ?? null;
         unset($_SESSION['portal_flash']);
-        $page_title          = (string)$venue['name'] . ' — Provider Portal';
+        $page_title          = (string)$venue['name'] . ' — Partner Portal';
         $portal_active       = 'venues';
         $portal_content_view = __DIR__ . '/venue.php';
         require __DIR__ . '/layout.php';
@@ -142,7 +152,7 @@ switch ($sub) {
                 $loginError = 'Invalid email or password.';   // generic — no enumeration
             }
         }
-        $page_title   = 'Provider sign in — All The Venues';
+        $page_title   = 'Partner sign in — All The Venues';
         $content_view = __DIR__ . '/login-content.php';
         require __DIR__ . '/../layout.php';
         break;
@@ -153,12 +163,16 @@ switch ($sub) {
         redirect('portal/login');
         break;
 
-    /* ---- Portal landing → "My venues" dashboard (gated) ------------------ */
+    /* ---- Portal landing → dashboard (gated) ------------------------------ */
     case '':
         auth_require_partner();
-        $myVenues            = portal_my_venues($pdo, (int)(auth_user()['partner_id']));
-        $page_title          = 'My Venues — Provider Portal';
-        $portal_active       = 'venues';
+        $me                  = auth_user();
+        $partnerId           = (int)($me['partner_id'] ?? 0);
+        $counts              = portal_dashboard_counts($pdo, $partnerId);
+        $nextSteps           = portal_dashboard_next_steps($pdo, $partnerId);
+        $recent              = portal_dashboard_recent($pdo, $partnerId);
+        $page_title          = 'Dashboard — Partner Portal';
+        $portal_active       = 'dashboard';
         $portal_content_view = __DIR__ . '/dashboard.php';
         require __DIR__ . '/layout.php';
         break;
@@ -167,7 +181,7 @@ switch ($sub) {
     default:
         auth_require_partner();
         http_response_code(404);
-        $page_title          = 'Not found — Provider Portal';
+        $page_title          = 'Not found — Partner Portal';
         $portal_content_view = __DIR__ . '/../content/404_content.php';
         require __DIR__ . '/layout.php';
         break;

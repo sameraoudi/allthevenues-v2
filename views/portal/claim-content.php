@@ -116,7 +116,7 @@ $claimStatus = [
         </div>
         <label class="pimg-consent">
           <input type="checkbox" name="consent" value="1" required data-claim-consent>
-          <span><strong>Required —</strong> I confirm that I am authorised to manage this venue on behalf of its owner or operator, and that the information I have provided is accurate. I understand that false or unsupported claims may be rejected or may affect my provider account.</span>
+          <span><strong>Required —</strong> I confirm that I am authorised to manage this venue on behalf of its owner or operator, and that the information I have provided is accurate. I understand that false or unsupported claims may be rejected or may affect my partner account.</span>
         </label>
         <p class="lead-hint mb-2">Submitting doesn&rsquo;t change anything yet — the venue stays as it is until our team approves your claim.</p>
         <div class="admin-form__actions">

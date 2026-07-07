@@ -21,7 +21,7 @@ require_once __DIR__ . '/../../lib/portal.php';
 $venue = portal_venue_for_partner($pdo, $vid, $partnerId);
 if ($venue === null) {
     http_response_code(404);   // not owned / not found — existence never revealed
-    $page_title          = 'Not found — Provider Portal';
+    $page_title          = 'Not found — Partner Portal';
     $portal_content_view = __DIR__ . '/../content/404_content.php';
     require __DIR__ . '/layout.php';
     return;
@@ -111,7 +111,7 @@ $live     = portal_venue_images_live($pdo, $vid, $partnerId);
 $flash    = $_SESSION['portal_flash'] ?? null;
 unset($_SESSION['portal_flash']);
 
-$page_title          = 'Venue photos — Provider Portal';
+$page_title          = 'Venue photos — Partner Portal';
 $portal_active       = 'venues';
 $portal_content_view = __DIR__ . '/venue-images-content.php';
 require __DIR__ . '/layout.php';
