@@ -533,20 +533,28 @@ function portal_delete_draft_venue(PDO $pdo, int $venueId, int $partnerId, int $
     return true;
 }
 
-/** All venues owned by a provider (every status), newest-touched first. [] if none. */
+/**
+ * All venues owned by a provider (every status EXCEPT admin-archived), newest-
+ * touched first. [] if none. 'archived' is the admin's soft-delete — it must never
+ * appear in or be reachable from the partner portal (#3).
+ */
 function portal_my_venues(PDO $pdo, int $partnerId): array
 {
     $stmt = $pdo->prepare(_portal_venue_select()
-        . ' WHERE v.partner_id = :pid ORDER BY v.updated_at DESC, v.id DESC');
+        . " WHERE v.partner_id = :pid AND v.status <> 'archived' ORDER BY v.updated_at DESC, v.id DESC");
     $stmt->execute([':pid' => $partnerId]);
     return $stmt->fetchAll();
 }
 
-/** One owned venue, or null if not found OR not owned (caller → 404). */
+/**
+ * One owned venue, or null if not found / not owned / admin-archived (caller → 404).
+ * Every /portal/venues/{id}[/edit|/images|/submit|/delist|…] route resolves through
+ * here, so excluding 'archived' 404s all of them for the partner (#3).
+ */
 function portal_venue_for_partner(PDO $pdo, int $venueId, int $partnerId): ?array
 {
     $stmt = $pdo->prepare(_portal_venue_select()
-        . ' WHERE v.id = :vid AND v.partner_id = :pid LIMIT 1');
+        . " WHERE v.id = :vid AND v.partner_id = :pid AND v.status <> 'archived' LIMIT 1");
     $stmt->execute([':vid' => $venueId, ':pid' => $partnerId]);
     $row = $stmt->fetch();
     return $row === false ? null : $row;
