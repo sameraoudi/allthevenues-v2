@@ -45,6 +45,8 @@ $nav = [
     ['key' => 'venues',    'label' => 'My Venues',  'href' => base_url('portal/venues'),     'ico' => 'building', 'pill' => $navVenues],
     ['key' => 'add',       'label' => 'Add Venue',  'href' => base_url('portal/venues/new'), 'ico' => 'plus'],
     ['key' => 'claims',    'label' => 'Claims',     'href' => base_url('portal/claim'),      'ico' => 'shield',   'pill' => $navClaims],
+    ['key' => 'guide',     'label' => 'Guide',      'href' => base_url('portal/guide'),      'ico' => 'info-circle'],
+    ['key' => 'account',   'label' => 'Account',    'href' => base_url('portal/account'),    'ico' => 'settings'],
 ];
 $year = (int)date('Y');
 ?>

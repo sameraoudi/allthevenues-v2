@@ -177,6 +177,21 @@ switch ($sub) {
         require __DIR__ . '/layout.php';
         break;
 
+    /* ---- Guide (#8) — static help in the shell (gated) ------------------- */
+    case 'guide':
+        auth_require_partner();
+        $page_title          = 'Guide — Partner Portal';
+        $portal_active       = 'guide';
+        $portal_content_view = __DIR__ . '/guide.php';
+        require __DIR__ . '/layout.php';
+        break;
+
+    /* ---- Account — read-only details + in-portal change password (gated) - */
+    case 'account':
+        auth_require_partner();
+        require __DIR__ . '/account.php';
+        break;
+
     /* ---- Unknown /portal/* — gate first, then branded not-found ---------- */
     default:
         auth_require_partner();
