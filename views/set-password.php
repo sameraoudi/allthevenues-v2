@@ -23,11 +23,6 @@ $robots = 'noindex, nofollow';
 $path   = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $isRequest = ($path === '/set-password/request');
 
-// Common-password denylist (small; the ≥10 rule + identity checks do the rest).
-$SP_DENY = ['password', 'password1', 'password123', 'passw0rd', '1234567890', '12345678',
-            'qwertyuiop', 'qwerty123', 'letmein123', 'iloveyou1', 'welcome123', 'admin1234',
-            'allthevenues', 'changeme123'];
-
 /** Load the token's user (public-safe fields + provider name), or null. */
 $loadUser = static function (PDO $pdo, int $userId): ?array {
     $s = $pdo->prepare(
@@ -102,44 +97,32 @@ if ($look['state'] !== 'valid') {
                 $spError = 'Too many attempts. Please try again in a few minutes.';
             } elseif (!turnstile_verify((string)($_POST['cf-turnstile-response'] ?? ''), client_ip())) {
                 $spError = 'Please complete the “I’m human” check and try again.';
-            } elseif (mb_strlen($pw) < 10) {
-                $spError = 'Use at least 10 characters.';
-            } elseif ($pw !== $pw2) {
-                $spError = 'The two passwords don’t match.';
+            } elseif (($spError = password_policy_error($pw, $pw2, $spUser)) !== null) {
+                // shared policy (PU-B) — identical rules to the previous inline checks
             } else {
-                $lc = mb_strtolower($pw);
-                $identity = array_filter([
-                    mb_strtolower((string)$spUser['email']),
-                    mb_strtolower((string)$spUser['name']),
-                    mb_strtolower((string)($spUser['provider_name'] ?? '')),
-                ]);
-                if (in_array($lc, array_map('mb_strtolower', $identity), true) || in_array($lc, $SP_DENY, true)) {
-                    $spError = 'Please choose a stronger password (not your email, name, or a common password).';
+                // Re-check the token is still valid at commit time (race-safe).
+                $recheck = pt_lookup($pdo, $spToken, 'invite');
+                if ($recheck['state'] !== 'valid') {
+                    $spMode = $recheck['state'];
                 } else {
-                    // Re-check the token is still valid at commit time (race-safe).
-                    $recheck = pt_lookup($pdo, $spToken, 'invite');
-                    if ($recheck['state'] !== 'valid') {
-                        $spMode = $recheck['state'];
-                    } else {
-                        try {
-                            $pdo->beginTransaction();
-                            $pdo->prepare('UPDATE users SET password_hash = :h, status = :s WHERE id = :id')
-                                ->execute([':h' => password_hash($pw, PASSWORD_DEFAULT), ':s' => 'active', ':id' => (int)$spUser['id']]);
-                            if (!pt_consume($pdo, (int)$recheck['row']['id'])) {
-                                throw new RuntimeException('token already consumed');
-                            }
-                            $pdo->commit();
-                        } catch (Throwable $e) {
-                            if ($pdo->inTransaction()) { $pdo->rollBack(); }
-                            error_log('set-password commit failed (user=' . (int)$spUser['id'] . '): ' . $e->getMessage());
-                            $spError = 'Something went wrong. Please try again.';
+                    try {
+                        $pdo->beginTransaction();
+                        $pdo->prepare('UPDATE users SET password_hash = :h, status = :s WHERE id = :id')
+                            ->execute([':h' => password_hash($pw, PASSWORD_DEFAULT), ':s' => 'active', ':id' => (int)$spUser['id']]);
+                        if (!pt_consume($pdo, (int)$recheck['row']['id'])) {
+                            throw new RuntimeException('token already consumed');
                         }
-                        if ($spError === null) {
-                            audit_log($pdo, (int)$spUser['id'], 'password_set', 'user', (int)$spUser['id'], null, ['via' => 'invite']);
-                            auth_login($spUser);   // regenerates the session id
-                            require_once __DIR__ . '/../config/config.php';
-                            redirect(portal_enabled() ? 'portal' : 'portal/login');
-                        }
+                        $pdo->commit();
+                    } catch (Throwable $e) {
+                        if ($pdo->inTransaction()) { $pdo->rollBack(); }
+                        error_log('set-password commit failed (user=' . (int)$spUser['id'] . '): ' . $e->getMessage());
+                        $spError = 'Something went wrong. Please try again.';
+                    }
+                    if ($spError === null) {
+                        audit_log($pdo, (int)$spUser['id'], 'password_set', 'user', (int)$spUser['id'], null, ['via' => 'invite']);
+                        auth_login($spUser);   // regenerates the session id
+                        require_once __DIR__ . '/../config/config.php';
+                        redirect(portal_enabled() ? 'portal' : 'portal/login');
                     }
                 }
             }

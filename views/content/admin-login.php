@@ -28,6 +28,7 @@ $old = $old ?? [];
         <div class="atv-field">
           <label for="a-pass">Password</label>
           <input type="password" id="a-pass" name="password" required autocomplete="current-password">
+          <a class="onb-forgot" href="<?= e(base_url('forgot-password')) ?>">Forgot password?</a>
         </div>
         <div class="atv-enq-nav">
           <button type="submit" class="atv-btn">Sign in</button>

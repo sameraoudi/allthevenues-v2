@@ -29,6 +29,7 @@ $old = $old ?? [];
         <div class="atv-field">
           <label for="p-pass">Password</label>
           <input type="password" id="p-pass" name="password" required autocomplete="current-password">
+          <a class="onb-forgot" href="<?= e(base_url('forgot-password')) ?>">Forgot password?</a>
         </div>
         <?php if (turnstile_field() !== ''): ?><div class="atv-field"><?= turnstile_field() ?></div><?php endif; ?>
         <div class="atv-enq-nav">

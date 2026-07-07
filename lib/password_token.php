@@ -145,3 +145,61 @@ function send_invite_email(array $user, string $raw, string $providerName): void
         error_log('send_invite_email: send failed to ' . $to . ' (user ' . (int)($user['id'] ?? 0) . ')');
     }
 }
+
+/**
+ * PU-B — email a password-RESET link (mirrors send_invite_email; reset copy).
+ * $raw is the plaintext 'reset' token (rawurlencoded into the link).
+ */
+function send_reset_email(array $user, string $raw): void
+{
+    $to = trim((string)($user['email'] ?? ''));
+    if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+        error_log('send_reset_email: no valid recipient for user ' . (int)($user['id'] ?? 0));
+        return;
+    }
+    $esc  = static fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+    $name = trim((string)($user['name'] ?? ''));
+    $link = base_url('reset-password?token=' . rawurlencode($raw));
+
+    $body = '<div style="font-family:Arial,sans-serif;color:#0E1B2A;line-height:1.6;">'
+          . '<h2 style="font-size:18px;">All The Venues</h2>'
+          . '<p>Hello' . ($name !== '' ? ' ' . $esc($name) : '') . ',</p>'
+          . '<p>We received a request to reset the password for your All The Venues account. '
+          . 'Use the secure link below to set a new password.</p>'
+          . '<p><a href="' . $esc($link) . '" style="display:inline-block;background:#426F94;color:#fff;'
+          . 'padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600;">Reset your password</a></p>'
+          . '<p style="color:#6b7b88;font-size:13px;">This link can be used once and expires in 48 hours. '
+          . 'If you didn’t request this, you can safely ignore this email — your password won’t change.</p>'
+          . '<p style="color:#6b7b88;">— The All The Venues team</p></div>';
+
+    if (!send_mail($to, 'Reset your All The Venues password', $body)) {
+        error_log('send_reset_email: send failed to ' . $to . ' (user ' . (int)($user['id'] ?? 0) . ')');
+    }
+}
+
+/**
+ * PU-B — shared password policy (extracted from U-P9a set-password; identical
+ * rules): ≥10 chars, confirmation match, not equal (case-insensitive) to the
+ * user's email/name/provider name, and not a common password. Returns an error
+ * message, or null when the password is acceptable. $user: email/name/provider_name.
+ */
+function password_policy_error(string $pw, string $confirm, array $user): ?string
+{
+    if (mb_strlen($pw) < 10) { return 'Use at least 10 characters.'; }
+    if ($pw !== $confirm)    { return 'The two passwords don’t match.'; }
+
+    $lc = mb_strtolower($pw);
+    $identity = array_map('mb_strtolower', array_filter([
+        (string)($user['email'] ?? ''),
+        (string)($user['name'] ?? ''),
+        (string)($user['provider_name'] ?? ''),
+    ]));
+    $deny = ['password', 'password1', 'password123', 'passw0rd', '1234567890', '12345678',
+             'qwertyuiop', 'qwerty123', 'letmein123', 'iloveyou1', 'welcome123', 'admin1234',
+             'allthevenues', 'changeme123'];
+
+    if (in_array($lc, $identity, true) || in_array($lc, $deny, true)) {
+        return 'Please choose a stronger password (not your email, name, or a common password).';
+    }
+    return null;
+}

@@ -144,6 +144,17 @@ if ($path === '/set-password' || $path === '/set-password/request') {
     exit;
 }
 
+// Self-service password reset (PU-B) — partner AND admin/staff. Public, noindex.
+// /forgot-password requests a link; /reset-password consumes the 'reset' token.
+if ($path === '/forgot-password') {
+    require __DIR__ . '/views/forgot-password.php';
+    exit;
+}
+if ($path === '/reset-password') {
+    require __DIR__ . '/views/reset-password.php';
+    exit;
+}
+
 // Provider portal: /portal and /portal/* → gated behind PORTAL_ENABLED (dark by
 // default). config.php (which defines the flag) is loaded here, only for portal
 // paths, so a normal request pays nothing. Flag off / undefined ⇒ fall through to
