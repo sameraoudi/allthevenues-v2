@@ -7,12 +7,14 @@ declare(strict_types=1);
  * on its own My Venues page. Expects: $counts, $nextSteps, $recent (from dispatch);
  * $me + $orgName are in scope from layout.php. All output escaped.
  */
-/** @var array $counts @var array $nextSteps @var array $recent */
-$me        = $me ?? (function_exists('auth_user') ? auth_user() : []);
-$orgName   = $orgName ?? '';
-$counts    = $counts ?? ['managed' => 0, 'pending_review' => 0, 'open_crs' => 0, 'claims' => 0, 'photos' => 0];
-$nextSteps = $nextSteps ?? [];
-$recent    = $recent ?? [];
+/** @var array $counts @var array $nextSteps @var array $recent @var array $myVenues @var array $pendingCrs */
+$me         = $me ?? (function_exists('auth_user') ? auth_user() : []);
+$orgName    = $orgName ?? '';
+$counts     = $counts ?? ['managed' => 0, 'pending_review' => 0, 'open_crs' => 0, 'claims' => 0, 'photos' => 0];
+$nextSteps  = $nextSteps ?? [];
+$recent     = $recent ?? [];
+$myVenues   = $myVenues ?? [];
+$pendingCrs = $pendingCrs ?? [];
 
 $fullName  = trim((string)($me['name'] ?? ''));
 $firstName = $fullName !== '' ? explode(' ', $fullName)[0] : 'there';
@@ -90,3 +92,11 @@ $tiles = [
     </ul>
   </div>
 <?php endif; ?>
+
+<div class="admin-panel">
+  <div class="lead-detail__head">
+    <h2 class="admin-panel__title">My Venues</h2>
+    <?php if ($myVenues): ?><a class="atv-btn atv-btn--sm atv-btn--ghost" href="<?= e(base_url('portal/venues')) ?>">View all</a><?php endif; ?>
+  </div>
+  <?php require __DIR__ . '/_venues-table.php'; ?>
+</div>

@@ -22,39 +22,6 @@ $pendingCrs = $pendingCrs ?? [];
   </div>
 </div>
 
-<?php if (!$myVenues): ?>
-  <div class="admin-panel admin-panel--center">
-    <p class="text-muted mb-2">No venues on your account yet.</p>
-    <a class="atv-btn" href="<?= e(base_url('portal/venues/new')) ?>">Add your first venue</a>
-  </div>
-<?php else: ?>
-  <div class="admin-panel">
-    <div class="lead-table-wrap">
-      <table class="lead-table">
-        <thead>
-          <tr><th>Venue</th><th>Location</th><th>Status</th><th>Updated</th><th></th></tr>
-        </thead>
-        <tbody>
-          <?php foreach ($myVenues as $v):
-            $loc = trim(implode(', ', array_filter([
-                trim((string)($v['area'] ?? '')),
-                trim((string)($v['emirate_name'] ?? '')),
-            ])));
-            $st = portal_venue_state_badge($v, $pendingCrs);
-          ?>
-            <tr>
-              <td data-label="Venue"><strong><?= e((string)$v['name']) ?></strong></td>
-              <td data-label="Location"><?= $loc !== '' ? e($loc) : '<span class="text-muted">&mdash;</span>' ?></td>
-              <td data-label="Status">
-                <span class="pv-chip pv-chip--<?= e($st['chip_class']) ?>"><?= e($st['chip_label']) ?></span>
-                <?php if ($st['badge_label'] !== ''): ?><span class="pv-badge pv-badge--<?= e($st['badge_class']) ?>"><?= e($st['badge_label']) ?></span><?php endif; ?>
-              </td>
-              <td data-label="Updated"><?= e(date('j M Y', strtotime((string)$v['updated_at']))) ?></td>
-              <td data-label=""><a class="atv-btn atv-btn--sm atv-btn--ghost" href="<?= e(base_url('portal/venues/' . (int)$v['id'])) ?>">View</a></td>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-  </div>
-<?php endif; ?>
+<div class="admin-panel<?= !$myVenues ? ' admin-panel--center' : '' ?>">
+  <?php require __DIR__ . '/_venues-table.php'; ?>
+</div>

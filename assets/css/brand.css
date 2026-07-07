@@ -1385,6 +1385,8 @@ select:focus-visible,
 .pv-badge--review  { background: #e7eef4; color: var(--action); }
 .pv-badge--changes { background: #f6efdb; color: #8a6d1f; }
 .pv-badge--delist  { background: #f6e7e5; color: #a5433b; }
+/* Portal-updates — dual row actions (View + View Live) */
+.pv-row-actions { display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 
 /* ---- Footer ---- */
 .pfoot { border-top: 1px solid var(--line); padding: 14px 30px; font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }

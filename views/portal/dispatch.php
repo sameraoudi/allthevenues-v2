@@ -171,6 +171,8 @@ switch ($sub) {
         $counts              = portal_dashboard_counts($pdo, $partnerId);
         $nextSteps           = portal_dashboard_next_steps($pdo, $partnerId);
         $recent              = portal_dashboard_recent($pdo, $partnerId);
+        $myVenues            = portal_my_venues($pdo, $partnerId);
+        $pendingCrs          = portal_owned_pending_crs($pdo, $partnerId);
         $page_title          = 'Dashboard — Partner Portal';
         $portal_active       = 'dashboard';
         $portal_content_view = __DIR__ . '/dashboard.php';

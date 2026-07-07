@@ -120,6 +120,9 @@ if (!$photosOk)  { $blockers[] = 'add at least one photo'; }
     <?php else: ?>
       <span class="lead-status lead-status--<?= e($vStatus) ?>"><?= e(venue_admin_status_label($vStatus)) ?></span>
     <?php endif; ?>
+    <?php if ($vStatus === 'published' && trim((string)($venue['slug'] ?? '')) !== ''): ?>
+      <a class="atv-btn atv-btn--sm atv-btn--ghost" href="<?= e(base_url('venues/' . trim((string)$venue['slug']))) ?>" target="_blank" rel="noopener">View Live Page</a>
+    <?php endif; ?>
     <a class="atv-btn atv-btn--sm" href="<?= e(base_url('portal/venues/' . $vid . '/edit')) ?>">Edit venue</a>
   </div>
 </div>
