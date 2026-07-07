@@ -115,13 +115,13 @@ which we did NOT set), so `?submitted=1` conversions are already counted as dist
 behind `PORTAL_ENABLED`): flag/skeleton, schema, partner auth, My Venues + read-only detail, live low-risk
 edit, sensitive-field change requests (submit + admin review), and new-venue submissions (submit + admin
 structured review). **Deployed: U-P0→U-P6b** (all portal units to date). **#9 image rights/provenance COMPLETE + deployed**
-(#9a/b/c — provenance schema, admin classification, needs-review report, publish-gate flip). Next: **U-P7**
-(provider image uploads — now unblocked by #9), then **U-P8** (claims), **U-P9** (launch). Known gaps: portal
-event-type editor; per-action confirm modals. Remaining post-launch: rest of #3, U6 passive watch.
-> **⚠️ QA-TODO (Samer):** full end-to-end test of the **#9 image-rights** flow before it's relied on / launch —
-> it's deployed but only CC-verified. Cover: Admin → Image Review (classify + report accuracy + Fix links),
-> per-image "Image rights" panel, cover provenance, and the new-venue publish gate (can't publish until ≥1
-> image is classified cleared).
+(#9a/b/c — provenance schema, admin classification, needs-review report, publish-gate flip). **#9 image-rights
+flow END-TO-END TESTED by Samer (7 Jul 2026) — works.** **U-P7a SHIPPED + deployed** (provider image uploads,
+submit + withdraw). Next: **U-P7b** (admin review of provider photos — design lock approved), then **U-P8**
+(claims), **U-P9** (launch). Known gaps: portal event-type editor; per-action confirm modals; **`db/001_schema.sql`
+drift** (016/019/020/021 live only as numbered ALTERs — never folded into 001; a fresh import runs 001 + all
+migrations in sequence, so this is fine, but a one-off "sync 001 with 016–021" task would restore true
+single-file parity). Remaining post-launch: rest of #3, U6 passive watch.
 
 **⚠️ Deploy now hits PROD directly.** Apex serves from `/atv-staging`, so a cPanel `allthevenues-v2` repo
 Deploy-HEAD updates the LIVE apex (no separate staging buffer). Workflow unchanged otherwise: local dev
@@ -191,6 +191,41 @@ remain.
 ---
 
 ## Dated history
+
+**7 Jul 2026 (post-launch)**
+- **#9 image-rights flow — END-TO-END TESTED by Samer + confirmed working.** Was deployed but only CC-verified;
+  now exercised in prod (Admin → Image Review classify + report + Fix links, per-image rights panel, cover
+  provenance, new-venue publish gate). Unblocks U-P7.
+- **U-P7a — provider portal venue-image uploads (submit + withdraw) SHIPPED + deployed** (commit `31c0621`,
+  migration 021 APPLIED on prod). Ships **inert** (PORTAL_ENABLED OFF → `/portal/*` 404s until U-P9). Design lock
+  `docs/atv-portal-images-preview.html` (approved w/ Samer refinements). **Model decision:** provider rights
+  confirmation is NOT ATV approval and does NOT reuse #9 `permission_status='approved_by_provider'`. Migration 021
+  = 13 additive columns on `venue_images` + `idx_vimg_review_status`, MySQL-5.7 guarded like 020: `review_status`
+  ENUM(pending_review/approved/rejected/withdrawn/archived) DEFAULT 'approved' (backfills 260 existing → approved),
+  `rights_confirmed`/`_by`/`_at`, `uploaded_by`, `original_filename`/`file_size`/`img_width`/`img_height`,
+  `reviewed_by`/`_at`/`review_note`/`review_reason`. Does NOT touch the display `status` enum or #9
+  `permission_status`. `lib/portal.php` +5 owner-scoped fns (`portal_add_pending_image` captures dims/filename/size
+  before WebP re-encode, records rights_confirmed*, inserts `review_status='pending_review'` + `status='hidden'`,
+  is_primary=0; `portal_withdraw_image` soft-marks withdrawn + unlinks files). New `views/portal/venue-images.php`
+  (controller) + `venue-images-content.php` (built to the lock), dispatch route `/portal/venues/{id}/images`,
+  "Manage photos" button on the portal venue detail, brand.css photo-grid classes, app.js submit-gating (file +
+  consent). Verified: pending images never public (`venue_images()` still `status='active'`) + never satisfy the
+  new-venue publish gate (counts `active` AND cleared perm); consent required; ownership fail-closed (404 / no-op);
+  upload rejects (.php.jpg/.gif/>12MB) clean; audit on create + withdraw.
+- **`db/001_schema.sql` fold-in NOT done (correct):** the U-P7a order said to fold the new columns into 001
+  "like 020" — but 020/019/016 were never folded either; only pre-launch Phase-1 patches were. CC correctly kept
+  migrations as the source of truth (partial fold would make 001 internally inconsistent). **Open item:** a
+  separate one-off "sync 001 with 016–021" task if true fresh-import single-file parity is wanted.
+- **U-P7b (admin review of provider photos) — design lock APPROVED** (`docs/atv-portal-image-review-preview.html`,
+  approved w/ Samer refinements). Locked decisions: NEW `/admin/image-submissions` page (separate from #9
+  `/admin/image-review`); access **admin+editor** via new cap `provider_images.manage`; per-image Approve &
+  publish (sets review_status=approved/status=active + admin-chosen #9 permission_status; optional set-primary) /
+  Reject (6 fixed reasons + required note, row retained). **Publish BLOCKED unless the chosen classification ∈
+  `venue_images_cleared_statuses()`** (server + JS). Global relabel `approved_by_provider` → "Rights confirmed by
+  provider". Audit + provider email each decision. Bulk/filters/search deferred. **CC build order issued — build
+  pending.**
+- **Open (flagged by Samer):** `staging.allthevenues.com` still fully serves the live `/atv-staging` docroot (only
+  a noindex header) — needs a host-gated **301 → apex**. Held until after U-P7a; build order pending.
 
 **6 Jul 2026 (post-launch)**
 - **#10 slug-history 301 redirects SHIPPED + verified on prod** (commit `cd694f3`): migration 018 added

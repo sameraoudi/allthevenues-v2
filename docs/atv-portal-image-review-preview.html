@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATV — Provider photo review (U-P7b preview)</title>
+<style>
+  :root{
+    --navy:#0E1B2A; --blue:#6C93B7; --action:#426F94; --action-hover:#315B7C;
+    --sand:#D9C7A8; --ink:#1c2b38; --muted:#6b7b88; --line:#e4e8ec; --bg:#f3f1ec;
+    --ok:#2f7d5b; --okbg:#e7f3ec; --warn:#8a6d1f; --warnbg:#f6efdb; --danger:#a5433b; --dangerbg:#f6e7e5;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Segoe UI,Inter,sans-serif;font-size:14px;}
+  h1,h2,h3{font-family:Georgia,'Cormorant Garamond',serif;font-weight:600;margin:0;}
+  a{color:var(--action);text-decoration:none;}
+  .wrap{display:grid;grid-template-columns:210px 1fr;min-height:100vh;}
+  .side{background:var(--navy);color:#c7d0d8;padding:22px 0;}
+  .side .brand{color:#fff;font-family:Georgia,serif;font-size:20px;padding:0 22px 20px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .side nav{display:flex;flex-direction:column;padding:14px 12px;gap:2px;}
+  .side nav a{color:#c7d0d8;padding:9px 12px;border-radius:8px;font-size:13.5px;}
+  .side nav a:hover{background:rgba(255,255,255,.06);color:#fff;}
+  .side nav a.on{background:var(--action);color:#fff;}
+  .side nav a .pill{background:var(--sand);color:var(--navy);font-size:11px;font-weight:700;border-radius:20px;padding:1px 8px;margin-left:8px;}
+  .main{padding:26px 30px 60px;max-width:1000px;}
+  .crumb{font-size:12px;color:var(--muted);margin-bottom:12px;}
+  h1.page{font-size:26px;margin-bottom:4px;}
+  .intro{color:var(--muted);font-size:13px;margin-bottom:20px;max-width:760px;line-height:1.55;}
+  .kpis{display:flex;gap:12px;margin-bottom:22px;flex-wrap:wrap;}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 18px;min-width:150px;}
+  .kpi .n{font-size:24px;font-weight:700;color:var(--navy);} .kpi .l{font-size:12px;color:var(--muted);}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;}
+  .b-rights{background:#eef4f8;color:var(--action);border:1px solid #d6e2ea;}
+  .b-pending{background:var(--warnbg);color:var(--warn);}
+  /* venue group */
+  .group{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 22px rgba(14,27,42,.06);padding:20px 22px;margin-bottom:18px;}
+  .group__head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:16px;}
+  .group__head h2{font-size:20px;} .group__head .meta{font-size:12.5px;color:var(--muted);margin-top:3px;}
+  .live-strip{display:flex;gap:6px;align-items:center;}
+  .live-strip .lbl{font-size:11px;color:var(--muted);margin-right:4px;}
+  .live-strip img,.live-strip .ph{width:44px;height:34px;border-radius:6px;object-fit:cover;background:linear-gradient(135deg,#c9d6e2,#9fb4c6);border:1px solid var(--line);position:relative;}
+  .live-strip .ph.main::after{content:'★';position:absolute;top:-6px;right:-4px;font-size:11px;color:var(--sand);}
+  /* pending image cards */
+  .subs{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .sub{border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;}
+  .sub .img{aspect-ratio:16/10;background:linear-gradient(135deg,#c9d6e2,#9fb4c6);position:relative;}
+  .sub .img .tag{position:absolute;top:8px;left:8px;}
+  .sub .body{padding:12px 14px;display:flex;flex-direction:column;gap:9px;}
+  .sub .cap{font-size:13.5px;color:var(--ink);}
+  .sub .metaline{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;}
+  .fieldrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12.5px;}
+  .fieldrow label{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.3px;}
+  select,input[type=text]{border:1px solid var(--line);border-radius:8px;padding:6px 9px;font:inherit;font-size:12.5px;background:#fff;}
+  .chk{display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--ink);}
+  .decide{border-top:1px solid #f0eee9;padding-top:11px;margin-top:2px;}
+  .decide .lane{display:none;}
+  .btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid transparent;}
+  .btn-a{background:var(--action);color:#fff;} .btn-a:hover{background:var(--action-hover);}
+  .btn-ok{background:var(--ok);color:#fff;} .btn-danger{background:#fff;border:1px solid #e2b6ad;color:var(--danger);} .btn-danger:hover{background:var(--dangerbg);}
+  .btn-ghost{background:#fff;border-color:var(--line);color:var(--action);}
+  .btn-sm{padding:5px 11px;font-size:12px;}
+  .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5;}
+  .note{background:#fbf7ef;border:1px dashed var(--sand);border-radius:10px;padding:9px 12px;color:#6d5f45;font-size:12.5px;margin-top:10px;}
+  .foot{font-size:12px;color:var(--muted);line-height:1.6;margin-top:8px;}
+  textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;font-size:12.5px;resize:vertical;min-height:46px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <aside class="side">
+    <div class="brand">All The Venues</div>
+    <nav>
+      <a href="#">Dashboard</a><a href="#">Enquiries</a><a href="#">Venues</a><a href="#">Providers</a>
+      <a href="#">Reports</a><a href="#">Change Requests <span class="pill">4</span></a>
+      <a href="#">Image Review <span class="pill">261</span></a>
+      <a href="#" class="on">Provider Photos <span class="pill">3</span></a>
+      <a href="#">Users</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="crumb">Admin › Provider Photos</div>
+    <h1 class="page">Provider photo submissions</h1>
+    <p class="intro">Review photos submitted by venue providers. Photos remain hidden from the public site until
+      approved. Provider rights confirmation is recorded on upload, but ATV still reviews each image for quality,
+      suitability, and rights risk before publishing.</p>
+
+    <details style="margin-bottom:18px;">
+      <summary style="cursor:pointer;font-size:12.5px;color:var(--action);font-weight:600;">Review checklist (optional guide)</summary>
+      <ul style="font-size:12.5px;color:var(--muted);line-height:1.7;margin:8px 0 0;padding-left:20px;">
+        <li>Clear venue view</li><li>No watermark or text overlay</li>
+        <li>No visible guests without permission</li><li>Good resolution</li><li>Suitable for public listing</li>
+      </ul>
+    </details>
+
+    <div class="kpis">
+      <div class="kpi"><div class="n">3</div><div class="l">Photos awaiting review</div></div>
+      <div class="kpi"><div class="n">2</div><div class="l">Venues with submissions</div></div>
+      <div class="kpi"><div class="n">1</div><div class="l">Oldest waiting: 2 days</div></div>
+    </div>
+
+    <!-- VENUE GROUP 1 -->
+    <div class="group">
+      <div class="group__head">
+        <div>
+          <h2><a href="#">My Rooftop Lounge ↗</a></h2>
+          <div class="meta">Rixos Hotels · Published venue</div>
+        </div>
+        <div class="live-strip">
+          <span class="lbl">On listing now</span>
+          <span class="ph main" title="Current main photo"></span><span class="ph"></span><span class="ph"></span>
+          <span style="font-size:11px;color:var(--muted);margin-left:2px;">★ Current main</span>
+        </div>
+      </div>
+
+      <div class="subs">
+        <!-- pending image A -->
+        <div class="sub">
+          <div class="img"><span class="tag badge b-pending">Pending review</span></div>
+          <div class="body">
+            <div class="cap">Rooftop set for a sunset reception</div>
+            <div class="metaline">
+              <span class="badge b-rights" title="Provider ticked the rights confirmation on upload (stored with name + date)">Rights confirmed by provider</span>
+            </div>
+            <div class="rights-rec" style="font-size:12px;color:#40525f;background:#f7f9fb;border:1px solid var(--line);border-radius:8px;padding:8px 11px;line-height:1.5;">
+              Rights confirmed by <b>Bianca, Rixos Hotels</b>, on 6 Jul 2026.<br>
+              <span style="color:var(--muted);">Submitted from provider account: bianca@rixos.example</span>
+            </div>
+            <div class="metaline" style="color:var(--muted);">WebP · 1800 × 1200 · 1.8 MB · uploaded 2 days ago · Source: provider upload</div>
+            <div class="decide">
+              <div class="fieldrow" style="margin-bottom:9px;">
+                <label>Image rights</label>
+                <select>
+                  <option selected>Rights confirmed by provider</option>
+                  <option>ATV-owned</option>
+                  <option>Licensed stock</option>
+                  <option data-block="1">Public website source, permission required</option>
+                  <option data-block="1">Unknown source — do not publish</option>
+                </select>
+                <span class="chk"><input type="checkbox" id="p1"><label for="p1" style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink);">Set as main photo</label></span>
+              </div>
+              <div class="actions">
+                <button class="btn btn-ok" data-confirm="Approve this photo? It will go live on the venue listing.">Approve &amp; publish</button>
+                <button class="btn btn-danger">Reject…</button>
+              </div>
+              <p class="hint" style="margin-top:7px;">Approve &amp; publish is blocked when rights are &ldquo;permission required&rdquo; or &ldquo;unknown source.&rdquo; Ticking <b>Set as main photo</b> changes the confirmation to: &ldquo;Approve and set as main photo? This will publish the image and replace the current main photo on the venue listing.&rdquo;</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- pending image B (reject lane expanded to show it) -->
+        <div class="sub">
+          <div class="img"><span class="tag badge b-pending">Pending review</span></div>
+          <div class="body">
+            <div class="cap">Private bar &amp; lounge area</div>
+            <div class="metaline">
+              <span class="badge b-rights">Rights confirmed by provider</span>
+            </div>
+            <div class="rights-rec" style="font-size:12px;color:#40525f;background:#f7f9fb;border:1px solid var(--line);border-radius:8px;padding:8px 11px;line-height:1.5;">
+              Rights confirmed by <b>Bianca, Rixos Hotels</b>, on 6 Jul 2026.<br>
+              <span style="color:var(--muted);">Submitted from provider account: bianca@rixos.example</span>
+            </div>
+            <div class="metaline" style="color:var(--muted);">WebP · 1600 × 1067 · 1.4 MB · uploaded 2 days ago · Source: provider upload</div>
+            <div class="decide">
+              <div class="fieldrow" style="margin-bottom:9px;">
+                <label>Reject reason</label>
+                <select>
+                  <option>Low image quality</option>
+                  <option selected>Watermark or text overlay</option>
+                  <option>Image rights unclear</option>
+                  <option>People visible without confirmation</option>
+                  <option>Does not clearly show the venue</option>
+                  <option>Duplicate image</option>
+                </select>
+              </div>
+              <textarea placeholder="Note to the provider (required when rejecting) — e.g. There's a logo watermark bottom-right; please re-upload a clean version."></textarea>
+              <div class="actions" style="margin-top:9px;">
+                <button class="btn btn-danger" data-confirm="Reject this photo? The provider will be notified with the reason and note.">Confirm reject</button>
+                <button class="btn btn-ghost">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VENUE GROUP 2 -->
+    <div class="group">
+      <div class="group__head">
+        <div>
+          <h2><a href="#">Marina Pavilion ↗</a></h2>
+          <div class="meta">Nikki Beach · Published venue</div>
+        </div>
+        <div class="live-strip"><span class="lbl">On listing now</span><span class="ph main"></span><span class="ph"></span><span style="font-size:11px;color:var(--muted);margin-left:2px;">★ Current main</span></div>
+      </div>
+      <div class="subs">
+        <div class="sub">
+          <div class="img"><span class="tag badge b-pending">Pending review</span></div>
+          <div class="body">
+            <div class="cap">Poolside cabana layout</div>
+            <div class="metaline"><span class="badge b-rights">Rights confirmed by provider</span></div>
+            <div class="rights-rec" style="font-size:12px;color:#40525f;background:#f7f9fb;border:1px solid var(--line);border-radius:8px;padding:8px 11px;line-height:1.5;">
+              Rights confirmed by <b>Omar, Nikki Beach</b>, on 7 Jul 2026.<br>
+              <span style="color:var(--muted);">Submitted from provider account: omar@nikkibeach.example</span>
+            </div>
+            <div class="metaline" style="color:var(--muted);">WebP · 2000 × 1333 · 2.1 MB · uploaded 6h ago · Source: provider upload</div>
+            <div class="decide">
+              <div class="fieldrow" style="margin-bottom:9px;">
+                <label>Image rights</label>
+                <select><option selected>Rights confirmed by provider</option><option>ATV-owned</option><option>Licensed stock</option><option data-block="1">Public website source, permission required</option><option data-block="1">Unknown source — do not publish</option></select>
+                <span class="chk"><input type="checkbox" id="p3"><label for="p3" style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink);">Set as main photo</label></span>
+              </div>
+              <div class="actions">
+                <button class="btn btn-ok" data-confirm="Approve this photo? It will go live on the venue listing.">Approve &amp; publish</button>
+                <button class="btn btn-danger">Reject…</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="foot">
+      Approval publishes the photo, stores the selected rights classification, and optionally sets it as the venue&rsquo;s
+      main image. Rejection keeps the photo off the site, stores the reason and note, and notifies the provider. All decisions
+      are audited (image id, venue, provider, submitted-by, reviewer, timestamps, decision, rights classification, note,
+      reject reason, set-as-main, notification status). Provider rights confirmation (name + date) is retained either way.
+    </p>
+  </main>
+</div>
+</body>
+</html>

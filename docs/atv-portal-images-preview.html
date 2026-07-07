@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATV — Provider portal: venue images (U-P7a preview)</title>
+<style>
+  :root{
+    --navy:#0E1B2A; --blue:#6C93B7; --action:#426F94; --action-hover:#315B7C;
+    --sand:#D9C7A8; --ink:#1c2b38; --muted:#6b7b88; --line:#e4e8ec; --bg:#f3f1ec;
+    --ok:#2f7d5b; --okbg:#e7f3ec; --warn:#8a6d1f; --warnbg:#f6efdb; --danger:#a5433b; --dangerbg:#f6e7e5;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Segoe UI,Inter,sans-serif;font-size:14px;}
+  h1,h2,h3{font-family:Georgia,'Cormorant Garamond',serif;font-weight:600;margin:0;}
+  a{color:var(--action);text-decoration:none;}
+  /* provider topbar (portal chrome, not the admin sidebar) */
+  .topbar{background:var(--navy);color:#fff;display:flex;justify-content:space-between;align-items:center;padding:14px 26px;}
+  .brand{font-family:Georgia,serif;font-size:19px;color:#fff;}
+  .brand span{color:var(--blue);} .brand em{color:var(--sand);font-style:normal;font-size:13px;margin-left:4px;}
+  .topbar__right{display:flex;align-items:center;gap:14px;font-size:13px;color:#c7d0d8;}
+  .main{max-width:860px;margin:0 auto;padding:26px 24px 70px;}
+  .crumb{font-size:13px;margin-bottom:14px;}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px;}
+  .head h1{font-size:28px;}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:22px;}
+  .status{display:inline-block;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;background:var(--okbg);color:var(--ok);}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 22px rgba(14,27,42,.06);padding:22px 24px;margin-bottom:18px;}
+  .panel h2{font-size:20px;margin-bottom:4px;}
+  .panel .lead{color:var(--muted);font-size:13px;margin:0 0 16px;line-height:1.5;}
+  .sec-h{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;margin:0 0 12px;}
+  /* upload form */
+  .field{margin-bottom:16px;}
+  .field label.lbl{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);margin-bottom:6px;}
+  .drop{border:1.5px dashed var(--sand);border-radius:12px;background:#fbf7ef;padding:22px;text-align:center;color:#6d5f45;font-size:13.5px;}
+  .drop b{color:var(--action);}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5;}
+  textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:13.5px;resize:vertical;min-height:56px;}
+  .consent{display:flex;gap:10px;align-items:flex-start;background:#f7f9fb;border:1px solid var(--line);border-radius:10px;padding:13px 15px;}
+  .consent input{margin-top:3px;flex:0 0 auto;width:16px;height:16px;}
+  .consent label{font-size:13px;line-height:1.5;color:var(--ink);}
+  .consent .req{color:var(--danger);font-weight:600;}
+  .btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:9px 18px;font-size:13.5px;font-weight:600;cursor:pointer;border:1px solid transparent;}
+  .btn-a{background:var(--action);color:#fff;} .btn-a:hover{background:var(--action-hover);}
+  .btn-ghost{background:#fff;border-color:var(--line);color:var(--action);} .btn-ghost:hover{background:#eef1f4;}
+  .btn-danger{background:#fff;border:1px solid #e2b6ad;color:var(--danger);} .btn-danger:hover{background:var(--dangerbg);}
+  .btn-sm{padding:5px 12px;font-size:12.5px;}
+  .btn[disabled]{opacity:.5;cursor:not-allowed;}
+  .form-actions{display:flex;align-items:center;gap:14px;margin-top:18px;}
+  /* thumbnail grids */
+  .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;}
+  .thumb{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;display:flex;flex-direction:column;}
+  .thumb .img{aspect-ratio:4/3;background:linear-gradient(135deg,#c9d6e2,#9fb4c6);position:relative;}
+  .thumb .img .tag{position:absolute;top:8px;left:8px;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;}
+  .tag-pending{background:var(--warnbg);color:var(--warn);}
+  .tag-rejected{background:var(--dangerbg);color:var(--danger);}
+  .tag-primary{background:var(--navy);color:#fff;}
+  .thumb .img.rejected{filter:grayscale(.5);opacity:.75;}
+  .reason{color:var(--danger);font-weight:600;}
+  .thumb .body{padding:9px 11px;font-size:12px;color:var(--muted);flex:1;display:flex;flex-direction:column;gap:8px;}
+  .thumb .cap{color:var(--ink);}
+  .thumb .row{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:auto;}
+  .badge-review{display:inline-block;font-size:11px;font-weight:700;color:var(--warn);}
+  .empty{background:#fbf7ef;border:1px dashed var(--sand);border-radius:10px;padding:18px;color:#6d5f45;font-size:13px;text-align:center;}
+  .managed-note{font-size:12.5px;color:var(--muted);margin-top:14px;line-height:1.5;border-top:1px solid var(--line);padding-top:12px;}
+  .flag{font-size:11px;background:#eef4f8;color:var(--action);border:1px solid #d6e2ea;border-radius:6px;padding:1px 7px;font-weight:600;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="#">All The <span>Venues</span> <em>· Provider</em></a>
+  <div class="topbar__right"><span>Bianca — Rixos Hotels</span> · <a href="#" style="color:#c7d0d8;">Sign out</a></div>
+</header>
+
+<main class="main">
+  <div class="crumb"><a href="#">&larr; Back to My Rooftop Lounge</a></div>
+
+  <div class="head">
+    <h1>Venue photos</h1>
+    <span class="status">Published</span>
+  </div>
+  <p class="sub">My Rooftop Lounge · JBR, Dubai</p>
+
+  <!-- HOW IT WORKS -->
+  <div class="panel" style="border-color:#d6e2ea;background:#f8fbfd;">
+    <h2 style="font-size:18px;">Add photos of your venue</h2>
+    <p class="lead" style="margin-bottom:0;">
+      Upload high-quality venue photos for review. All The Venues checks each image for quality and rights
+      before it appears on your public listing. You can withdraw a photo any time before review.
+    </p>
+  </div>
+
+  <!-- UPLOAD FORM -->
+  <div class="panel">
+    <div class="sec-h">Upload new photos</div>
+
+    <div class="field">
+      <label class="lbl">Choose images</label>
+      <div class="drop">
+        <b>Choose files</b> or drag them here &mdash; JPG, PNG or WebP, up to 12&nbsp;MB each. You can select several at once.
+      </div>
+      <p class="hint">Best photos are landscape, well lit, free of text overlays or watermarks, and clearly show the venue. Landscape photos at least 1200px wide look best. We optimise and re-encode every image automatically.</p>
+    </div>
+
+    <div class="field">
+      <label class="lbl">Caption / alt text <span style="text-transform:none;font-weight:400;">(optional)</span></label>
+      <textarea placeholder="e.g. Rooftop set for a sunset reception, skyline behind the stage."></textarea>
+      <p class="hint">A short description applied to the photos in this upload. Helps accessibility and SEO. You can edit it later per photo.</p>
+    </div>
+
+    <div class="field">
+      <div class="consent">
+        <input type="checkbox" id="consent">
+        <label for="consent">
+          <span class="req">Required &mdash;</span> I confirm that I own these images or have the necessary rights
+          and permissions to submit them, and I grant All The Venues permission to display, crop, resize, optimise,
+          and use them on allthevenues.com for this venue&rsquo;s listing and related venue discovery pages.
+          <span class="flag" title="Stored as rights_confirmed_by_provider on each photo — separate from ATV editorial approval">recorded as rights confirmed by provider</span>
+        </label>
+      </div>
+      <p class="hint">Your confirmation is stored with each photo, including your name and the submission date, for our image-rights records.</p>
+      <p class="hint" style="color:#6d5f45;background:#fbf7ef;border:1px dashed var(--sand);border-radius:8px;padding:9px 12px;margin-top:8px;">
+        <strong>If people are clearly visible</strong>, please make sure you have permission to use the image for
+        venue promotion &mdash; this includes guests, couples, staff, and attendees in event photos.</p>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-a" disabled title="Choose at least one image and tick the rights confirmation">Submit for review</button>
+      <span class="hint" style="margin-top:0;">Enabled once you&rsquo;ve chosen a photo and ticked the box.</span>
+    </div>
+  </div>
+
+  <!-- AWAITING REVIEW -->
+  <div class="panel">
+    <div class="sec-h">Awaiting review <span class="badge-review">· 2 photos</span></div>
+    <p class="lead">These photos have been submitted and are with All The Venues for review. They&rsquo;re not on your
+      public listing yet. You can withdraw one before it&rsquo;s reviewed.</p>
+    <div class="thumbs">
+      <div class="thumb">
+        <div class="img"><span class="tag tag-pending">Pending review</span></div>
+        <div class="body">
+          <span class="cap">Rooftop sunset reception</span>
+          <span>Submitted 2h ago</span>
+          <div class="row"><span class="badge-review">In review</span><button class="btn btn-danger btn-sm" data-confirm="Withdraw this photo? It will be removed and not reviewed.">Withdraw</button></div>
+        </div>
+      </div>
+      <div class="thumb">
+        <div class="img"><span class="tag tag-pending">Pending review</span></div>
+        <div class="body">
+          <span class="cap">Private bar &amp; lounge area</span>
+          <span>Submitted 2h ago</span>
+          <div class="row"><span class="badge-review">In review</span><button class="btn btn-danger btn-sm" data-confirm="Withdraw this photo? It will be removed and not reviewed.">Withdraw</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOT APPROVED (rejected) -->
+  <div class="panel">
+    <div class="sec-h">Not approved <span class="badge-review" style="color:var(--danger);">· 1 photo</span></div>
+    <p class="lead">All The Venues reviewed these photos and couldn&rsquo;t add them to your listing. You can upload a
+      replacement that resolves the reason below.</p>
+    <div class="thumbs">
+      <div class="thumb">
+        <div class="img rejected"><span class="tag tag-rejected">Not approved</span></div>
+        <div class="body">
+          <span class="cap">Entrance at night</span>
+          <span>Reason: <span class="reason">Watermark or text overlay</span></span>
+          <span>Reviewed 1 day ago</span>
+          <div class="row"><span></span><button class="btn btn-ghost btn-sm">Upload replacement</button></div>
+        </div>
+      </div>
+    </div>
+    <p class="managed-note" style="border:0;padding-top:6px;">Typical reasons: low image quality &middot; watermark or
+      text overlay &middot; image rights unclear &middot; people visible without confirmation &middot; doesn&rsquo;t
+      clearly show the venue &middot; duplicate image.</p>
+  </div>
+
+  <!-- CURRENTLY LIVE (read-only) -->
+  <div class="panel">
+    <div class="sec-h">On your public listing</div>
+    <div class="thumbs">
+      <div class="thumb">
+        <div class="img"><span class="tag tag-primary">Main photo</span></div>
+        <div class="body"><span class="cap">Ballroom, banquet layout</span></div>
+      </div>
+      <div class="thumb"><div class="img"></div><div class="body"><span class="cap">Terrace at dusk</span></div></div>
+      <div class="thumb"><div class="img"></div><div class="body"><span class="cap">Stage &amp; AV setup</span></div></div>
+    </div>
+    <p class="managed-note">
+      These photos are live on your listing and managed by All The Venues (which one is the main photo, order and
+      removal). Need one changed or removed? <a href="#">Request a change</a> and we&rsquo;ll take care of it.
+    </p>
+  </div>
+
+</main>
+</body>
+</html>
