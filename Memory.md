@@ -142,8 +142,15 @@ delete hover. **PU-A1 SHIPPED** (`9250c32`, no migration) — portal rebuilt int
 Next steps + Recent decisions via `portal_dashboard_counts/next_steps/recent`), **My Venues** at `/portal/venues`
 with per-venue request badges (#7b, `portal_venue_state_badge`), minimal footer, **partner** terminology (portal
 UI + partner emails only; DB/routes/admin/public "Venue Providers" untouched). Enquiries omitted (VISION
-managed-leads); photos = a dashboard tile. **Next: PU-A2** (Guide #8 + Account page — adds those two nav items).
-Then the post-launch backlog's top tier is DONE.
+managed-leads); photos = a dashboard tile. **PU-A2 SHIPPED** (Guide #8 + Account page [read-only profile +
+in-portal change-password reusing `password_policy_error`] + their nav items). **Post-launch backlog top tier DONE.**
+**Copy + portal polish SHIPPED (8 Jul):** public button-capitalization audit + footer/header renames (Partner
+Portal, Event Types, Delist a Venue, Enquire Now, Apply Filters; Show/Hide toggle; header+title "Event Types";
+`eafe0ee`/`92330f1`); portal **dashboard now lists venues** (shared `_venues-table.php` partial) + **dual view
+buttons** (View portal / View Live public, published-only) on the table + venue detail + **revised Guide copy**
+(`197245f`). `/event-types` H1 hero kept by choice. **Remaining backlog:** PU-C (claims polish: #10 preserve claim
+history, #11 show rejected claims to partner, #9 proof UI) + PU-E (#20 admin new-venue-review → image-approval link)
++ tracked fast-follows (admin event-type editor UI; sync `db/001` with 016–023).
 **PU-D2 SHIPPED** (#17, commit `452b1a5`, no migration) — published-venue event-type edits are now a governed
 change request folded into the U-P5 edit CR: the proposed set rides in `proposed_changes_json._event_type_ids`
 (inert to the scalar field-loop); `cr_approve` applies it (validate active ids → DELETE+INSERT) in the same
