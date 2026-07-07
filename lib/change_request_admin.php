@@ -211,10 +211,45 @@ function cr_admin_get(PDO $pdo, int $id): ?array
             'new_disp' => cr_display_value($field, $pair['new'] ?? null, $fkMaps),
         ];
     }
+    // PU-D2 (#17) — event-type diff (Current → Proposed) when a set was proposed.
+    $req['event_type_diff'] = null;
+    if (isset($changes['_event_type_ids']) && is_array($changes['_event_type_ids'])) {
+        $proposed = array_values(array_unique(array_filter(
+            array_map('intval', $changes['_event_type_ids']), static fn($i) => $i > 0)));
+        $ct = $pdo->prepare('SELECT event_type_id FROM venue_event_types WHERE venue_id = :vid');
+        $ct->execute([':vid' => (int)$req['venue_id']]);
+        $current = array_map('intval', $ct->fetchAll(PDO::FETCH_COLUMN));
+
+        $names = [];
+        foreach ($pdo->query('SELECT id, name FROM event_types')->fetchAll() as $et) {
+            $names[(int)$et['id']] = (string)$et['name'];
+        }
+        $nameOf  = static fn(int $eid): string => $names[$eid] ?? ('#' . $eid);
+        $propSet = array_flip($proposed);
+        $curSet  = array_flip($current);
+
+        $tags = [];   // current order: kept + removed, then the additions
+        foreach ($current as $eid) {
+            $tags[] = ['name' => $nameOf($eid), 'state' => isset($propSet[$eid]) ? 'keep' : 'rem'];
+        }
+        foreach ($proposed as $eid) {
+            if (!isset($curSet[$eid])) { $tags[] = ['name' => $nameOf($eid), 'state' => 'add']; }
+        }
+        $req['event_type_diff'] = [
+            'tags'           => $tags,
+            'current_names'  => array_map($nameOf, $current),
+            'proposed_names' => array_map($nameOf, $proposed),
+        ];
+    }
+
     $req['changes']      = $changes;
     $req['change_rows']  = $rows;
     $req['risk']         = ($req['type'] === 'edit') ? cr_request_risk(array_keys($changes))
                          : (in_array($req['type'], ['new_venue', 'claim'], true) ? 'high' : 'low');
+    // An event-type change is Medium risk — bump a scalar-low request up.
+    if ($req['type'] === 'edit' && $req['event_type_diff'] !== null && $req['risk'] === 'low') {
+        $req['risk'] = 'medium';
+    }
     $req['recipient']    = trim((string)($req['submitter_email'] ?? '')) !== ''
         ? (string)$req['submitter_email'] : (string)($req['provider_email'] ?? '');
     return $req;
@@ -284,16 +319,42 @@ function cr_approve(PDO $pdo, array $req, int $adminUserId, string $note): array
     foreach ($changes as $field => $pair) {
         if (isset($meta[$field])) { $apply[$field] = $pair; }
     }
-    if (!$apply) { return ['ok' => false, 'error' => 'This request has no applicable changes.']; }
 
-    $errors = _cr_validate_edit($pdo, $apply, $venueId);
-    if ($errors) { return ['ok' => false, 'error' => implode(' ', $errors)]; }
+    // PU-D2 (#17) — an event-type set may accompany scalar changes OR stand alone.
+    $etIdsRaw    = $changes['_event_type_ids'] ?? null;
+    $hasEtChange = is_array($etIdsRaw);
+
+    if (!$apply && !$hasEtChange) {
+        return ['ok' => false, 'error' => 'This request has no applicable changes.'];
+    }
+    if ($apply) {
+        $errors = _cr_validate_edit($pdo, $apply, $venueId);
+        if ($errors) { return ['ok' => false, 'error' => implode(' ', $errors)]; }
+    }
 
     // Current values (for slug-redirect + audit "old").
     $cur = $pdo->prepare('SELECT name, slug, venue_type_id, emirate_id FROM venues WHERE id = :id LIMIT 1');
     $cur->execute([':id' => $venueId]);
     $before = $cur->fetch();
     if ($before === false) { return ['ok' => false, 'error' => 'The venue no longer exists.']; }
+
+    // PU-D2 — validate the proposed event-type ids against ACTIVE types and capture
+    // the current tags for the audit (both computed before the transaction).
+    $oldTags = $appliedTags = [];
+    if ($hasEtChange) {
+        $ot = $pdo->prepare('SELECT event_type_id FROM venue_event_types WHERE venue_id = :vid');
+        $ot->execute([':vid' => $venueId]);
+        $oldTags = array_map('intval', $ot->fetchAll(PDO::FETCH_COLUMN));
+
+        $wanted = array_values(array_unique(array_filter(
+            array_map('intval', $etIdsRaw), static fn($i) => $i > 0)));
+        if ($wanted) {
+            $ph = implode(',', array_fill(0, count($wanted), '?'));
+            $q  = $pdo->prepare("SELECT id FROM event_types WHERE active = 1 AND id IN ($ph)");
+            $q->execute($wanted);
+            $appliedTags = array_map('intval', $q->fetchAll(PDO::FETCH_COLUMN));
+        }
+    }
 
     $oldValues = $appliedValues = [];
     $sets = []; $bind = [];
@@ -315,15 +376,27 @@ function cr_approve(PDO $pdo, array $req, int $adminUserId, string $note): array
     try {
         $pdo->beginTransaction();
 
-        $bind[':id']  = $venueId;
-        $bind[':pid'] = $pid;
-        $upd = $pdo->prepare('UPDATE venues SET ' . implode(', ', $sets)
-            . ' WHERE id = :id AND partner_id = :pid');
-        $upd->execute($bind);
+        // A tags-only request has no scalar $sets — skip the venues UPDATE then.
+        if ($sets) {
+            $bind[':id']  = $venueId;
+            $bind[':pid'] = $pid;
+            $upd = $pdo->prepare('UPDATE venues SET ' . implode(', ', $sets)
+                . ' WHERE id = :id AND partner_id = :pid');
+            $upd->execute($bind);
 
-        // #10 — capture a 301 from the old pretty slug to the new one.
-        if (isset($appliedValues['slug']) && (string)$before['slug'] !== (string)$appliedValues['slug']) {
-            slug_redirect_capture($pdo, 'venue', (string)$before['slug'], (string)$appliedValues['slug'], $venueId);
+            // #10 — capture a 301 from the old pretty slug to the new one.
+            if (isset($appliedValues['slug']) && (string)$before['slug'] !== (string)$appliedValues['slug']) {
+                slug_redirect_capture($pdo, 'venue', (string)$before['slug'], (string)$appliedValues['slug'], $venueId);
+            }
+        }
+
+        // PU-D2 — replace the venue's event-type tags in the SAME transaction.
+        if ($hasEtChange) {
+            $pdo->prepare('DELETE FROM venue_event_types WHERE venue_id = :vid')->execute([':vid' => $venueId]);
+            if ($appliedTags) {
+                $ins = $pdo->prepare('INSERT IGNORE INTO venue_event_types (venue_id, event_type_id) VALUES (:vid, :eid)');
+                foreach ($appliedTags as $eid) { $ins->execute([':vid' => $venueId, ':eid' => $eid]); }
+            }
         }
 
         $mark = $pdo->prepare(
@@ -342,9 +415,13 @@ function cr_approve(PDO $pdo, array $req, int $adminUserId, string $note): array
 
     // Best-effort provider email (never rolls back an applied approval).
     $mailOk = cr_notify_provider($req, 'approved', $note);
-    audit_log($pdo, $adminUserId, 'approve', 'change_request', $rid,
-        ['venue_id' => $venueId, 'partner_id' => $pid, 'values' => $oldValues],
-        ['applied' => $appliedValues, 'email_sent' => $mailOk]);
+    $auditOld = ['venue_id' => $venueId, 'partner_id' => $pid, 'values' => $oldValues];
+    $auditNew = ['applied' => $appliedValues, 'email_sent' => $mailOk];
+    if ($hasEtChange) {
+        $auditOld['event_type_ids'] = $oldTags;      // old → applied tag ids
+        $auditNew['event_type_ids'] = $appliedTags;
+    }
+    audit_log($pdo, $adminUserId, 'approve', 'change_request', $rid, $auditOld, $auditNew);
 
     $out = ['ok' => true];
     if (!$mailOk) { $out['warning'] = 'Saved, but the provider notification email failed to send.'; }

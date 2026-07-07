@@ -53,9 +53,10 @@ $submitter = trim((string)($req['submitter_name'] ?? '')) !== ''
     <p class="text-muted mb-0">This request type (<?= e(cr_type_label((string)$req['type'])) ?>) is reviewed in a later unit. No actions are available here yet.</p>
   </div>
 <?php else: ?>
+  <?php $etDiff = $req['event_type_diff'] ?? null; ?>
   <div class="admin-panel">
     <h3 class="admin-panel__title">Proposed changes</h3>
-    <?php if (!$req['change_rows']): ?>
+    <?php if (!$req['change_rows'] && !$etDiff): ?>
       <p class="text-muted mb-0">This request has no applicable changes.</p>
     <?php else: ?>
       <div class="lead-table-wrap">
@@ -75,6 +76,24 @@ $submitter = trim((string)($req['submitter_name'] ?? '')) !== ''
                 <tr class="cr-diff__help"><td colspan="3"><span class="text-muted"><?= e((string)$meta['help']) ?></span></td></tr>
               <?php endif; ?>
             <?php endforeach; ?>
+            <?php if ($etDiff): /* PU-D2 (#17) — event-type diff row (Medium risk) */ ?>
+              <tr>
+                <td data-label="Field">
+                  <strong>Event types</strong>
+                  <span class="cr-risk cr-risk--medium">Medium risk</span>
+                </td>
+                <td data-label="Current">
+                  <?php if ($etDiff['current_names']): ?>
+                    <?php foreach ($etDiff['current_names'] as $n): ?><span class="cr-tag cr-tag--keep"><?= e($n) ?></span><?php endforeach; ?>
+                  <?php else: ?><span class="text-muted">—</span><?php endif; ?>
+                </td>
+                <td data-label="Proposed">
+                  <?php foreach ($etDiff['tags'] as $t): ?><span class="cr-tag cr-tag--<?= e($t['state']) ?>"><?= e($t['name']) ?></span><?php endforeach; ?>
+                  <?php if (!$etDiff['tags']): ?><span class="text-muted">No event types</span><?php endif; ?>
+                </td>
+              </tr>
+              <tr class="cr-diff__help"><td colspan="3"><span class="text-muted">Current &rarr; proposed. Green = added, struck red = removed, grey = kept. Approving applies the new set to the live venue (updates search + event-type pages).</span></td></tr>
+            <?php endif; ?>
           </tbody>
         </table>
       </div>
@@ -92,7 +111,7 @@ $submitter = trim((string)($req['submitter_name'] ?? '')) !== ''
           <textarea id="review_note" name="review_note" rows="3"><?= e($note) ?></textarea>
         </div>
         <div class="admin-form__actions">
-          <button type="submit" class="atv-btn" name="decision" value="approve">Approve &amp; apply</button>
+          <button type="submit" class="atv-btn" name="decision" value="approve"<?php if ($etDiff): ?> data-confirm-btn="Approve &amp; apply? The venue&rsquo;s event-type tags update immediately, affecting search and event-type pages."<?php endif; ?>>Approve &amp; apply</button>
           <button type="submit" class="atv-btn atv-btn--ghost" name="decision" value="needs_changes">Request changes</button>
           <button type="submit" class="atv-btn atv-btn--danger" name="decision" value="reject">Reject</button>
         </div>

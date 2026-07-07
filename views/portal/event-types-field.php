@@ -39,7 +39,7 @@ $isChecked = static fn(int $id): bool => in_array($id, $etChecked, true);
       <p class="lead-hint mb-2"><span class="text-muted">No event types set.</span></p>
     <?php endif; ?>
     <p class="lead-hint">Event types on a published venue are reviewed before changes go live.
-      <a href="<?= e(base_url('portal/venues/' . $etVid . '/request')) ?>">Request a change</a> and our team will update them.</p>
+      <a href="<?= e(base_url('portal/venues/' . $etVid . '/request')) ?>">Propose event-type changes</a> — you choose the new set and All The Venues reviews it; your current tags stay live until approved.</p>
 
   <?php else: ?>
     <label class="et-lbl">What kinds of events does this venue host? <span class="et-req">needed to publish</span></label>

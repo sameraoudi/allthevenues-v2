@@ -712,6 +712,11 @@ select:focus-visible,
 .cr-risk--low    { background: #d7ecdd; color: #1f6a41; }
 .cr-badge { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; padding: 2px 7px; margin-left: 6px; border-radius: 4px; background: #eef1f4; color: #566573; vertical-align: middle; }
 .cr-diff__help td { padding-top: 0; border-top: 0; }
+/* PU-D2 (#17) — event-type diff tags in the admin edit-review. */
+.cr-tag { display: inline-block; font-size: 12px; border-radius: 20px; padding: 2px 9px; margin: 2px 4px 2px 0; }
+.cr-tag--keep { background: #eef1f4; color: var(--ink); }
+.cr-tag--add  { background: #e7f3ec; color: #1f6a41; }
+.cr-tag--rem  { background: #f7e7e5; color: #a12f24; text-decoration: line-through; }
 /* #3 U-P6b — new-venue completeness meter + checklist (additive). */
 .cr-comp { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 .cr-meter { flex: 1; height: 10px; background: #eef1f4; border-radius: 6px; overflow: hidden; }

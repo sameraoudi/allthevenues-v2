@@ -93,6 +93,26 @@ function portal_create_edit_request(PDO $pdo, int $venueId, int $partnerId, int 
 }
 
 /**
+ * PU-D2 (#17) — replace a pending edit request's proposed-changes JSON (owner-
+ * scoped, only while pending). Used to fold newly-proposed scalar diffs and/or the
+ * event-type set into the SINGLE pending request instead of creating a second one.
+ * Returns true if a row was updated.
+ */
+function portal_update_edit_request(PDO $pdo, int $requestId, int $venueId, int $partnerId, array $changes): bool
+{
+    $stmt = $pdo->prepare(
+        "UPDATE venue_change_requests
+         SET proposed_changes_json = :json, updated_at = NOW()
+         WHERE id = :rid AND venue_id = :vid AND partner_id = :pid AND type = 'edit' AND status = 'pending'"
+    );
+    $stmt->execute([
+        ':json' => json_encode($changes, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        ':rid'  => $requestId, ':vid' => $venueId, ':pid' => $partnerId,
+    ]);
+    return $stmt->rowCount() > 0;
+}
+
+/**
  * #3 U-P5b — the most recent request for an owned venue, ANY status (for the
  * provider-side decision reflection: needs_changes / rejected banners). Owner-scoped.
  */

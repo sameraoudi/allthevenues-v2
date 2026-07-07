@@ -211,6 +211,18 @@ if (!empty($pending)):
         <span class="lead-detail__v"><?= e($vcShow($field, $pair['old'] ?? null)) ?> &rarr; <?= e($vcShow($field, $pair['new'] ?? null)) ?></span>
       </div>
     <?php endforeach; ?>
+    <?php /* PU-D2 (#17) — proposed event-type set (published-venue change). */
+      if (isset($vcChanges['_event_type_ids']) && is_array($vcChanges['_event_type_ids'])):
+        $etNames = [];
+        foreach (venue_event_types($pdo) as $et) { $etNames[(int)$et['id']] = (string)$et['name']; }
+        $propNames = [];
+        foreach ($vcChanges['_event_type_ids'] as $eid) { $eid = (int)$eid; if ($eid > 0) { $propNames[] = $etNames[$eid] ?? ('#' . $eid); } }
+    ?>
+      <div class="lead-detail__row">
+        <span class="lead-detail__k">Event types</span>
+        <span class="lead-detail__v"><?= $propNames ? e(implode(', ', $propNames)) : 'None' ?> <span class="lead-hint">(proposed — current tags stay live until approved)</span></span>
+      </div>
+    <?php endif; ?>
     <form class="mt-2" method="post" action="<?= e(base_url('portal/venues/' . $vid . '/request/withdraw')) ?>">
       <?php csrf_field(); ?>
       <input type="hidden" name="request_id" value="<?= (int)$pending['id'] ?>">

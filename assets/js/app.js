@@ -72,6 +72,17 @@
     }
   });
 
+  // Per-button confirm (PU-D2): a submit button carrying data-confirm-btn prompts
+  // only for THAT action — used for admin "Approve & apply" when it also updates
+  // event-type tags. Isolated from the form-level data-confirm above (sibling
+  // buttons like Reject are unaffected). Progressive enhancement — no-JS submits.
+  document.addEventListener('click', function (ev) {
+    var btn = ev.target.closest('button[type=submit][data-confirm-btn], input[type=submit][data-confirm-btn]');
+    if (btn && !window.confirm(btn.getAttribute('data-confirm-btn'))) {
+      ev.preventDefault();
+    }
+  });
+
   // Listing: auto-submit the sort form on change (progressive enhancement;
   // a visible Sort button remains for no-JS).
   document.addEventListener('change', function (ev) {

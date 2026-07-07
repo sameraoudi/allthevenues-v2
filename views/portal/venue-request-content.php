@@ -59,6 +59,17 @@ $id  = (int)$venue['id'];
     </div>
   </div>
 
+  <?php if (!empty($isPublished)): /* PU-D2 (#17) — governed event-type change (published only) */ ?>
+    <p class="lead-flash lead-flash--temp mb-2" role="note">This venue is <strong>published</strong>, so changes to its event types are reviewed by All The Venues before they go live in search and on event-type pages. Your <strong>current tags stay live until approved</strong>.</p>
+    <?php
+      // Reuse the U-P9b Primary/Additional grouping, but EDITABLE (this IS the
+      // governed request path). $etChecked is prefilled by the controller.
+      $etPublished = false;
+      $etVid       = $id;
+      include __DIR__ . '/event-types-field.php';
+    ?>
+  <?php endif; ?>
+
   <div class="admin-form__actions">
     <button type="submit" class="atv-btn">Submit request</button>
     <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('portal/venues/' . $id)) ?>">Cancel</a>

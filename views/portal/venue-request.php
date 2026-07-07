@@ -29,7 +29,8 @@ if ($venue === null) {
     return;
 }
 
-$pending = portal_pending_edit_request($pdo, $vid, $partnerId);
+$pending     = portal_pending_edit_request($pdo, $vid, $partnerId);
+$isPublished = ((string)$venue['status'] === 'published');
 
 /* ---- (A) Withdraw the provider's own pending request (POST only) ------------ */
 if ($requestAction === 'withdraw') {
@@ -47,21 +48,36 @@ if ($requestAction === 'withdraw') {
 }
 
 /* ---- (B) The request form / submit ------------------------------------------ */
-// One pending edit request per venue — bounce to detail if one already exists.
+// PU-D2 (#17) — one pending edit request per venue: a pending request is NOT a
+// dead-end. The form loads it so the provider can revise; submit UPDATEs that
+// single request (never creates a second). Scalar fields prefill from the pending
+// request's proposed value if present, else the live venue.
+$pendingJson = [];
 if ($pending !== null) {
-    $_SESSION['portal_flash'] = ['type' => 'error',
-        'msg' => 'You already have a pending request for this venue; withdraw it before submitting another.'];
-    redirect('portal/venues/' . $vid);
-    return;
+    $decoded = json_decode((string)$pending['proposed_changes_json'], true);
+    if (is_array($decoded)) { $pendingJson = $decoded; }
 }
+$prefill = static function (string $f) use ($venue, $pendingJson) {
+    if (isset($pendingJson[$f]) && is_array($pendingJson[$f]) && array_key_exists('new', $pendingJson[$f])) {
+        return $pendingJson[$f]['new'];
+    }
+    return $venue[$f] ?? null;
+};
 
 $errors = [];
 $old    = [
-    'name'          => (string)$venue['name'],
-    'slug'          => (string)$venue['slug'],
-    'venue_type_id' => (string)($venue['venue_type_id'] ?? ''),
-    'emirate_id'    => (string)($venue['emirate_id'] ?? ''),
+    'name'          => (string)$prefill('name'),
+    'slug'          => (string)$prefill('slug'),
+    'venue_type_id' => (string)($prefill('venue_type_id') ?? ''),
+    'emirate_id'    => (string)($prefill('emirate_id') ?? ''),
 ];
+
+// PU-D2 — event types are governed on a PUBLISHED venue only. Prefill from the
+// pending request's proposed set if present, else the live tags.
+$liveTagIds = $isPublished ? portal_venue_event_type_ids($pdo, $vid) : [];
+$etChecked  = (isset($pendingJson['_event_type_ids']) && is_array($pendingJson['_event_type_ids']))
+    ? array_values(array_filter(array_map('intval', $pendingJson['_event_type_ids']), static fn($i) => $i > 0))
+    : $liveTagIds;
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $old = array_merge($old, array_intersect_key($_POST, $old));
@@ -112,15 +128,37 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             }
         }
 
+        // PU-D2 — event-type set (PUBLISHED venues only). Compared to the CURRENT
+        // live tags; if different, the FULL proposed set rides in '_event_type_ids'
+        // (a key the scalar field-loop / cr_field_meta ignore). A tags-only request
+        // is valid. Non-published venues edit tags live (U-P9b) — ignored here.
+        if ($isPublished) {
+            $etChecked  = array_values(array_unique(array_filter(
+                array_map('intval', (array)($_POST['event_types'] ?? [])), static fn($i) => $i > 0)));
+            $liveSorted = $liveTagIds; sort($liveSorted);
+            $etSorted   = $etChecked;  sort($etSorted);
+            if ($liveSorted !== $etSorted) {
+                $changes['_event_type_ids'] = $etChecked;
+            }
+        }
+
         if (!$errors && !$changes) {
             $errors['_form'] = 'No changes to request.';
         }
 
         if (!$errors) {
             try {
-                $rid = portal_create_edit_request($pdo, $vid, $partnerId, $userId, $changes);
-                audit_log($pdo, $userId ?: null, 'create', 'change_request', $rid, null, $changes);
-                $_SESSION['portal_flash'] = ['type' => 'success', 'msg' => 'Change request submitted for review.'];
+                if ($pending !== null) {
+                    // Fold into the single pending request (no duplicate).
+                    portal_update_edit_request($pdo, (int)$pending['id'], $vid, $partnerId, $changes);
+                    $rid = (int)$pending['id'];
+                    audit_log($pdo, $userId ?: null, 'update', 'change_request', $rid, null, $changes);
+                    $_SESSION['portal_flash'] = ['type' => 'success', 'msg' => 'Change request updated.'];
+                } else {
+                    $rid = portal_create_edit_request($pdo, $vid, $partnerId, $userId, $changes);
+                    audit_log($pdo, $userId ?: null, 'create', 'change_request', $rid, null, $changes);
+                    $_SESSION['portal_flash'] = ['type' => 'success', 'msg' => 'Change request submitted for review.'];
+                }
                 redirect('portal/venues/' . $vid);
             } catch (Throwable $e) {
                 error_log('portal change request failed (venue=' . $vid . '): ' . $e->getMessage());
