@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATV — Three-step Add Venue (PU-D1 preview)</title>
+<style>
+  :root{
+    --navy:#0E1B2A; --blue:#6C93B7; --action:#426F94; --action-hover:#315B7C;
+    --sand:#D9C7A8; --ink:#1c2b38; --muted:#6b7b88; --line:#e4e8ec; --bg:#f3f1ec;
+    --ok:#2f7d5b; --okbg:#e7f3ec; --warn:#8a6d1f; --warnbg:#f6efdb; --danger:#a5433b; --dangerbg:#f6e7e5;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Segoe UI,Inter,sans-serif;font-size:14px;}
+  h1,h2,h3{font-family:Georgia,'Cormorant Garamond',serif;font-weight:600;margin:0;}
+  a{color:var(--action);text-decoration:none;}
+  .topbar{background:var(--navy);color:#fff;display:flex;justify-content:space-between;align-items:center;padding:13px 26px;}
+  .brand{font-family:Georgia,serif;font-size:19px;color:#fff;} .brand span{color:var(--blue);} .brand em{color:var(--sand);font-style:normal;font-size:13px;margin-left:4px;}
+  .main{max-width:760px;margin:0 auto;padding:24px 24px 60px;}
+  .screen-tag{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:26px 0 10px;}
+  /* stepper */
+  .stepper{display:flex;gap:8px;margin-bottom:20px;}
+  .step{flex:1;display:flex;align-items:center;gap:9px;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:13px;color:var(--muted);}
+  .step .n{width:22px;height:22px;border-radius:50%;background:#eef1f4;color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:0 0 auto;}
+  .step.on{border-color:var(--action);color:var(--ink);font-weight:600;} .step.on .n{background:var(--action);color:#fff;}
+  .step.done .n{background:var(--ok);color:#fff;} .step.done{color:var(--ink);}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 22px rgba(14,27,42,.06);padding:20px 22px;margin-bottom:16px;}
+  .panel h2{font-size:18px;margin-bottom:12px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;} .full{grid-column:1/-1;}
+  label.l{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:5px;}
+  input,select,textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 11px;font:inherit;font-size:13.5px;background:#fff;}
+  .flash-ok{background:var(--okbg);border:1px solid #bfe0cd;border-radius:10px;padding:11px 14px;color:#245c43;font-size:13px;margin-bottom:14px;}
+  .flash-err{background:var(--dangerbg);border:1px solid #e2b6ad;border-radius:10px;padding:11px 14px;color:#7a352e;font-size:13px;margin-bottom:14px;}
+  .flash-err b{color:var(--danger);}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5;}
+  .invalid{border-color:var(--danger)!important;background:#fdf6f5;}
+  .btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer;border:1px solid transparent;background:var(--action);color:#fff;}
+  .btn-ghost{background:#fff;border-color:var(--line);color:var(--action);} .btn[disabled]{opacity:.5;cursor:not-allowed;}
+  .actions{display:flex;gap:10px;align-items:center;margin-top:6px;}
+  /* layout rows */
+  .lrow{display:grid;grid-template-columns:1fr 130px;gap:10px;align-items:center;margin-bottom:8px;}
+  .lrow .cap{position:relative;}
+  /* checklist / progress */
+  .prog{list-style:none;margin:0;padding:0;}
+  .prog li{display:flex;align-items:center;gap:9px;padding:6px 0;font-size:13.5px;}
+  .tick{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex:0 0 auto;}
+  .tick.ok{background:var(--ok);} .tick.todo{background:#cfd6dd;color:#5b6a76;}
+  .status-chip{display:inline-block;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;background:#eef1f4;color:var(--muted);}
+  .photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:6px;}
+  .ph{aspect-ratio:4/3;border-radius:10px;background:linear-gradient(135deg,#c9d6e2,#9fb4c6);border:1px solid var(--line);position:relative;}
+  .ph .tag{position:absolute;top:6px;left:6px;font-size:10px;font-weight:700;background:var(--warnbg);color:var(--warn);border-radius:20px;padding:1px 7px;}
+  .filebtn{display:inline-block;border:1px solid var(--line);border-radius:8px;background:#f7f9fb;padding:8px 14px;font-size:13px;color:var(--action);font-weight:600;}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#">All The <span>Venues</span> <em>· Partner</em></a>
+  <div style="font-size:13px;color:#c7d0d8;">Omar — Nikki Beach</div>
+</header>
+
+<main class="main">
+
+  <!-- STEP 1 -->
+  <div class="screen-tag">Step 1 · Venue details (saved as a draft — not submitted yet)</div>
+  <div class="stepper">
+    <div class="step on"><span class="n">1</span> Details</div>
+    <div class="step"><span class="n">2</span> Photos</div>
+    <div class="step"><span class="n">3</span> Submit</div>
+  </div>
+
+  <div class="flash-err"><b>Submission could not be saved.</b> Please fix the highlighted fields and try again.</div>
+
+  <p class="hint" style="margin-top:-8px;">Fields marked <b style="color:var(--danger);">*</b> are required. You
+    can&rsquo;t continue to photos until they&rsquo;re all filled — but you can <b>Save as draft</b> anytime and pick
+    up where you left off.</p>
+
+  <div class="panel">
+    <h2>Venue basics</h2>
+    <div class="grid">
+      <div class="full"><label class="l">Name <b style="color:var(--danger);">*</b></label><input value="Marina Terrace &amp; Deck"></div>
+      <div><label class="l">Venue type <b style="color:var(--danger);">*</b></label><select><option>Rooftop Venue</option></select></div>
+      <div><label class="l">Primary emirate <b style="color:var(--danger);">*</b></label><select><option>Dubai</option></select></div>
+      <div><label class="l">Area or address <b style="color:var(--danger);">*</b></label><input value="Dubai Marina"></div>
+      <div><label class="l">Indoor / outdoor</label><select><option>Outdoor</option></select></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Capacity &amp; pricing</h2>
+    <div class="grid">
+      <div><label class="l">Minimum guests</label><input type="number" value="40"></div>
+      <div><label class="l">Maximum capacity <b style="color:var(--danger);">*</b></label><input type="number" value="200"></div>
+      <div><label class="l">Minimum spend (AED)</label><input type="number" value="25000"></div>
+      <div><label class="l">Pricing level</label><select><option>Premium</option></select></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Description <b style="color:var(--danger);">*</b></h2>
+    <textarea rows="3" placeholder="A short description of the venue — what it is and what makes it a good fit.">A relaxed open-air rooftop with skyline and sea views…</textarea>
+  </div>
+
+  <!-- #18 layouts on add + #19 validation -->
+  <div class="panel">
+    <h2>Layouts &amp; capacity</h2>
+    <p class="hint" style="margin-top:0;">Capacity for each layout you offer. None can exceed the venue maximum (200).</p>
+    <div class="lrow"><div>Banquet</div><div class="cap"><input type="number" value="180"></div></div>
+    <div class="lrow"><div>Theatre</div><div class="cap"><input type="number" class="invalid" value="240"></div></div>
+    <p class="flash-err" style="margin:2px 0 8px;">Theatre capacity cannot exceed the venue maximum of 200 guests.</p>
+    <div class="lrow"><div>Reception</div><div class="cap"><input type="number" value="200"></div></div>
+    <div class="lrow"><div>Boardroom</div><div class="cap"><input type="number" placeholder="—"></div></div>
+  </div>
+
+  <!-- event types (structured); NOTE: legacy free-text "Best for" removed from the partner form (#13) -->
+  <div class="panel">
+    <h2>Event types <b style="color:var(--danger);">*</b> <span class="status-chip" style="background:var(--warnbg);color:var(--warn);">needed to publish</span></h2>
+    <p class="hint" style="margin-top:0;">Structured tags that power search + event-type pages. (The old free-text
+      &ldquo;Best for&rdquo; field has been removed — event types replace it.) Recommended: 3&ndash;6.</p>
+    <div class="grid" style="grid-template-columns:1fr 1fr 1fr;">
+      <label class="l" style="font-weight:400;color:var(--ink);"><input type="checkbox" checked style="width:auto;"> Wedding</label>
+      <label class="l" style="font-weight:400;color:var(--ink);"><input type="checkbox" checked style="width:auto;"> Corporate Event</label>
+      <label class="l" style="font-weight:400;color:var(--ink);"><input type="checkbox" style="width:auto;"> Gala Dinner</label>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn">Save &amp; continue to photos →</button>
+    <a class="btn-ghost btn" href="#">Save draft</a>
+    <span class="hint" style="margin:0;">Saving keeps this as a <b>draft</b> — it isn&rsquo;t submitted for review yet.</span>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="screen-tag">Step 2 · Photos (at least one required before you can submit)</div>
+  <div class="stepper">
+    <div class="step done"><span class="n">✓</span> Details</div>
+    <div class="step on"><span class="n">2</span> Photos</div>
+    <div class="step"><span class="n">3</span> Submit</div>
+  </div>
+  <div class="panel">
+    <h2>Add photos</h2>
+    <p class="hint" style="margin-top:0;">At least one photo is required before you can submit this venue for review.
+      Photos must be submitted with rights confirmation and are reviewed by All The Venues.</p>
+    <p><span class="filebtn">Choose files</span> <span class="hint" style="margin:0;">or drag &amp; drop — JPG/PNG/WebP</span></p>
+    <div class="photos">
+      <div class="ph"><span class="tag">Pending review</span></div>
+      <div class="ph"><span class="tag">Pending review</span></div>
+    </div>
+    <div class="actions" style="margin-top:14px;"><a class="btn-ghost btn" href="#">← Back to details</a><button class="btn">Continue to submit →</button></div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="screen-tag">Step 3 · Submit for review</div>
+  <div class="stepper">
+    <div class="step done"><span class="n">✓</span> Details</div>
+    <div class="step done"><span class="n">✓</span> Photos</div>
+    <div class="step on"><span class="n">3</span> Submit</div>
+  </div>
+  <div class="panel">
+    <h2>Ready to submit</h2>
+    <ul class="prog">
+      <li><span class="tick ok">✓</span> All required details complete</li>
+      <li><span class="tick ok">✓</span> 2 event types selected</li>
+      <li><span class="tick ok">✓</span> 1+ photo uploaded (pending review)</li>
+    </ul>
+    <p class="hint">Submit is only enabled when Steps 1 &amp; 2 are both complete. When you submit, All The Venues
+      reviews the venue and its photos; it stays private until approved. Publishing also requires at least one
+      <b>approved</b> photo — our team reviews your uploads.</p>
+    <div class="actions"><button class="btn">Submit venue for review</button><a class="btn-ghost btn" href="#">Keep as draft</a></div>
+  </div>
+
+  <!-- Draft venue on the dashboard/detail -->
+  <div class="screen-tag">My Venues · a draft venue shows its progress + a submit CTA</div>
+  <div class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <h2 style="margin:0;">Marina Terrace &amp; Deck</h2><span class="status-chip">Draft — not submitted</span>
+    </div>
+    <ul class="prog">
+      <li><span class="tick ok">✓</span> Details</li>
+      <li><span class="tick todo">2</span> Add at least one photo <a href="#" style="margin-left:6px;">Add photos</a></li>
+      <li><span class="tick todo">3</span> Submit for review</li>
+    </ul>
+    <div class="actions"><button class="btn" disabled title="Add at least one photo first">Submit for review</button><a class="btn-ghost btn" href="#">Edit details</a>
+      <a class="btn-ghost btn" href="#" style="color:var(--danger);border-color:#e2b6ad;margin-left:auto;">Delete draft</a></div>
+    <p class="hint">Delete is available for <b>drafts only</b> (private, never submitted). Once a venue is submitted or
+      published, removing it is a request reviewed by All The Venues.</p>
+  </div>
+
+  <p class="hint" style="border-top:1px solid var(--line);padding-top:12px;"><b>Venue states (no dead-ends):</b>
+    <b>Draft</b> → edit + add photos, submit when ready. <b>Under review</b> (submitted, admin not yet decided) →
+    "Awaiting review" + a "Withdraw to draft" escape. <b>Changes requested</b> (admin bounced it back) → reviewer
+    note + "Re-submit for review" (the venue is now <i>needs_changes</i>, not stuck at pending). Re-submit reopens
+    the same review request rather than creating a duplicate.</p>
+
+  <p class="hint">Flow (corrected): <b>Step 1</b> — can&rsquo;t continue to photos until all required fields (*) are
+    filled; "Save as draft" persists partial work to resume later. <b>Step 2</b> — add ≥1 photo; "Continue to submit"
+    only appears once a photo exists and goes to Step 3. <b>Step 3</b> — submit is enabled only when Steps 1 &amp; 2
+    are both complete (required details AND ≥1 photo), so an almost-empty venue can no longer be submitted. Draft
+    venues are never public; no admin review request exists until submit.</p>
+</main>
+</body>
+</html>

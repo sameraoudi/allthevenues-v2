@@ -123,9 +123,17 @@ Turnstile + gated footer link + email copy). **PORTAL #3 IS LIVE** — Samer fli
 7 Jul 2026); onboarding + disabling verified. **Post-launch backlog** (20-item QA) triaged in
 `docs/ATV-PORTAL-POSTLAUNCH-BACKLOG.md`; order PU-B→PU-D→PU-A. **PU-B forgot-password/reset SHIPPED** (commit
 `a236ebc`, no migration — reuses `password_tokens` purpose='reset'; `/forgot-password` + `/reset-password`, partner
-+ staff, no enumeration, `password_policy_error()` extracted + shared with set-password). **Next: PU-D** (three-step
-add-venue #15 + layout/capacity #18 + capacity validation #19 + Best-for/Event-types #13 + error banner #14 +
-legacy-venue event-type change request #17), then **PU-A** portal shell. Fast-follows folded into PU-D (#17) + backlog.
++ staff, no enumeration, `password_policy_error()` extracted + shared with set-password). **PU-D1 SHIPPED**
+(commits `16e5a1a`+`907f618`+`8b5bac5`+`38d5380`, no migration) — provider Add-Venue is now a **draft→photos→submit**
+three-step flow: create as `draft` (no review request), submit only when required details complete AND ≥1 photo
+(`portal_submit_venue_for_review` backstop), layouts+capacity on Add with ≤max validation (#19), Best-for removed
+from partner forms (#13, kept admin/public), top error banner (#14), draft-only delete (`portal_delete_draft_venue`),
+styled file input (#16), photo count, sqm default. **Limbo fix:** `request_changes` now sets venue→`needs_changes`
+(was leaving it `pending`); `portal_submit_venue_for_review` reopens the SAME new_venue CR (idempotent, no dup),
+`portal_withdraw_to_draft` escape; provider state machine (Under review / Changes requested+Re-submit / Draft) has
+no dead-ends. **Next: PU-D2** (#17 published-venue event-type change request — extend U-P5 submit + U-P5b apply to
+carry the event-type set), then the **DELISTING** unit (design locked, space memory `atv-venue-delisting`: new
+`delisted` status + `delist` CR type; self-serve re-list; 404), then **PU-A** portal shell (#7/#2/#4/#5/#6/#8).
 Known gaps: **`db/001_schema.sql`
 drift** (016/019/020/021 live only as numbered ALTERs — never folded into 001; a fresh import runs 001 + all
 migrations in sequence, so this is fine, but a one-off "sync 001 with 016–021" task would restore true

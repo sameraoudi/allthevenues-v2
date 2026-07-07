@@ -70,6 +70,16 @@ number for traceability. "PU-*" = post-launch unit.*
 - **#14 (High) Error/failure banner** — a red error banner mirroring the success bar (e.g. invalid Google-Maps iframe):
   explain the failure, highlight the field, KEEP entered data. Applies across portal forms.
 
+## Deferred / new (from PU-D1 testing)
+
+- **Partner draft delete** — DONE in PU-D1-fix (draft-only hard delete; owner + status='draft' guarded).
+- **Venue DELISTING (reversible)** — supersedes "request removal." Partner can't hard-delete a published venue;
+  instead **request delisting** (reversible take-down) with re-list. Design LOCKED (space memory
+  `atv-venue-delisting`): new `delisted` status + `delisted_at/by/reason`; `venue_change_requests type='delist'`
+  (admin-approved); **self-serve re-list**; delisted → 404. Approved partners via the portal → Change Requests;
+  non-approved via a new public contact menu item; admin can delist/re-list directly via the status dropdown.
+  Build after PU-D1-fix (likely 2 sub-units).
+
 ## Workstream E — Admin review (PU-E)
 
 - **#20 (High) Link new-venue review → image approval** — when publish is blocked on images, link admin straight to
