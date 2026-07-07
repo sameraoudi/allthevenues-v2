@@ -64,6 +64,21 @@ $phc = $pdo->prepare('SELECT COUNT(*) FROM venue_images WHERE venue_id = :vid');
 $phc->execute([':vid' => $vid]);
 $photoCount = (int)$phc->fetchColumn();
 
+// PU-D1-fix-3 A — per-status breakdown for a friendly "N photos (…)" label.
+$pbStmt = $pdo->prepare('SELECT review_status, COUNT(*) AS c FROM venue_images WHERE venue_id = :vid GROUP BY review_status');
+$pbStmt->execute([':vid' => $vid]);
+$photoBy = [];
+foreach ($pbStmt->fetchAll() as $r) { $photoBy[(string)$r['review_status']] = (int)$r['c']; }
+$photoCountLabel = static function (int $total, array $by): string {
+    if ($total === 0) { return 'No photos yet'; }
+    $label = $total . ' photo' . ($total === 1 ? '' : 's');
+    $parts = [];
+    if (!empty($by['approved']))       { $parts[] = $by['approved'] . ' approved'; }
+    if (!empty($by['pending_review'])) { $parts[] = $by['pending_review'] . ' pending review'; }
+    if ($parts) { $label .= ' (' . implode(' · ', $parts) . ')'; }
+    return $label;
+};
+
 /* PU-D1-fix-2 #1C — one source of truth for the submission state, shared with the
    server (portal_active_newvenue_cr). Distinguish: under review · changes requested
    (incl. the pre-fix stuck 'pending'+needs_changes-CR rows) · draft. */
@@ -272,6 +287,7 @@ if (!empty($pending)):
     <h2 class="admin-panel__title">Images</h2>
     <a class="atv-btn atv-btn--sm" href="<?= e(base_url('portal/venues/' . (int)$venue['id'] . '/images')) ?>">Manage photos</a>
   </div>
+  <p class="lead-hint mb-2"><?= e($photoCountLabel($photoCount, $photoBy)) ?></p>
   <?php if ($images): ?>
     <div class="portal-thumbs">
       <?php foreach ($images as $img): ?>

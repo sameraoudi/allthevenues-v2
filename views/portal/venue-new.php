@@ -98,6 +98,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             }
         }
 
+        // PU-D1-fix-3 B — never store a unitless floor area: default the unit to
+        // sqm when a positive floor_area is given but the unit is empty/invalid.
+        if (array_key_exists('floor_area_unit', $clean)
+            && ($clean['floor_area'] ?? null) !== null && (float)$clean['floor_area'] > 0
+            && empty($clean['floor_area_unit'])) {
+            $clean['floor_area_unit'] = 'sqm';
+        }
+
         // #19 — no layout capacity may exceed the venue maximum.
         $layoutErrors = venue_layout_capacity_errors(
             (array)($_POST['layout'] ?? []),

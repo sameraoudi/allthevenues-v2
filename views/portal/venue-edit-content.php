@@ -121,10 +121,11 @@ $isDraftEdit = in_array((string)$venue['status'], ['draft', 'needs_changes'], tr
       <div class="atv-field"><label for="f-floor">Floor area</label><input type="number" id="f-floor" name="floor_area" value="<?= $v('floor_area') ?>" min="0" step="0.01"></div>
       <div class="atv-field">
         <label for="f-floor-unit">Floor area unit</label>
+        <?php /* PU-D1-fix-3 B — default to the region unit (m²) when none is stored. */
+          $fauSel = ((string)($old['floor_area_unit'] ?? '') === 'sqft') ? 'sqft' : 'sqm'; ?>
         <select id="f-floor-unit" name="floor_area_unit">
-          <option value="">—</option>
-          <option value="sqm"<?= $sel('floor_area_unit', 'sqm') ?>>m² (sqm)</option>
-          <option value="sqft"<?= $sel('floor_area_unit', 'sqft') ?>>ft² (sqft)</option>
+          <option value="sqm"<?= $fauSel === 'sqm' ? ' selected' : '' ?>>m² (sqm)</option>
+          <option value="sqft"<?= $fauSel === 'sqft' ? ' selected' : '' ?>>ft² (sqft)</option>
         </select>
       </div>
     </div>
