@@ -17,6 +17,8 @@ number for traceability. "PU-*" = post-launch unit.*
 ## Workstream A — Portal shell, navigation & branding (PU-A)
 *One design-led unit: rebuild the portal chrome so it feels like a real app, aligned to ATV branding.*
 
+- **#7b (High) Label active requests in the My-Venues list** (Samer, post-delisting) — show a per-venue badge when
+  a venue has an open change request / pending delist / needs-changes / under-review, so partners see state at a glance.
 - **#7 (High) Dashboard + left sidebar** — admin-style simplified shell. Menu: Dashboard · My Venues · Add Venue ·
   Claims · Photo Submissions · Account · Guide · Sign out. Dashboard tiles: venues managed / pending review /
   open change requests / claims pending / photos awaiting review / recent decisions / next steps. Current page

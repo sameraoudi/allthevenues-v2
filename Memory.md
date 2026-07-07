@@ -131,7 +131,14 @@ from partner forms (#13, kept admin/public), top error banner (#14), draft-only 
 styled file input (#16), photo count, sqm default. **Limbo fix:** `request_changes` now sets venue→`needs_changes`
 (was leaving it `pending`); `portal_submit_venue_for_review` reopens the SAME new_venue CR (idempotent, no dup),
 `portal_withdraw_to_draft` escape; provider state machine (Under review / Changes requested+Re-submit / Draft) has
-no dead-ends. **PU-D2 SHIPPED** (#17, commit `452b1a5`, no migration) — published-venue event-type edits are now a governed
+no dead-ends. **DELISTING SHIPPED** (Delist-1 `75a4fe8` [migration 023: `delisted` status + `delist` CR type +
+`delisted_at/by/reason/details`] + Delist-2 `7baa66c`) — reversible published-venue take-down: partner
+request→admin approve→`delisted` (404, slug kept), **self-serve re-list**, admin can delist/re-list via the
+editor status dropdown, non-approved operators via a public `/delist-venue` form → inbox "Delist request" badge.
+Verified both sides. **Next: a small portal-polish fix** (partner can currently EDIT an `archived` venue — hide
+archived from the portal entirely; add a delete-draft confirm; fix the delete button's blue hover → warn), then
+**PU-A** portal shell (#7 dashboard [+ **label active requests in the venues list** — Samer], #2/#4/#5/#6/#8).
+**PU-D2 SHIPPED** (#17, commit `452b1a5`, no migration) — published-venue event-type edits are now a governed
 change request folded into the U-P5 edit CR: the proposed set rides in `proposed_changes_json._event_type_ids`
 (inert to the scalar field-loop); `cr_approve` applies it (validate active ids → DELETE+INSERT) in the same
 transaction as scalar changes, tags-only requests approvable, Medium-risk diff row in the admin edit review.
