@@ -17,11 +17,19 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/helpers.php';
 require_once __DIR__ . '/lib/csrf.php';
 
-// Staging must not be indexed. Host-gated X-Robots-Tag covers non-HTML responses
-// too (assets, sitemap.xml, robots.txt); the layout adds the <meta> for pages.
-// Production hosts are untouched, so the apex keeps emitting index,follow.
-$isStagingHost = str_starts_with(strtolower((string)($_SERVER['HTTP_HOST'] ?? '')), 'staging.');
-if ($isStagingHost) {
+// Post-cutover, the staging subdomain shares the live docroot — collapse it to
+// the apex so there's one canonical host (no duplicate site). Derive the apex by
+// stripping the leading "staging." (no hardcoded domain); force HTTPS. Apex hosts
+// don't match, so there's no redirect loop. Runs before session/routing.
+$host = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
+if (str_starts_with($host, 'staging.')) {
+    $apexHost = substr($host, strlen('staging.'));   // staging.allthevenues.com → allthevenues.com
+    if ($apexHost !== '' && $apexHost !== $host) {
+        $target = 'https://' . $apexHost . ($_SERVER['REQUEST_URI'] ?? '/');
+        header('Location: ' . $target, true, 301);
+        exit;
+    }
+    // Fallback (shouldn't happen): at least keep it out of the index.
     header('X-Robots-Tag: noindex, nofollow');
 }
 
