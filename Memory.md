@@ -118,10 +118,10 @@ structured review). **Deployed: U-P0→U-P6b** (all portal units to date). **#9 
 (#9a/b/c — provenance schema, admin classification, needs-review report, publish-gate flip). **#9 image-rights
 flow END-TO-END TESTED by Samer (7 Jul 2026) — works.** **U-P7a + U-P7b SHIPPED + deployed** (provider image
 uploads + admin review), **staging 301→apex SHIPPED**, **U-P8a + U-P8b SHIPPED** (venue claims — submit + admin
-review), **U-P9a + U-P9b SHIPPED** (partner onboarding + email set-password [migration 022]; portal event-type editor).
-Next: **U-P9c** login hardening (Turnstile on `/portal/login`) + footer "Partner login" link → **U-P9d** flip
-`PORTAL_ENABLED` + onboard providers. Fast-follows: published-venue event-type change-request; admin event-type
-editor UI. Known gaps: **`db/001_schema.sql`
+review), **U-P9a + U-P9b + U-P9c SHIPPED** (onboarding + email set-password [migration 022]; event-type editor; portal-login
+Turnstile + gated footer link + email copy). **PORTAL #3 BUILD-COMPLETE + inert behind `PORTAL_ENABLED` (OFF).**
+Only **U-P9d** remains = owner-run go-live (flip prod `config.php` flag; runbook `docs/ATV-PORTAL-GOLIVE-RUNBOOK.md`).
+Fast-follows: published-venue event-type change-request; admin event-type editor UI. Known gaps: **`db/001_schema.sql`
 drift** (016/019/020/021 live only as numbered ALTERs — never folded into 001; a fresh import runs 001 + all
 migrations in sequence, so this is fine, but a one-off "sync 001 with 016–021" task would restore true
 single-file parity). Remaining post-launch: rest of #3, U6 passive watch.
@@ -269,9 +269,20 @@ remain.
   event-type change-request** (governed edit for live venues — extend U-P5 submit + U-P5b apply to carry the
   event-type set); (2) **admin event-type editor UI** (admins still can't set event types except via the seed or now
   the portal — reuse `portal_venue_event_types_save`'s logic in the admin venue editor).
-- **U-P9 remaining:** **U-P9c** login hardening (Turnstile on `/portal/login`) + footer "Partner login" link live +
-  notification-copy pass → **U-P9d** flip `PORTAL_ENABLED` on prod + onboard providers (content). `app.js` per-button
-  confirm (`data-confirm-main`) already exists.
+- **U-P9c — portal login hardening + footer link + notification-copy pass SHIPPED + deployed** (commit `6c8c772`,
+  no migration). Turnstile on `/portal/login` (dispatch.php POST verify fail-closed + `turnstile_field()`/script on
+  login-content.php); footer "Partner login" flag-gated (real link when `portal_enabled()`, else "Coming soon");
+  provider emails standardised (greeting + "— The All The Venues team" sign-off across invite / cr_notify_provider /
+  incumbent / image decisions; recipients/timing/logic unchanged).
+- **PORTAL (#3) BUILD-COMPLETE.** Entire provider portal U-P0→U-P9c is built + deployed, **inert behind
+  `PORTAL_ENABLED` (OFF)**. Only **U-P9d remains** = the owner-run go-live (NOT a CC build): pre-flight all
+  confirmed (7 Jul 2026 — Turnstile live on public forms, invite email tested, migrations 019/021/022 present,
+  `/portal/login`→404 while off). Runbook: **`docs/ATV-PORTAL-GOLIVE-RUNBOOK.md`** (flip the prod-only `config.php`
+  `PORTAL_ENABLED=true` + flush LiteSpeed → smoke-test one throwaway provider end-to-end → onboard real providers in
+  batches; rollback = flip back, data preserved). **Sequencing gotcha:** flip the flag BEFORE creating partner
+  accounts (set-password redirects to `/portal`, which 404s while off).
+- **Fast-follows (post-launch, tracked):** published-venue event-type change-request; admin event-type editor UI;
+  optional "sync `db/001_schema.sql` with 016–022".
 
 **6 Jul 2026 (post-launch)**
 - **#10 slug-history 301 redirects SHIPPED + verified on prod** (commit `cd694f3`): migration 018 added
