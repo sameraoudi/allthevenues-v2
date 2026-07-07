@@ -27,7 +27,8 @@ if ($venue === null) {
     return;
 }
 
-$errors = [];
+$errors       = [];
+$layoutErrors = [];   // #19 — layout capacity > venue max
 $old    = $venue;   // form display values (POST overrides on error)
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
@@ -80,6 +81,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     break;
             }
         }
+
+        // #19 — no layout capacity may exceed the venue maximum.
+        $layoutErrors = venue_layout_capacity_errors(
+            (array)($_POST['layout'] ?? []),
+            isset($clean['capacity_max']) ? (int)$clean['capacity_max'] : null
+        );
+        foreach ($layoutErrors as $t => $msg) { $errors['layout_' . $t] = $msg; }
 
         if (!$errors) {
             // Audit diff (only changed live columns).

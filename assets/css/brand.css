@@ -1401,6 +1401,22 @@ select:focus-visible,
 .onb-toggle { float: right; font-size: 12px; color: var(--action); background: none; border: 0; cursor: pointer; padding: 0; font-weight: 600; }
 .onb-forgot { display: block; text-align: right; font-size: 12.5px; margin-top: 6px; }
 
+/* PU-D1 — three-step add-venue stepper + draft progress (additive). */
+.pstepper { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.pstep { flex: 1; min-width: 120px; display: flex; align-items: center; gap: 9px; padding: 11px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; font-size: 13px; color: var(--muted); }
+.pstep__n { width: 22px; height: 22px; border-radius: 50%; background: #eef1f4; color: var(--muted); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex: 0 0 auto; }
+.pstep--on { border-color: var(--action); color: var(--ink); font-weight: 600; }
+.pstep--on .pstep__n { background: var(--action); color: #fff; }
+.pstep--done { color: var(--ink); }
+.pstep--done .pstep__n { background: #1f6a41; color: #fff; }
+.status-chip { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; background: #eef1f4; color: var(--muted); }
+.pd-prog { list-style: none; margin: 0 0 4px; padding: 0; }
+.pd-prog__i { display: flex; align-items: center; gap: 9px; padding: 6px 0; font-size: 13.5px; }
+.pd-prog__i a { margin-left: 6px; }
+.pd-tick { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex: 0 0 auto; }
+.pd-prog__i--ok .pd-tick { background: #1f6a41; }
+.pd-prog__i--todo .pd-tick { background: #cfd6dd; color: #5b6a76; }
+
 /* #3 U-P8b — admin claim review (additive). */
 .clr-conflict { background: #f6e7e5; border: 1px solid #e2b6ad; border-radius: 10px; padding: 13px 15px; color: #7a352e; font-size: 13px; margin-bottom: 16px; line-height: 1.5; }
 .clr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 26px; }

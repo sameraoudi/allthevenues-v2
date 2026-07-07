@@ -56,17 +56,49 @@ $ltypeIcons = venue_layout_types();
 
 <?php if (!empty($flash)): ?><div class="lead-flash lead-flash--<?= e((string)($flash['type'] ?? 'success')) ?>" role="status"><?= e((string)($flash['msg'] ?? '')) ?></div><?php endif; ?>
 
+<?php
+$vid       = (int)$venue['id'];
+$isDraft   = in_array((string)$venue['status'], ['draft', 'needs_changes'], true);
+// #15 — total uploaded photos (any review_status) drives the submit gate.
+$phc = $pdo->prepare('SELECT COUNT(*) FROM venue_images WHERE venue_id = :vid');
+$phc->execute([':vid' => $vid]);
+$photoCount = (int)$phc->fetchColumn();
+?>
 <div class="lead-detail__head">
   <h1><?= e((string)$venue['name']) ?></h1>
   <div>
-    <span class="lead-status lead-status--<?= e((string)$venue['status']) ?>"><?= e(venue_admin_status_label((string)$venue['status'])) ?></span>
-    <a class="atv-btn atv-btn--sm" href="<?= e(base_url('portal/venues/' . (int)$venue['id'] . '/edit')) ?>">Edit venue</a>
+    <?php if ($isDraft): ?>
+      <span class="status-chip">Draft — not submitted</span>
+    <?php else: ?>
+      <span class="lead-status lead-status--<?= e((string)$venue['status']) ?>"><?= e(venue_admin_status_label((string)$venue['status'])) ?></span>
+    <?php endif; ?>
+    <a class="atv-btn atv-btn--sm" href="<?= e(base_url('portal/venues/' . $vid . '/edit')) ?>">Edit venue</a>
   </div>
 </div>
 
+<?php if ($isDraft): /* #15 — three-step progress + submit CTA */ ?>
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">Finish adding this venue</h2>
+    <?php $stepActive = 'submit'; $stepDetailsDone = true; $stepPhotosDone = ($photoCount > 0); require __DIR__ . '/_stepper.php'; ?>
+    <ul class="pd-prog">
+      <li class="pd-prog__i pd-prog__i--ok"><span class="pd-tick">&#10003;</span> Details saved</li>
+      <li class="pd-prog__i <?= $photoCount > 0 ? 'pd-prog__i--ok' : 'pd-prog__i--todo' ?>">
+        <span class="pd-tick"><?= $photoCount > 0 ? '&#10003;' : '2' ?></span>
+        <?= $photoCount > 0 ? e((string)$photoCount) . ' photo' . ($photoCount === 1 ? '' : 's') . ' uploaded' : 'Add at least one photo' ?>
+        <a href="<?= e(base_url('portal/venues/' . $vid . '/images')) ?>">Manage photos</a>
+      </li>
+      <li class="pd-prog__i pd-prog__i--todo"><span class="pd-tick">3</span> Submit for review</li>
+    </ul>
+    <p class="lead-hint mb-2">Draft venues are private and never public. When you submit, All The Venues reviews the venue and its photos.</p>
+    <form method="post" action="<?= e(base_url('portal/venues/' . $vid . '/submit')) ?>">
+      <?php csrf_field(); ?>
+      <button type="submit" class="atv-btn"<?= $photoCount > 0 ? '' : ' disabled title="Add at least one photo first"' ?>>Submit for review</button>
+    </form>
+  </div>
+<?php endif; ?>
+
 <?php
 /* #3 U-P5a — pending change request for managed (name/slug/type/emirate) fields. */
-$vid = (int)$venue['id'];
 if (!empty($pending)):
     $vcChanges = json_decode((string)($pending['proposed_changes_json'] ?? ''), true);
     if (!is_array($vcChanges)) { $vcChanges = []; }

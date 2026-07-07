@@ -30,11 +30,20 @@ $ago = static function (?string $ts): string {
   <div class="lead-flash lead-flash--<?= e((string)($flash['type'] ?? 'success')) ?>" role="status"><?= e((string)($flash['msg'] ?? '')) ?></div>
 <?php endif; ?>
 
+<?php $isDraft = in_array((string)$venue['status'], ['draft', 'needs_changes'], true); ?>
 <div class="lead-detail__head">
   <h1>Venue photos</h1>
-  <span class="lead-status lead-status--<?= e((string)$venue['status']) ?>"><?= e(venue_admin_status_label((string)$venue['status'])) ?></span>
+  <?php if ($isDraft): ?><span class="status-chip">Draft — not submitted</span><?php else: ?><span class="lead-status lead-status--<?= e((string)$venue['status']) ?>"><?= e(venue_admin_status_label((string)$venue['status'])) ?></span><?php endif; ?>
 </div>
 <?php if ($loc !== ''): ?><p class="portal-sub"><?= e((string)$venue['name']) ?> · <?= e($loc) ?></p><?php endif; ?>
+
+<?php if ($isDraft): /* #15 — Step 2 of the add-venue flow */ ?>
+  <?php $stepActive = 'photos'; $stepDetailsDone = true; $stepPhotosDone = (bool)($pending || $live); require __DIR__ . '/_stepper.php'; ?>
+  <div class="admin-panel">
+    <p class="lead-hint mb-2">Step 2 of 3. <strong>At least one photo is required before you can submit</strong> this venue for review. Photos are uploaded with rights confirmation and reviewed by All The Venues.</p>
+    <a class="atv-btn atv-btn--sm" href="<?= e(base_url('portal/venues/' . $vid)) ?>">Continue to submit &rarr;</a>
+  </div>
+<?php endif; ?>
 
 <div class="admin-panel">
   <h2 class="admin-panel__title">Add photos of your venue</h2>

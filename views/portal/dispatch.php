@@ -44,6 +44,11 @@ if ($sub === 'venues' || strncmp($sub, 'venues/', 7) === 0) {
         require __DIR__ . '/venue-images.php';
         return;
     }
+    if (preg_match('#^venues/(\d+)/submit$#', $sub, $msub)) {
+        $vid = (int)$msub[1];
+        require __DIR__ . '/venue-submit.php';
+        return;
+    }
     if (preg_match('#^venues/(\d+)$#', $sub, $mm)) {
         $venue = portal_venue_for_partner($pdo, (int)$mm[1], $partnerId);
         if ($venue === null) {

@@ -7,7 +7,8 @@ declare(strict_types=1);
  * editable here because the whole venue is born pending admin review. Expects
  * $old, $errors, $pdo. No status/featured/verified/contact fields. Escapes output.
  */
-/** @var array $old @var array $errors @var PDO $pdo */
+/** @var array $old @var array $errors @var array $layoutErrors @var PDO $pdo */
+$layoutErrors = $layoutErrors ?? [];
 $v   = static fn(string $k, string $d = ''): string => e((string)($old[$k] ?? $d));
 $has = static fn(string $k): bool => isset($errors[$k]);
 $err = static function (string $k) use ($errors): void {
@@ -15,9 +16,10 @@ $err = static function (string $k) use ($errors): void {
 };
 $sel = static fn(string $k, $val): string => ((string)($old[$k] ?? '') === (string)$val) ? ' selected' : '';
 $ta  = static fn(string $k): string => e((string)($old[$k] ?? ''));
+$lval = static fn(string $type): string => e((string)($old['layout'][$type] ?? ''));   // #18 layout prefill
+// #13 — 'best_for' removed from partner forms (event types replace it).
 $richFields = [
     'description'   => 'Description',
-    'best_for'      => 'Best for',
     'highlights'    => 'What makes it special (highlights)',
     'facilities'    => 'Facilities',
     'food_beverage' => 'Food & beverage',
@@ -30,14 +32,18 @@ $richFields = [
 <p><a class="lead-back" href="<?= e(base_url('portal')) ?>">&larr; Back to my venues</a></p>
 
 <div class="lead-detail__head">
-  <h1>Submit a new venue</h1>
+  <h1>Add a venue</h1>
 </div>
 
-<p class="lead-hint mb-2">New venues are reviewed by All The Venues before they go live. You can add photos and layouts after submitting.</p>
+<?php $stepActive = 'details'; $stepDetailsDone = false; $stepPhotosDone = false; require __DIR__ . '/_stepper.php'; ?>
 
-<?php if (!empty($errors['_form'])): ?><div class="lead-flash lead-flash--error" role="alert"><?= e($errors['_form']) ?></div><?php endif; ?>
+<p class="lead-hint mb-2">Step 1 of 3. Saving keeps this as a <strong>draft</strong> (private, not submitted) — you’ll add photos next, then submit for review.</p>
 
-<form class="admin-form" method="post" action="<?= e(base_url('portal/venues/new')) ?>" novalidate>
+<?php if (!empty($errors)): /* #14 — top error banner on any validation failure */ ?>
+  <div class="lead-flash lead-flash--error" role="alert"><strong>Submission could not be saved.</strong> Please fix the highlighted fields and try again.<?php if (!empty($errors['_form'])): ?> <?= e($errors['_form']) ?><?php endif; ?></div>
+<?php endif; ?>
+
+<form class="admin-form" method="post" action="<?= e(base_url('portal/venues/new')) ?>" novalidate data-layout-form>
   <?php csrf_field(); ?>
 
   <div class="admin-panel">
@@ -79,7 +85,7 @@ $richFields = [
     <h2 class="admin-panel__title">Capacity, size &amp; pricing</h2>
     <div class="admin-form__grid">
       <div class="atv-field"><label for="f-cmin">Minimum guests</label><input type="number" id="f-cmin" name="capacity_min" value="<?= $v('capacity_min') ?>" min="0"></div>
-      <div class="atv-field"><label for="f-cmax">Maximum capacity</label><input type="number" id="f-cmax" name="capacity_max" value="<?= $v('capacity_max') ?>" min="0"></div>
+      <div class="atv-field"><label for="f-cmax">Maximum capacity</label><input type="number" id="f-cmax" name="capacity_max" value="<?= $v('capacity_max') ?>" min="0" data-layout-capmax></div>
       <div class="atv-field"><label for="f-spend">Minimum spend (AED)</label><input type="number" id="f-spend" name="minimum_spend" value="<?= $v('minimum_spend') ?>" min="0" step="0.01"></div>
       <div class="atv-field">
         <label for="f-price">Pricing level</label>
@@ -97,6 +103,20 @@ $richFields = [
           <option value="sqft"<?= $sel('floor_area_unit', 'sqft') ?>>ft² (sqft)</option>
         </select>
       </div>
+    </div>
+  </div>
+
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">Layouts &amp; capacity</h2>
+    <p class="lead-hint mb-2">Capacity for each layout you offer. None can exceed the venue maximum. Leave blank for layouts this venue doesn’t offer.</p>
+    <div class="admin-form__grid layout-grid">
+      <?php foreach (venue_layout_types() as $ltype => $liconKey): $lerr = isset($layoutErrors[$ltype]); ?>
+        <div class="atv-field">
+          <label class="layout-label" for="f-layout-<?= e($ltype) ?>"><?= icon($liconKey, 'layout-ico') ?> <?= e($ltype) ?></label>
+          <input type="number" id="f-layout-<?= e($ltype) ?>" name="layout[<?= e($ltype) ?>]" value="<?= $lval($ltype) ?>" min="0" class="<?= $lerr ? 'is-invalid' : '' ?>" data-layout-cap>
+          <?php if ($lerr): ?><p class="atv-enq-err" role="alert"><?= e($layoutErrors[$ltype]) ?></p><?php endif; ?>
+        </div>
+      <?php endforeach; ?>
     </div>
   </div>
 
@@ -127,7 +147,8 @@ $richFields = [
   ?>
 
   <div class="admin-form__actions">
-    <button type="submit" class="atv-btn">Submit venue</button>
+    <button type="submit" class="atv-btn" data-layout-submit>Save &amp; continue to photos &rarr;</button>
     <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('portal')) ?>">Cancel</a>
+    <span class="lead-hint">Saving keeps this as a <strong>draft</strong> — it isn’t submitted for review yet.</span>
   </div>
 </form>

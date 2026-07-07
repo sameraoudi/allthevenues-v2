@@ -173,6 +173,24 @@ function venue_layout_capacity_save(PDO $pdo, int $venueId, array $input): void
     }
 }
 
+/**
+ * #19 — validate that no layout capacity exceeds the venue maximum. Returns
+ * [layoutType => message] (empty when all fine, or when no positive max is set).
+ * Existing rows may pre-date this rule — the caller only blocks NEW saves.
+ */
+function venue_layout_capacity_errors(array $layout, ?int $capMax): array
+{
+    $errors = [];
+    if ($capMax === null || $capMax <= 0) { return $errors; }
+    foreach (array_keys(venue_layout_types()) as $type) {
+        $raw = trim((string)($layout[$type] ?? ''));
+        if ($raw !== '' && ctype_digit($raw) && (int)$raw > $capMax) {
+            $errors[$type] = $type . ' capacity cannot exceed the venue maximum of ' . $capMax . ' guests.';
+        }
+    }
+    return $errors;
+}
+
 /** Rich-text fields that must pass through html_sanitize() before save. */
 function venue_richtext_fields(): array
 {

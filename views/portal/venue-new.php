@@ -21,8 +21,9 @@ require_once __DIR__ . '/../../lib/portal.php';      // allowlist + create
 
 $userId = (int)(auth_user()['id'] ?? 0);
 
-$errors = [];
-$old    = [];
+$errors       = [];
+$layoutErrors = [];   // #19 — layout capacity > venue max
+$old          = [];
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $old = $_POST;
@@ -97,17 +98,24 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             }
         }
 
+        // #19 — no layout capacity may exceed the venue maximum.
+        $layoutErrors = venue_layout_capacity_errors(
+            (array)($_POST['layout'] ?? []),
+            isset($clean['capacity_max']) ? (int)$clean['capacity_max'] : null
+        );
+        foreach ($layoutErrors as $t => $msg) { $errors['layout_' . $t] = $msg; }
+
         if (!$errors) {
             try {
-                [$vid, $rid] = portal_create_new_venue($pdo, $partnerId, $userId, $clean);
-                // Event types (junction, like layouts) — the new venue is 'pending', so the save
-                // succeeds; optional at submit and never blocks submission.
+                // #15 — create as a DRAFT (no review request yet); save layouts + event types.
+                $vid = portal_create_new_venue($pdo, $partnerId, $userId, $clean);
+                venue_layout_capacity_save($pdo, $vid, (array)($_POST['layout'] ?? []));   // #18
                 portal_venue_event_types_save($pdo, $vid, $partnerId, (array)($_POST['event_types'] ?? []));
-                $_SESSION['portal_flash'] = ['type' => 'success', 'msg' => 'Venue submitted for review.'];
-                redirect('portal/venues/' . $vid);
+                $_SESSION['portal_flash'] = ['type' => 'success', 'msg' => 'Draft saved — add photos, then submit.'];
+                redirect('portal/venues/' . $vid . '/images');   // Step 2
             } catch (Throwable $e) {
                 error_log('portal new venue failed (partner=' . $partnerId . '): ' . $e->getMessage());
-                $errors['_form'] = 'Something went wrong submitting your venue. Please try again.';
+                $errors['_form'] = 'Something went wrong saving your venue. Please try again.';
             }
         }
     }

@@ -572,6 +572,29 @@
     if (btn && btn.form) { btn.form.setAttribute('data-confirm', btn.getAttribute('data-confirm')); }
   });
 
+  // Add/Edit venue (PU-D1 #19): no layout capacity may exceed the venue maximum.
+  // Marks offending inputs invalid + blocks submit. Server is authoritative.
+  (function () {
+    var form = document.querySelector('[data-layout-form]');
+    if (!form) return;
+    var maxInput = form.querySelector('[data-layout-capmax]');
+    var caps = form.querySelectorAll('[data-layout-cap]');
+    if (!maxInput || !caps.length) return;
+    function check() {
+      var max = parseInt(maxInput.value, 10);
+      var bad = false;
+      caps.forEach(function (c) {
+        var v = parseInt(c.value, 10);
+        var over = !isNaN(max) && max > 0 && !isNaN(v) && v > max;
+        c.classList.toggle('is-invalid', over);
+        if (over) { bad = true; }
+      });
+      return bad;
+    }
+    form.addEventListener('input', check);
+    form.addEventListener('submit', function (ev) { if (check()) { ev.preventDefault(); } });
+  })();
+
   // Portal event-type editor (U-P9b): live "N selected" counter. Progressive
   // enhancement — the server ignores it; the publish gate enforces ≥1.
   (function () {

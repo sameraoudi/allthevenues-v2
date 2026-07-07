@@ -43,7 +43,8 @@ function portal_venue_live_columns(): array
         ['area', 'address', 'video_url', 'website', 'indoor_outdoor',
          'capacity_min', 'capacity_max', 'minimum_spend', 'pricing_level',
          'floor_area', 'floor_area_unit', 'map_embed'],
-        venue_richtext_fields()   // description, best_for, highlights, facilities, …
+        // #13 — 'best_for' is ATV-editorial, not partner-writable (kept in admin + public).
+        array_values(array_diff(venue_richtext_fields(), ['best_for']))
     );
 }
 
@@ -134,63 +135,97 @@ function portal_new_venue_fields(): array
         ['name', 'venue_type_id', 'emirate_id', 'area', 'address', 'indoor_outdoor',
          'capacity_min', 'capacity_max', 'minimum_spend', 'pricing_level',
          'floor_area', 'floor_area_unit', 'website', 'video_url', 'map_embed'],
-        venue_richtext_fields()
+        // #13 — 'best_for' is ATV-editorial, not partner-writable.
+        array_values(array_diff(venue_richtext_fields(), ['best_for']))
     );
 }
 
 /**
- * Create a pending, provider-owned venue + its 'new_venue' change request in one
- * transaction. $clean holds the already-validated fields keyed by column (name
- * required). Returns [venueId, requestId]. Throws on failure (caller handles).
+ * #15 — Create a provider-owned venue as a DRAFT (private, editable). The admin
+ * review request is NOT created here — it is created only when the provider
+ * SUBMITS (portal_submit_venue_for_review), which requires ≥1 photo. $clean holds
+ * the already-validated fields keyed by column (name required). Returns the venue
+ * id. Throws on failure (caller handles).
  */
-function portal_create_new_venue(PDO $pdo, int $partnerId, int $userId, array $clean): array
+function portal_create_new_venue(PDO $pdo, int $partnerId, int $userId, array $clean): int
 {
     // Auto unique slug from the name.
     $base = slugify((string)($clean['name'] ?? '')) ?: 'venue';
     $slug = $base; $n = 2;
     while (!venue_slug_available($pdo, $slug, 0)) { $slug = $base . '-' . $n; $n++; }
 
+    $insCols = array_keys($clean);
+    $colSql  = implode(', ', $insCols);
+    $valSql  = implode(', ', array_map(static fn($c) => ':' . $c, $insCols));
+
+    $sql = "INSERT INTO venues ($colSql, slug, status, partner_id, is_featured, is_verified,
+                management_source, provider_assigned_at, provider_assigned_by, created_at)
+            VALUES ($valSql, :slug, 'draft', :pid, 0, 0, 'provider_created', NOW(), :uid, NOW())";
+    $stmt = $pdo->prepare($sql);
+    foreach ($clean as $c => $val) { $stmt->bindValue(':' . $c, $val); }
+    $stmt->bindValue(':slug', $slug);
+    $stmt->bindValue(':pid', $partnerId, PDO::PARAM_INT);
+    $stmt->bindValue(':uid', $userId, PDO::PARAM_INT);
+    $stmt->execute();
+    $venueId = (int)$pdo->lastInsertId();
+
+    audit_log($pdo, $userId, 'create', 'venue', $venueId, null, array_merge($clean, ['status' => 'draft']));
+    return $venueId;
+}
+
+/**
+ * #15 — Submit an owned DRAFT (or needs_changes) venue for review. Requires ≥1
+ * uploaded photo. On success: flips the venue to 'pending' and creates the
+ * new_venue change request (the U-P6b admin flow takes it from there).
+ * @return array{ok:bool,error?:string}
+ */
+function portal_submit_venue_for_review(PDO $pdo, int $venueId, int $partnerId, int $userId): array
+{
+    $vs = $pdo->prepare('SELECT * FROM venues WHERE id = :vid AND partner_id = :pid LIMIT 1');
+    $vs->execute([':vid' => $venueId, ':pid' => $partnerId]);
+    $venue = $vs->fetch();
+    if ($venue === false) {
+        return ['ok' => false, 'error' => 'Not found.'];
+    }
+    if (!in_array((string)$venue['status'], ['draft', 'needs_changes'], true)) {
+        return ['ok' => false, 'error' => 'This venue has already been submitted.'];
+    }
+
+    // GATE: at least one photo must exist (any review_status).
+    $ic = $pdo->prepare('SELECT COUNT(*) FROM venue_images WHERE venue_id = :vid');
+    $ic->execute([':vid' => $venueId]);
+    if ((int)$ic->fetchColumn() < 1) {
+        return ['ok' => false, 'error' => 'Add at least one photo before submitting for review.'];
+    }
+
+    // Snapshot the venue's submittable fields for the admin review request.
+    $snapCols = array_merge(portal_new_venue_fields(), ['slug']);
+    $snapshot = [];
+    foreach ($snapCols as $c) { if (array_key_exists($c, $venue)) { $snapshot[$c] = $venue[$c]; } }
+
     try {
         $pdo->beginTransaction();
-
-        $insCols = array_keys($clean);
-        $colSql  = implode(', ', $insCols);
-        $valSql  = implode(', ', array_map(static fn($c) => ':' . $c, $insCols));
-
-        $sql = "INSERT INTO venues ($colSql, slug, status, partner_id, is_featured, is_verified,
-                    management_source, provider_assigned_at, provider_assigned_by, created_at)
-                VALUES ($valSql, :slug, 'pending', :pid, 0, 0, 'provider_created', NOW(), :uid, NOW())";
-        $stmt = $pdo->prepare($sql);
-        foreach ($clean as $c => $val) { $stmt->bindValue(':' . $c, $val); }
-        $stmt->bindValue(':slug', $slug);
-        $stmt->bindValue(':pid', $partnerId, PDO::PARAM_INT);
-        $stmt->bindValue(':uid', $userId, PDO::PARAM_INT);
-        $stmt->execute();
-        $venueId = (int)$pdo->lastInsertId();
-
-        // Snapshot of what was submitted (for the admin new-venue review, U-P6b).
-        $snapshot = $clean;
-        $snapshot['slug'] = $slug;
+        $pdo->prepare("UPDATE venues SET status = 'pending' WHERE id = :vid AND partner_id = :pid AND status IN ('draft','needs_changes')")
+            ->execute([':vid' => $venueId, ':pid' => $partnerId]);
         $cr = $pdo->prepare(
             "INSERT INTO venue_change_requests
                 (venue_id, partner_id, submitted_by, type, proposed_changes_json, status)
              VALUES (:vid, :pid, :uid, 'new_venue', :json, 'pending')"
         );
         $cr->execute([
-            ':vid'  => $venueId, ':pid' => $partnerId, ':uid' => $userId,
+            ':vid' => $venueId, ':pid' => $partnerId, ':uid' => $userId,
             ':json' => json_encode($snapshot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
         ]);
         $requestId = (int)$pdo->lastInsertId();
-
         $pdo->commit();
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) { $pdo->rollBack(); }
-        throw $e;
+        error_log('portal_submit_venue_for_review failed (venue=' . $venueId . '): ' . $e->getMessage());
+        return ['ok' => false, 'error' => 'Something went wrong submitting your venue. Please try again.'];
     }
 
-    audit_log($pdo, $userId, 'create', 'venue', $venueId, null, $clean);
-    audit_log($pdo, $userId, 'create', 'change_request', $requestId, null, ['type' => 'new_venue']);
-    return [$venueId, $requestId];
+    audit_log($pdo, $userId, 'submit', 'venue', $venueId, ['status' => 'draft'], ['status' => 'pending', 'request_id' => $requestId]);
+    return ['ok' => true];
 }
 
 /** All venues owned by a provider (every status), newest-touched first. [] if none. */
