@@ -706,6 +706,7 @@ select:focus-visible,
 .lead-mode--new_venue { background: #d9ede4; color: #2f6b52; }
 .lead-mode--image     { background: #efe7d8; color: #7a6a45; }
 .lead-mode--claim     { background: #e5e0ef; color: #5b4a86; }
+.lead-mode--delist    { background: #f6e7e5; color: #a5433b; }   /* Delist-2 */
 .cr-risk { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
 .cr-risk--high   { background: #f7d9d5; color: #a12f24; }
 .cr-risk--medium { background: #fbeecb; color: #8a6d1b; }

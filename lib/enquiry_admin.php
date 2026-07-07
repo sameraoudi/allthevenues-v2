@@ -31,8 +31,12 @@ function enquiry_status_label(string $s): string
 }
 
 /** Mode badge from stored mode + whether venues are linked. */
-function enquiry_mode_badge(string $mode, int $venueCount): array
+function enquiry_mode_badge(string $mode, int $venueCount, string $sourcePage = ''): array
 {
+    // Delist-2 — a delist request is a 'contact' enquiry marked by source_page.
+    if ($sourcePage === '/delist-venue') {
+        return ['Delist request', 'delist'];
+    }
     if ($mode === 'contact') {
         return ['Contact', 'contact'];
     }
@@ -85,7 +89,8 @@ function enquiry_admin_filters(array $in): array
         $out['provider'] = $pr;
     }
     $mode = trim((string)($in['mode'] ?? ''));
-    if (in_array($mode, ['venue', 'assisted', 'partner', 'general', 'partner_signup', 'contact'], true)) {
+    // 'delist' is a pseudo-mode (Delist-2): contact enquiries from /delist-venue.
+    if (in_array($mode, ['venue', 'assisted', 'partner', 'general', 'partner_signup', 'contact', 'delist'], true)) {
         $out['mode'] = $mode;
     }
     foreach (['date_from', 'date_to'] as $k) {
@@ -115,12 +120,22 @@ function enquiry_admin_where(array $f): array
     if (isset($f['event_type'])) { $sql .= ' AND e.event_type_id = :et';         $p[':et'] = $f['event_type']; }
     if (isset($f['emirate']))    { $sql .= ' AND e.emirate_id = :em';            $p[':em'] = $f['emirate']; }
     if (isset($f['mode'])) {
-        if ($f['mode'] === 'venue') {
+        if ($f['mode'] === 'delist') {
+            // Delist-2 — contact enquiries submitted from the public "Delist a venue" form.
+            $sql .= " AND e.source_page = :dsp";
+            $p[':dsp'] = '/delist-venue';
+        } elseif ($f['mode'] === 'venue') {
             $sql .= ' AND (e.mode = :mode OR EXISTS (SELECT 1 FROM enquiry_venues ev WHERE ev.enquiry_id = e.id))';
+            $p[':mode'] = $f['mode'];
+        } elseif ($f['mode'] === 'contact') {
+            // Plain contact only — exclude the delist-request variant.
+            $sql .= " AND e.mode = :mode AND e.source_page <> '/delist-venue'"
+                  . ' AND NOT EXISTS (SELECT 1 FROM enquiry_venues ev WHERE ev.enquiry_id = e.id)';
+            $p[':mode'] = $f['mode'];
         } else {
             $sql .= ' AND e.mode = :mode AND NOT EXISTS (SELECT 1 FROM enquiry_venues ev WHERE ev.enquiry_id = e.id)';
+            $p[':mode'] = $f['mode'];
         }
-        $p[':mode'] = $f['mode'];
     }
     if (isset($f['date_from'])) { $sql .= ' AND e.created_at >= :dfrom';                 $p[':dfrom'] = $f['date_from'] . ' 00:00:00'; }
     if (isset($f['date_to']))   { $sql .= ' AND e.created_at <= :dto';                   $p[':dto']   = $f['date_to'] . ' 23:59:59'; }
@@ -149,7 +164,7 @@ function _enquiry_admin_select(): string
 {
     return "SELECT e.id, e.reference, e.name, e.email, e.phone, e.event_date,
                    e.guest_count, e.budget_range, e.mode, e.status, e.created_at,
-                   e.company,
+                   e.company, e.source_page,
                    et.name AS event_type_name,
                    em.name AS emirate_name,
                    pp.org_name AS partner_name,

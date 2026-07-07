@@ -393,6 +393,57 @@ function contact_insert(PDO $pdo, array $clean): array
 }
 
 /**
+ * Delist-2 Part C — save a public "Delist a venue" request (operator without a
+ * portal account) as a 'contact' enquiry marked with source_page='/delist-venue'
+ * so it lands in the admin inbox with its own badge/filter. Captures venue
+ * name/URL, operator + role, reason + optional proof in structured notes. NO
+ * migration — reuses the existing enquiries table + 'contact' mode. Expects
+ * $clean: name, email, phone, venue_name, venue_url, role, reason, proof,
+ * message, consent_to_share. Returns ['reference'=>…, 'id'=>…].
+ */
+function delist_request_insert(PDO $pdo, array $clean): array
+{
+    $reference = enquiry_generate_reference($pdo);
+
+    $lines = [];
+    foreach ([
+        'Venue'           => $clean['venue_name'] ?? '',
+        'Public URL'      => $clean['venue_url'] ?? '',
+        'Role at venue'   => $clean['role'] ?? '',
+        'Reason'          => $clean['reason'] ?? '',
+        'Proof / authority' => $clean['proof'] ?? '',
+    ] as $label => $val) {
+        $val = trim((string)$val);
+        if ($val !== '') { $lines[] = $label . ': ' . $val; }
+    }
+    $msg = trim((string)($clean['message'] ?? ''));
+    if ($msg !== '') { $lines[] = "\n" . $msg; }
+    $notes = "DELIST REQUEST\n" . implode("\n", $lines);
+
+    $stmt = $pdo->prepare(
+        'INSERT INTO enquiries
+            (reference, name, email, phone, company, notes, consent_to_share,
+             source_page, mode, status)
+         VALUES
+            (:reference, :name, :email, :phone, :company, :notes, :consent,
+             :source_page, :mode, :status)'
+    );
+    $stmt->execute([
+        ':reference'   => $reference,
+        ':name'        => ($clean['name'] ?? '') !== '' ? $clean['name'] : null,
+        ':email'       => ($clean['email'] ?? '') !== '' ? $clean['email'] : null,
+        ':phone'       => ($clean['phone'] ?? '') !== '' ? $clean['phone'] : null,
+        ':company'     => (mb_substr(trim((string)($clean['venue_name'] ?? '')), 0, 255)) ?: null,
+        ':notes'       => $notes,
+        ':consent'     => (int)($clean['consent_to_share'] ?? 1),
+        ':source_page' => '/delist-venue',
+        ':mode'        => 'contact',
+        ':status'      => 'new',
+    ]);
+    return ['reference' => $reference, 'id' => (int)$pdo->lastInsertId()];
+}
+
+/**
  * Human-readable summary rows for emails (label => value), from clean input.
  */
 function enquiry_summary_rows(PDO $pdo, array $clean, array $venues): array

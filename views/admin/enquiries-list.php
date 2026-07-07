@@ -23,7 +23,7 @@ $carry = array_filter([
 $hasFilters = (bool)$carry;
 $sel = static fn(string $k, $v): string => ((string)($f[$k] ?? '') === (string)$v) ? ' selected' : '';
 $listUrl = base_url('admin/enquiries');
-$modes = ['venue' => 'Venue enquiry', 'assisted' => 'Assisted', 'partner' => 'Partner interest', 'partner_signup' => 'Partner signup', 'contact' => 'Contact', 'general' => 'General'];
+$modes = ['venue' => 'Venue enquiry', 'assisted' => 'Assisted', 'partner' => 'Partner interest', 'partner_signup' => 'Partner signup', 'contact' => 'Contact', 'delist' => 'Delist request', 'general' => 'General'];
 
 // Sortable column headers (GET-link sort; created_at desc is the default).
 $activeSort = $f['sort'] ?? 'created_at';
@@ -98,7 +98,7 @@ $sortHead = function (string $key, string $label) use ($listUrl, $carry, $active
       <tbody>
         <?php foreach ($rows as $r): ?>
           <?php
-            [$modeLabel, $modeClass] = enquiry_mode_badge((string)$r['mode'], (int)$r['venue_count']);
+            [$modeLabel, $modeClass] = enquiry_mode_badge((string)$r['mode'], (int)$r['venue_count'], (string)($r['source_page'] ?? ''));
             $detail = base_url('admin/enquiries/' . (int)$r['id']);
             $guests = $r['guest_count'] ? (venue_guest_bands()[$r['guest_count']][0] ?? $r['guest_count']) : '—';
           ?>

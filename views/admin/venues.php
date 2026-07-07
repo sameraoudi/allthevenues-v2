@@ -284,6 +284,19 @@ if ($rest === 'edit') {
             $st = trim((string)($_POST['status'] ?? ''));
             $clean['status'] = isset(venue_admin_statuses()[$st]) ? $st : $venue['status'];
 
+            // --- Delist-2 Part B: stamp/clear delist bookkeeping when an admin
+            //     flips the status to/from 'delisted' from the editor dropdown. ---
+            $oldStatus = (string)($venue['status'] ?? '');
+            if ($clean['status'] === 'delisted' && $oldStatus !== 'delisted') {
+                $clean['delisted_at'] = date('Y-m-d H:i:s');
+                $clean['delisted_by'] = (int)($me['id'] ?? 0) ?: null;
+            } elseif ($clean['status'] !== 'delisted' && $oldStatus === 'delisted') {
+                $clean['delisted_at']    = null;
+                $clean['delisted_by']    = null;
+                $clean['delist_reason']  = null;
+                $clean['delist_details'] = null;
+            }
+
             // --- provider assignment (nullable; validated if set) ---
             $pid = (int)($_POST['partner_id'] ?? 0);
             if ($pid > 0) {

@@ -109,6 +109,7 @@ $routes = [
     '/become-a-venue-partner' => __DIR__ . '/views/become-partner.php',
     '/shortlist'   => __DIR__ . '/views/shortlist.php',
     '/contact'        => __DIR__ . '/views/contact.php',
+    '/delist-venue'   => __DIR__ . '/views/delist-venue.php',
     '/about'          => __DIR__ . '/views/page.php',
     '/terms-of-use'   => __DIR__ . '/views/page.php',
     '/privacy-policy' => __DIR__ . '/views/page.php',

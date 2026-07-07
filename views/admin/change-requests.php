@@ -128,6 +128,22 @@ if (preg_match('#^(\d+)$#', $rest, $m)) {
                 redirect(base_url('admin/change-requests'));
             }
             $noteError = $res['error'] ?? 'Could not complete that action.';
+        } elseif ($type === 'delist') {
+            /* ---- Delist-2: delist decisions --------------------------- */
+            if ($decision === 'reject' && $note === '') {
+                $noteError = 'A note to the provider is required to reject a delisting request.';
+            } else {
+                $res = cr_delist_decide($pdo, $req, $uid, $decision, $note);
+                if (!empty($res['ok'])) {
+                    $labels = ['approve' => 'Venue delisted — it is now hidden from the public site.',
+                               'reject'  => 'Delisting request rejected — the venue stays published.'];
+                    $msg = $labels[$decision] ?? 'Done.';
+                    if (!empty($res['warning'])) { $msg .= ' ' . $res['warning']; }
+                    $_SESSION['admin_flash'] = ['type' => (!empty($res['warning']) ? 'warning' : 'success'), 'msg' => $msg];
+                    redirect(base_url('admin/change-requests'));
+                }
+                $noteError = $res['error'] ?? 'Could not complete that action.';
+            }
         } else {
             $_SESSION['admin_flash'] = ['type' => 'error', 'msg' => 'This request type is reviewed in a later unit.'];
             redirect($detailUrl);
@@ -150,6 +166,9 @@ if (preg_match('#^(\d+)$#', $rest, $m)) {
     } elseif ($type === 'claim') {
         $cl = cr_load_claim($pdo, $req);
         $admin_content_view = __DIR__ . '/change-request-claim.php';
+    } elseif ($type === 'delist') {
+        $dl = cr_load_delist($pdo, $req);
+        $admin_content_view = __DIR__ . '/change-request-delist.php';
     } else {
         $admin_content_view = __DIR__ . '/change-request-detail.php';
     }

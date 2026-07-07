@@ -38,6 +38,7 @@
         <ul>
           <li><a href="<?= e(base_url('about')) ?>">About us</a></li>
           <li><a href="<?= e(base_url('contact')) ?>">Contact</a></li>
+          <li><a href="<?= e(base_url('delist-venue')) ?>">Delist a venue</a></li>
           <li><a href="#" title="Coming soon">Blog</a></li>
         </ul>
       </div>

@@ -19,6 +19,7 @@ function venue_admin_statuses(): array
         'published'     => ['Published',      'published'],
         'needs_changes' => ['Needs changes',  'needs_changes'],
         'archived'      => ['Archived',       'archived'],
+        'delisted'      => ['Delisted',       'delisted'],   // Delist-2 — admin can delist/re-list here
     ];
 }
 

@@ -18,6 +18,7 @@ require_once __DIR__ . '/venue_images_admin.php'; // venue_images_count() (#3 U-
 require_once __DIR__ . '/slug_redirect.php';    // slug_redirect_capture() (#10)
 require_once __DIR__ . '/audit.php';            // audit_log()
 require_once __DIR__ . '/mail.php';             // send_mail()
+require_once __DIR__ . '/portal.php';           // portal_delist_reasons() (Delist-2 shared labels)
 
 /**
  * Per requestable field: display label, descriptive badges, risk weight, and
@@ -107,6 +108,7 @@ function cr_type_label(string $type): string
         'new_venue' => 'New venue',
         'image'     => 'Image',
         'claim'     => 'Ownership claim',
+        'delist'    => 'Delist',
     ][$type] ?? ucfirst($type);
 }
 
@@ -168,7 +170,7 @@ function cr_admin_list(PDO $pdo, array $filters): array
         $r['change_count'] = count($changes);
         // new_venue / claim have no changed-field list — inherently high-risk.
         $r['risk']      = ($r['type'] === 'edit') ? cr_request_risk(array_keys($changes))
-                        : (in_array($r['type'], ['new_venue', 'claim'], true) ? 'high' : 'low');
+                        : (in_array($r['type'], ['new_venue', 'claim', 'delist'], true) ? 'high' : 'low');
     }
     unset($r);
     return $rows;
@@ -245,7 +247,7 @@ function cr_admin_get(PDO $pdo, int $id): ?array
     $req['changes']      = $changes;
     $req['change_rows']  = $rows;
     $req['risk']         = ($req['type'] === 'edit') ? cr_request_risk(array_keys($changes))
-                         : (in_array($req['type'], ['new_venue', 'claim'], true) ? 'high' : 'low');
+                         : (in_array($req['type'], ['new_venue', 'claim', 'delist'], true) ? 'high' : 'low');
     // An event-type change is Medium risk — bump a scalar-low request up.
     if ($req['type'] === 'edit' && $req['event_type_diff'] !== null && $req['risk'] === 'low') {
         $req['risk'] = 'medium';
@@ -640,6 +642,138 @@ function cr_newvenue_decide(PDO $pdo, array $req, int $adminUserId, string $deci
 }
 
 /* ==========================================================================
+ * Delist-2 — DELIST review (approve → hide the venue · reject → keep it live).
+ * ======================================================================== */
+
+/** Full context for the delist review screen: venue + reason/details + requester. */
+function cr_load_delist(PDO $pdo, array $req): array
+{
+    $data    = cr_decode_changes($req['proposed_changes_json']);
+    $reason  = (string)($data['reason'] ?? '');
+    $details = (string)($data['details'] ?? '');
+    $venueId = (int)($req['venue_id'] ?? 0);
+
+    $vs = $pdo->prepare(
+        'SELECT v.id, v.name, v.slug, v.status, v.management_source, v.partner_id,
+                p.org_name AS provider_name, p.email AS provider_email
+         FROM venues v LEFT JOIN partners p ON p.id = v.partner_id
+         WHERE v.id = :vid LIMIT 1'
+    );
+    $vs->execute([':vid' => $venueId]);
+    $venue = $vs->fetch() ?: null;
+
+    return [
+        'venue'           => $venue,
+        'reason'          => $reason,
+        'reason_label'    => portal_delist_reasons()[$reason] ?? ($reason !== '' ? $reason : '—'),
+        'details'         => $details,
+        'requester_name'  => (string)($req['submitter_name'] ?? ''),
+        'requester_email' => (string)($req['submitter_email'] ?? ''),
+    ];
+}
+
+/**
+ * Decide a delist request. $decision ∈ approve | reject. Pending-only.
+ *   approve: venue must still be published → set status='delisted', stamp
+ *            delisted_at/by + delist_reason/details from the CR, mark CR approved
+ *            (one transaction). Audit (old status → delisted). Email the partner.
+ *   reject:  note REQUIRED; CR rejected; venue UNCHANGED. Email the partner.
+ * @return array{ok:bool,error?:string,warning?:string}
+ */
+function cr_delist_decide(PDO $pdo, array $req, int $adminUserId, string $decision, string $note): array
+{
+    if (($req['type'] ?? '') !== 'delist' || (string)($req['status'] ?? '') !== 'pending') {
+        return ['ok' => false, 'error' => 'This request can no longer be reviewed.'];
+    }
+    if (!in_array($decision, ['approve', 'reject'], true)) {
+        return ['ok' => false, 'error' => 'Unknown decision.'];
+    }
+    $note = trim($note);
+    if ($decision === 'reject' && $note === '') {
+        return ['ok' => false, 'error' => 'A note to the provider is required to reject a delisting request.'];
+    }
+
+    $rid     = (int)$req['id'];
+    $venueId = (int)$req['venue_id'];
+    $pid     = (int)$req['partner_id'];
+    $ctx     = cr_load_delist($pdo, $req);
+
+    /* ---------------- REJECT (venue stays published) ---------------- */
+    if ($decision === 'reject') {
+        try {
+            $ur = $pdo->prepare(
+                "UPDATE venue_change_requests
+                 SET status='rejected', reviewed_by=:by, reviewed_at=NOW(), review_note=:note, updated_at=NOW()
+                 WHERE id=:rid AND status='pending'"
+            );
+            $ur->execute([':by' => $adminUserId, ':note' => $note, ':rid' => $rid]);
+            if ($ur->rowCount() < 1) {
+                return ['ok' => false, 'error' => 'This request can no longer be reviewed.'];
+            }
+        } catch (Throwable $e) {
+            error_log('cr_delist_decide reject failed (request=' . $rid . '): ' . $e->getMessage());
+            return ['ok' => false, 'error' => 'Something went wrong recording the decision. Please try again.'];
+        }
+        $mailOk = cr_notify_provider($req, 'delist_rejected', $note);
+        audit_log($pdo, $adminUserId, 'reject', 'change_request', $rid, null,
+            ['decision' => 'reject', 'note' => $note, 'notified' => $mailOk]);
+        $out = ['ok' => true];
+        if (!$mailOk) { $out['warning'] = 'Saved, but the provider notification email failed to send.'; }
+        return $out;
+    }
+
+    /* ---------------- APPROVE (take the venue offline) ---------------- */
+    if ($ctx['venue'] === null) {
+        return ['ok' => false, 'error' => 'The venue no longer exists.'];
+    }
+    if ((string)$ctx['venue']['status'] !== 'published') {
+        return ['ok' => false, 'error' => 'This venue is no longer published, so it cannot be delisted.'];
+    }
+    try {
+        $pdo->beginTransaction();
+        $uv = $pdo->prepare(
+            "UPDATE venues
+             SET status='delisted', delisted_at=NOW(), delisted_by=:by,
+                 delist_reason=:reason, delist_details=:details
+             WHERE id=:vid AND partner_id=:pid AND status='published'"
+        );
+        $uv->execute([
+            ':by' => $adminUserId, ':reason' => ($ctx['reason'] !== '' ? $ctx['reason'] : null),
+            ':details' => ($ctx['details'] !== '' ? $ctx['details'] : null),
+            ':vid' => $venueId, ':pid' => $pid,
+        ]);
+        if ($uv->rowCount() < 1) {
+            $pdo->rollBack();
+            return ['ok' => false, 'error' => 'This venue is no longer published, so it cannot be delisted.'];
+        }
+        $ur = $pdo->prepare(
+            "UPDATE venue_change_requests
+             SET status='approved', reviewed_by=:by, reviewed_at=NOW(), review_note=:note, updated_at=NOW()
+             WHERE id=:rid AND status='pending'"
+        );
+        $ur->execute([':by' => $adminUserId, ':note' => ($note !== '' ? $note : null), ':rid' => $rid]);
+        if ($ur->rowCount() < 1) {
+            $pdo->rollBack();
+            return ['ok' => false, 'error' => 'This request can no longer be reviewed.'];
+        }
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) { $pdo->rollBack(); }
+        error_log('cr_delist_decide approve failed (request=' . $rid . '): ' . $e->getMessage());
+        return ['ok' => false, 'error' => 'Something went wrong applying the delisting. Please try again.'];
+    }
+
+    $mailOk = cr_notify_provider($req, 'delist_approved', $note);
+    audit_log($pdo, $adminUserId, 'approve', 'change_request', $rid,
+        ['venue_id' => $venueId, 'status' => 'published'],
+        ['status' => 'delisted', 'reason' => $ctx['reason'], 'decision' => 'approve', 'notified' => $mailOk]);
+
+    $out = ['ok' => true];
+    if (!$mailOk) { $out['warning'] = 'Delisted, but the provider notification email failed to send.'; }
+    return $out;
+}
+
+/* ==========================================================================
  * #3 U-P8b — CLAIM review (approve/reassign · request-proof · reject).
  * ======================================================================== */
 
@@ -886,9 +1020,20 @@ function cr_notify_provider(array $req, string $decision, string $note): bool
     $link    = base_url('portal/venues/' . (int)($req['venue_id'] ?? 0));
 
     // Decisions that are pure approvals (no reviewer note shown to the provider).
-    $positive = ['approved', 'nv_published', 'nv_draft', 'claim_approved'];
+    $positive = ['approved', 'nv_published', 'nv_draft', 'claim_approved', 'delist_approved'];
 
     switch ($decision) {
+        case 'delist_approved':
+            $subject = 'Your venue has been delisted — ' . $venue;
+            $intro   = 'As requested, <strong>' . $esc($venue) . '</strong> has been delisted and is now hidden '
+                     . 'from the public site. Your data, photos and past enquiries are kept — you can re-list it '
+                     . 'yourself anytime from your provider portal.';
+            break;
+        case 'delist_rejected':
+            $subject = 'Your delisting request was declined — ' . $venue;
+            $intro   = 'We reviewed your request to delist <strong>' . $esc($venue) . '</strong> and it remains '
+                     . 'published for now.';
+            break;
         case 'claim_approved':
             $subject = 'Your venue claim was approved — ' . $venue;
             $intro   = 'Good news — your claim for <strong>' . $esc($venue)

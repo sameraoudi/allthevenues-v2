@@ -11,7 +11,7 @@ $listUrl = base_url('admin/change-requests');
 $sel = static fn(string $k, string $v): string => ((string)($f[$k] ?? '') === $v) ? ' selected' : '';
 $statuses = ['pending' => 'Pending', 'needs_changes' => 'Changes requested', 'approved' => 'Approved',
              'rejected' => 'Rejected', 'withdrawn' => 'Withdrawn', 'all' => 'All statuses'];
-$types = ['edit' => 'Edit', 'new_venue' => 'New venue', 'image' => 'Image', 'claim' => 'Ownership claim'];
+$types = ['edit' => 'Edit', 'new_venue' => 'New venue', 'image' => 'Image', 'claim' => 'Ownership claim', 'delist' => 'Delist'];
 ?>
 <form class="lead-filters" method="get" action="<?= e($listUrl) ?>">
   <select name="status" aria-label="Status">
@@ -41,7 +41,7 @@ $types = ['edit' => 'Edit', 'new_venue' => 'New venue', 'image' => 'Image', 'cla
       <tbody>
         <?php foreach ($rows as $r):
           [$stLabel, $stClass] = cr_status_meta((string)$r['status']);
-          $reviewable = in_array((string)$r['type'], ['edit', 'new_venue', 'claim'], true);   // U-P5b + U-P6b + U-P8b
+          $reviewable = in_array((string)$r['type'], ['edit', 'new_venue', 'claim', 'delist'], true);   // U-P5b + U-P6b + U-P8b + Delist-2
           $detail = base_url('admin/change-requests/' . (int)$r['id']);
         ?>
           <tr>
