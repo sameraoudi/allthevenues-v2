@@ -131,9 +131,14 @@ from partner forms (#13, kept admin/public), top error banner (#14), draft-only 
 styled file input (#16), photo count, sqm default. **Limbo fix:** `request_changes` now sets venue→`needs_changes`
 (was leaving it `pending`); `portal_submit_venue_for_review` reopens the SAME new_venue CR (idempotent, no dup),
 `portal_withdraw_to_draft` escape; provider state machine (Under review / Changes requested+Re-submit / Draft) has
-no dead-ends. **Next: PU-D2** (#17 published-venue event-type change request — extend U-P5 submit + U-P5b apply to
-carry the event-type set), then the **DELISTING** unit (design locked, space memory `atv-venue-delisting`: new
-`delisted` status + `delist` CR type; self-serve re-list; 404), then **PU-A** portal shell (#7/#2/#4/#5/#6/#8).
+no dead-ends. **PU-D2 SHIPPED** (#17, commit `452b1a5`, no migration) — published-venue event-type edits are now a governed
+change request folded into the U-P5 edit CR: the proposed set rides in `proposed_changes_json._event_type_ids`
+(inert to the scalar field-loop); `cr_approve` applies it (validate active ids → DELETE+INSERT) in the same
+transaction as scalar changes, tags-only requests approvable, Medium-risk diff row in the admin edit review.
+Scalar-only regression (incl. #10 slug-301) verified intact. **Next: DELISTING unit** (design locked, space
+memory `atv-venue-delisting`; **preview built** `docs/atv-portal-delisting-preview.html`, awaiting Samer's sign-off;
+needs a migration = `delisted` status + `delisted_at/by/reason` + `delist` CR type; self-serve re-list; delisted→404),
+then **PU-A** portal shell (#7/#2/#4/#5/#6/#8).
 Known gaps: **`db/001_schema.sql`
 drift** (016/019/020/021 live only as numbered ALTERs — never folded into 001; a fresh import runs 001 + all
 migrations in sequence, so this is fine, but a one-off "sync 001 with 016–021" task would restore true

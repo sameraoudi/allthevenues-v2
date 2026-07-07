@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATV — Published-venue event-type change request (PU-D2 preview)</title>
+<style>
+  :root{
+    --navy:#0E1B2A; --blue:#6C93B7; --action:#426F94; --action-hover:#315B7C;
+    --sand:#D9C7A8; --ink:#1c2b38; --muted:#6b7b88; --line:#e4e8ec; --bg:#f3f1ec;
+    --ok:#2f7d5b; --okbg:#e7f3ec; --warn:#8a6d1f; --warnbg:#f6efdb; --danger:#a5433b; --dangerbg:#f6e7e5;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Segoe UI,Inter,sans-serif;font-size:14px;}
+  h1,h2,h3{font-family:Georgia,'Cormorant Garamond',serif;font-weight:600;margin:0;}
+  a{color:var(--action);text-decoration:none;}
+  .lbl-screen{max-width:900px;margin:0 auto;padding:24px;}
+  .screen-tag{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:24px 0 10px;}
+  .topbar{background:var(--navy);color:#fff;display:flex;justify-content:space-between;align-items:center;padding:12px 22px;border-radius:12px 12px 0 0;}
+  .brand{font-family:Georgia,serif;font-size:17px;} .brand span{color:var(--blue);} .brand em{color:var(--sand);font-style:normal;font-size:12px;margin-left:4px;}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 22px rgba(14,27,42,.06);padding:20px 22px;margin-bottom:16px;}
+  .panel.attached{border-radius:0 0 12px 12px;border-top:0;margin-top:0;}
+  .sec-h{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;margin:0 0 10px;}
+  .note{background:var(--warnbg);border:1px solid #e6d59b;border-radius:9px;padding:9px 12px;color:#6d5a1f;font-size:12.5px;margin-bottom:14px;}
+  .grp-h{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;margin:10px 0 7px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px 14px;}
+  .chk{font-size:13.5px;} .chk input{width:auto;margin-right:6px;}
+  .btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer;border:1px solid transparent;background:var(--action);color:#fff;}
+  .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--action);}
+  .hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;}
+  /* admin diff */
+  .side{background:var(--navy);color:#c7d0d8;border-radius:12px 0 0 12px;} /* placeholder */
+  .diffrow{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid #f0eee9;font-size:13.5px;}
+  .diffrow .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.3px;}
+  .tag{display:inline-block;font-size:12px;border-radius:20px;padding:2px 9px;margin:2px 3px 2px 0;}
+  .tag-keep{background:#eef1f4;color:var(--ink);} .tag-add{background:var(--okbg);color:var(--ok);} .tag-rem{background:var(--dangerbg);color:var(--danger);text-decoration:line-through;}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;background:#e7eef4;color:var(--action);}
+  .actions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap;}
+</style>
+</head>
+<body>
+<div class="lbl-screen">
+
+  <!-- PROVIDER SIDE -->
+  <div class="screen-tag">Provider · Request a change → event types (on a published venue)</div>
+  <div class="topbar">
+    <span class="brand">All The <span>Venues</span> <em>· Partner</em></span>
+    <span style="font-size:12.5px;color:#c7d0d8;">Marina Terrace &amp; Deck · Published</span>
+  </div>
+  <div class="panel attached">
+    <div class="note">This venue is <b>published</b>, so changes to its event types are reviewed by All The Venues
+      before they go live in search and on event-type pages. Your current tags stay live until approved.</div>
+
+    <div class="sec-h">Event types</div>
+    <div class="grp-h">Primary event types</div>
+    <div class="grid">
+      <label class="chk"><input type="checkbox" checked> Wedding</label>
+      <label class="chk"><input type="checkbox" checked> Corporate Event</label>
+      <label class="chk"><input type="checkbox"> Conference</label>
+      <label class="chk"><input type="checkbox" checked> Product Launch</label>
+      <label class="chk"><input type="checkbox"> Private Party</label>
+      <label class="chk"><input type="checkbox"> Exhibition</label>
+      <label class="chk"><input type="checkbox" checked> Gala Dinner</label>
+      <label class="chk"><input type="checkbox"> Yacht Event</label>
+    </div>
+    <div class="grp-h">Additional suitable uses</div>
+    <div class="grid">
+      <label class="chk"><input type="checkbox"> Engagement</label>
+      <label class="chk"><input type="checkbox"> Meeting</label>
+      <label class="chk"><input type="checkbox"> Networking Event</label>
+      <label class="chk"><input type="checkbox"> Birthday</label>
+      <label class="chk"><input type="checkbox"> Outdoor Event</label>
+      <label class="chk"><input type="checkbox"> Social Gathering</label>
+    </div>
+    <div class="actions"><button class="btn">Submit change request</button><a class="btn-ghost btn" href="#">Cancel</a></div>
+    <p class="hint">Event-type changes are bundled into your venue&rsquo;s single pending change request (alongside any
+      name / classification / location changes). You&rsquo;ll be notified when it&rsquo;s reviewed. One pending request
+      per venue — you can withdraw it before review.</p>
+  </div>
+
+  <!-- ADMIN SIDE -->
+  <div class="screen-tag">Admin · Change Requests → edit review (event-type diff added)</div>
+  <div class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <h2 style="font-size:20px;">Change request: Marina Terrace &amp; Deck</h2>
+      <span class="badge">Edit · Pending</span>
+    </div>
+    <div class="diffrow"><div class="k">Venue type</div><div>Rooftop Venue <span style="color:var(--muted);">(unchanged)</span></div></div>
+    <div class="diffrow">
+      <div class="k">Event types</div>
+      <div>
+        <span class="tag tag-keep">Wedding</span><span class="tag tag-keep">Corporate Event</span>
+        <span class="tag tag-add">+ Product Launch</span><span class="tag tag-add">+ Gala Dinner</span>
+        <span class="tag tag-rem">Conference</span>
+        <div class="hint" style="margin-top:6px;">Current → proposed. Green = added, struck red = removed, grey = kept.
+          Approving applies the new set to the live venue (updates search + event-type pages).</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" data-confirm="Approve &amp; apply? The venue's event-type tags update immediately, affecting search and event-type pages.">Approve &amp; apply</button>
+      <button class="btn-ghost btn">Request changes</button>
+      <button class="btn-ghost btn" style="color:var(--danger);border-color:#e2b6ad;">Reject</button>
+    </div>
+    <p class="hint">Reuses the existing edit-request review screen; the event-type set is applied in the same
+      transaction as any scalar field changes, audited (old → applied), and the provider is emailed.</p>
+  </div>
+
+  <p class="hint">Model (PU-D2 / #17): a published venue&rsquo;s event-type edit is a <b>change request</b>, not a live
+    edit. It folds into the existing U-P5 edit request (carried as a proposed event-type set), and the U-P5b admin
+    review applies it on approve. Non-published venues keep editing event types live (U-P9b). Resolves the U-P9b
+    &ldquo;published = read-only&rdquo; pointer with a real request path.</p>
+</div>
+</body>
+</html>
