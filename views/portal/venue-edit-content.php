@@ -125,6 +125,17 @@ $layoutValues = $layoutValues ?? [];
     <?php endforeach; ?>
   </div>
 
+  <?php
+    /* #3 U-P9b — event types. Published → read-only (governed); else editable,
+       prefilled from the current tags (or the posted set on a re-render). */
+    $etPublished = ((string)$venue['status'] === 'published');
+    $etChecked   = $etPublished
+        ? portal_venue_event_type_ids($pdo, (int)$venue['id'])
+        : (isset($old['event_types']) ? array_map('intval', (array)$old['event_types']) : portal_venue_event_type_ids($pdo, (int)$venue['id']));
+    $etVid       = (int)$venue['id'];
+    include __DIR__ . '/event-types-field.php';
+  ?>
+
   <div class="admin-form__actions">
     <button type="submit" class="atv-btn">Save changes</button>
     <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('portal/venues/' . $id)) ?>">Cancel</a>

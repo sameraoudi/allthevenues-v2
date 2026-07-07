@@ -101,6 +101,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
                 venue_layout_capacity_save($pdo, $vid, (array)($_POST['layout'] ?? []));
 
+                // #3 U-P9b — event types, only while the venue is NOT public. The save
+                // function refuses (writes nothing) on a published venue anyway, so this
+                // is defence-in-depth against a forged POST.
+                if ((string)($venue['status'] ?? '') !== 'published') {
+                    portal_venue_event_types_save($pdo, $vid, $partnerId, (array)($_POST['event_types'] ?? []));
+                }
+
                 if ($changedNew) {
                     audit_log($pdo, (int)(auth_user()['id'] ?? 0) ?: null, 'update', 'venue', $vid, $changedOld, $changedNew);
                 }

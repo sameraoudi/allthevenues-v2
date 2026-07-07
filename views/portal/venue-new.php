@@ -100,6 +100,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         if (!$errors) {
             try {
                 [$vid, $rid] = portal_create_new_venue($pdo, $partnerId, $userId, $clean);
+                // Event types (junction, like layouts) — the new venue is 'pending', so the save
+                // succeeds; optional at submit and never blocks submission.
+                portal_venue_event_types_save($pdo, $vid, $partnerId, (array)($_POST['event_types'] ?? []));
                 $_SESSION['portal_flash'] = ['type' => 'success', 'msg' => 'Venue submitted for review.'];
                 redirect('portal/venues/' . $vid);
             } catch (Throwable $e) {

@@ -226,6 +226,77 @@ function portal_venue_event_types(PDO $pdo, int $venueId): array
 }
 
 /* ==========================================================================
+ * #3 U-P9b — provider event-type editor (governed). Providers may set
+ * venue_event_types DIRECTLY only while a venue is NOT public (status !=
+ * 'published') — event types drive public search / event-type pages / SEO /
+ * enquiry routing, so a published venue's tags are admin-approved only. The save
+ * function is the server-side guard (blocks even a forged POST on a published or
+ * non-owned venue).
+ * ======================================================================== */
+
+/** The "Primary" event-type slugs (everything else renders under "Additional"). */
+function portal_event_type_primary_slugs(): array
+{
+    return ['wedding', 'corporate-event', 'conference', 'product-launch',
+            'private-party', 'exhibition', 'gala-dinner', 'yacht-event'];
+}
+
+/** Current event-type ids linked to a venue (for form prefill). */
+function portal_venue_event_type_ids(PDO $pdo, int $venueId): array
+{
+    $stmt = $pdo->prepare('SELECT event_type_id FROM venue_event_types WHERE venue_id = :vid');
+    $stmt->execute([':vid' => $venueId]);
+    return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+}
+
+/**
+ * Replace a venue's event-type tags (owner-scoped). Returns false — writing
+ * nothing — if the venue isn't owned by $partnerId OR is 'published' (governance
+ * gate). Sanitizes ids to distinct active event_types. An empty set is allowed
+ * (clears tags; the publish gate still needs ≥1). Transactional + audited.
+ */
+function portal_venue_event_types_save(PDO $pdo, int $venueId, int $partnerId, array $ids): bool
+{
+    $vs = $pdo->prepare('SELECT status FROM venues WHERE id = :vid AND partner_id = :pid LIMIT 1');
+    $vs->execute([':vid' => $venueId, ':pid' => $partnerId]);
+    $status = $vs->fetchColumn();
+    if ($status === false) { return false; }                 // not owned
+    if ((string)$status === 'published') { return false; }   // governance: published tags are admin-only
+
+    // Sanitize → distinct positive ints that exist as ACTIVE event types.
+    $wanted = array_values(array_unique(array_filter(array_map('intval', $ids), static fn($i) => $i > 0)));
+    $valid  = [];
+    if ($wanted) {
+        $ph = implode(',', array_fill(0, count($wanted), '?'));
+        $q  = $pdo->prepare("SELECT id FROM event_types WHERE active = 1 AND id IN ($ph)");
+        $q->execute($wanted);
+        $valid = array_map('intval', $q->fetchAll(PDO::FETCH_COLUMN));
+    }
+
+    $old = portal_venue_event_type_ids($pdo, $venueId);
+
+    try {
+        $pdo->beginTransaction();
+        $pdo->prepare('DELETE FROM venue_event_types WHERE venue_id = :vid')->execute([':vid' => $venueId]);
+        if ($valid) {
+            $ins = $pdo->prepare('INSERT IGNORE INTO venue_event_types (venue_id, event_type_id) VALUES (:vid, :eid)');
+            foreach ($valid as $eid) { $ins->execute([':vid' => $venueId, ':eid' => $eid]); }
+        }
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) { $pdo->rollBack(); }
+        error_log('portal_venue_event_types_save failed (venue=' . $venueId . '): ' . $e->getMessage());
+        return false;
+    }
+
+    sort($old); $newSorted = $valid; sort($newSorted);
+    if ($old !== $newSorted) {
+        audit_log($pdo, (int)(auth_user()['id'] ?? 0) ?: null, 'update', 'venue_event_types', $venueId, $old, $valid);
+    }
+    return true;
+}
+
+/* ==========================================================================
  * #3 U-P7a — provider venue-image uploads (submit + withdraw side).
  * Every query is owner-scoped via JOIN venues v ON v.id = vi.venue_id AND
  * v.partner_id = :pid (fail closed — a client id is never trusted). Uploads land

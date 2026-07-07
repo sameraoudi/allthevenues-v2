@@ -571,4 +571,22 @@
     var btn = ev.target.closest('[data-claim-form] button[type=submit][data-confirm]');
     if (btn && btn.form) { btn.form.setAttribute('data-confirm', btn.getAttribute('data-confirm')); }
   });
+
+  // Portal event-type editor (U-P9b): live "N selected" counter. Progressive
+  // enhancement — the server ignores it; the publish gate enforces ≥1.
+  (function () {
+    var field = document.querySelector('[data-et-field]');
+    if (!field) return;
+    var row = field.querySelector('[data-et-selrow]');
+    if (!row) return;
+    function sync() {
+      var n = field.querySelectorAll('[data-et-box]:checked').length;
+      row.textContent = n > 0
+        ? row.getAttribute('data-et-some').replace('{n}', String(n))
+        : row.getAttribute('data-et-none');
+      row.classList.toggle('et-selrow--none', n === 0);
+    }
+    field.addEventListener('change', sync);
+    sync();
+  })();
 })();

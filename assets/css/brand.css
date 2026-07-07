@@ -1417,3 +1417,15 @@ select:focus-visible,
 .clr-notify { margin: 14px 0 2px; }
 .clr-notify__lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; color: var(--muted); margin-bottom: 7px; }
 .clr-notify label { display: flex; gap: 8px; align-items: center; font-size: 13px; margin-bottom: 6px; }
+
+/* #3 U-P9b — portal event-type editor (additive). */
+.et-lbl { display: block; font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+.et-req { display: inline-block; font-size: 11px; font-weight: 700; color: #8a6d1b; background: #fbeecb; border-radius: 20px; padding: 1px 9px; margin-left: 6px; }
+.et-recommend { color: #6d5f45; background: #fbf7ef; border: 1px dashed var(--sand); border-radius: 8px; padding: 8px 11px; }
+.et-grp-h { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); font-weight: 700; margin: 14px 0 8px; }
+.et-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px 16px; }
+@media (max-width: 640px) { .et-grid { grid-template-columns: 1fr 1fr; } }
+.et-chk { display: flex; gap: 8px; align-items: center; font-size: 13.5px; padding: 5px 0; }
+.et-chk input { width: 16px; height: 16px; flex: 0 0 auto; }
+.et-selrow { margin-top: 12px; font-size: 12.5px; color: var(--muted); }
+.et-selrow--none { color: #8a6d1b; }

@@ -118,6 +118,14 @@ $richFields = [
     <?php endforeach; ?>
   </div>
 
+  <?php
+    /* #3 U-P9b — event types (new venue is 'pending' → editable). */
+    $etChecked   = array_map('intval', (array)($old['event_types'] ?? []));
+    $etPublished = false;
+    $etVid       = 0;
+    include __DIR__ . '/event-types-field.php';
+  ?>
+
   <div class="admin-form__actions">
     <button type="submit" class="atv-btn">Submit venue</button>
     <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('portal')) ?>">Cancel</a>
