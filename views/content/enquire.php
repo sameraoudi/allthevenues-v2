@@ -254,7 +254,7 @@ $hasErrors = !empty($errors) || $formError !== null;
         <div class="atv-enq-nav">
           <button type="button" class="atv-btn atv-btn--ghost step-back" data-enq-back>Back</button>
           <button type="button" class="atv-btn step-next" data-enq-next>Next</button>
-          <button type="submit" class="atv-btn step-submit">Submit enquiry</button>
+          <button type="submit" class="atv-btn step-submit">Submit Enquiry</button>
         </div>
       </form>
     </div>

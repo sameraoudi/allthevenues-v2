@@ -99,7 +99,7 @@ $mapsLinkUrl = 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode
       <button type="button" class="atv-btn atv-btn--sm atv-btn--ghost atv-save"
               data-shortlist-toggle data-venue-id="<?= (int)$venue['id'] ?>" aria-pressed="false"
               aria-label="Save to shortlist"><?= icon('heart') ?> Save to shortlist</button>
-      <a class="atv-btn atv-btn--sm" href="<?= e($enquireUrl) ?>">Enquire now</a>
+      <a class="atv-btn atv-btn--sm" href="<?= e($enquireUrl) ?>">Enquire Now</a>
     </div>
   </div>
 
@@ -279,7 +279,7 @@ $mapsLinkUrl = 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode
       <div class="vd-enqbar">
         <h4>Interested in this venue?</h4>
         <p>Share your event details once, and we'll help connect you with the right contact.</p>
-        <a class="atv-btn atv-btn--sand" href="<?= e($enquireUrl) ?>">Enquire about this venue</a>
+        <a class="atv-btn atv-btn--sand" href="<?= e($enquireUrl) ?>">Enquire About This Venue</a>
       </div>
     </aside>
   </div>

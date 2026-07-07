@@ -144,7 +144,7 @@ $locationLabels = $locationLabels ?? [];
         <?php endif; ?>
 
         <div class="atv-bvp-actions">
-          <button type="submit" class="atv-btn">Send partner request</button>
+          <button type="submit" class="atv-btn">Send Partner Request</button>
           <span class="atv-bvp-fine">We'll never publish your contact details.</span>
         </div>
       </form>

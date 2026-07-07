@@ -33,7 +33,7 @@ $resCsv = implode(',', array_map('intval', $resolved));
           <span class="atv-sl-bar__t">Comparing <b><?= count($rows) ?> venue<?= count($rows) === 1 ? '' : 's' ?></b>.
             Remove any venue with the heart, then send one enquiry for the ones you like.</span>
           <span class="atv-sl-bar__acts">
-            <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('venues')) ?>">Browse more venues</a>
+            <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('venues')) ?>">Browse More Venues</a>
             <a class="atv-sl-clear" role="button" tabindex="0" data-shortlist-clear href="<?= e(base_url('venues')) ?>">Clear shortlist</a>
           </span>
         </div>
@@ -57,8 +57,8 @@ $resCsv = implode(',', array_map('intval', $resolved));
       <h2>Your shortlist is empty</h2>
       <p>Tap the heart on any venue to save it here. When you're ready, send one enquiry for the venues you're comparing.</p>
       <div class="atv-sl-empty__acts">
-        <a class="atv-btn" href="<?= e(base_url('venues')) ?>">Browse venues</a>
-        <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('enquire') . '?mode=assisted') ?>">Get help finding a venue</a>
+        <a class="atv-btn" href="<?= e(base_url('venues')) ?>">Browse Venues</a>
+        <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('enquire') . '?mode=assisted') ?>">Get Help Finding a Venue</a>
       </div>
     </section>
 

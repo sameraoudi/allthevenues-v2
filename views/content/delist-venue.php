@@ -114,7 +114,7 @@ $reasons = $reasons ?? [];
         <?php endif; ?>
 
         <div class="atv-bvp-actions">
-          <button type="submit" class="atv-btn">Submit delist request</button>
+          <button type="submit" class="atv-btn">Submit Delist Request</button>
           <span class="atv-bvp-fine">We verify every request before taking a venue offline.</span>
         </div>
       </form>

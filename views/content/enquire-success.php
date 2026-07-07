@@ -14,8 +14,8 @@ declare(strict_types=1);
       <p class="atv-enq__reassure">We've emailed you a copy for your records. Secure and confidential —
         your details are only shared with relevant venue partners.</p>
       <div class="atv-enq-nav atv-enq-nav--center">
-        <a class="atv-btn" href="<?= e(base_url('venues')) ?>">Browse more venues</a>
-        <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('/')) ?>">Back to home</a>
+        <a class="atv-btn" href="<?= e(base_url('venues')) ?>">Browse More Venues</a>
+        <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('/')) ?>">Back to Home</a>
       </div>
     </div>
   </div>

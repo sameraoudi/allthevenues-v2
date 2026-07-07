@@ -35,7 +35,7 @@ $requestUrl = base_url('set-password/request');
           <p class="lead-hint">Use at least 10 characters. A longer passphrase is recommended. Don’t reuse a password from another site.</p>
           <?php if (turnstile_field() !== ''): ?><div class="onb-turnstile"><?= turnstile_field() ?></div><?php endif; ?>
           <div class="atv-enq-nav">
-            <button type="submit" class="atv-btn">Set password &amp; sign in</button>
+            <button type="submit" class="atv-btn">Set Password &amp; Sign In</button>
           </div>
         </form>
         <p class="onb-expire">This link expires in 48 hours and can be used once.</p>
@@ -60,7 +60,7 @@ $requestUrl = base_url('set-password/request');
             <input type="email" id="sp-email" name="email" required autocomplete="username" autofocus>
           </div>
           <div class="atv-enq-nav">
-            <button type="submit" class="atv-btn">Send link</button>
+            <button type="submit" class="atv-btn">Send Link</button>
           </div>
         </form>
 

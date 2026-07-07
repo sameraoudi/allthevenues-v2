@@ -27,7 +27,7 @@
          data-shortlist-link data-shortlist-base="<?= e(base_url('shortlist')) ?>">
         <?= icon('heart') ?> Shortlist <span class="n" data-shortlist-count>0</span>
       </a>
-      <a class="atv-btn atv-btn--sm" href="<?= e(base_url('enquire')) ?>">Enquire now</a>
+      <a class="atv-btn atv-btn--sm" href="<?= e(base_url('enquire')) ?>">Enquire Now</a>
     </div>
   </div>
 </header>

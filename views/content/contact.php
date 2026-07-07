@@ -89,7 +89,7 @@ $reasons = $reasons ?? [];
         <?php endif; ?>
 
         <div class="atv-bvp-actions">
-          <button type="submit" class="atv-btn">Send message</button>
+          <button type="submit" class="atv-btn">Send Message</button>
           <span class="atv-bvp-fine">We'll never publish your contact details.</span>
         </div>
       </form>

@@ -15,7 +15,7 @@
         <ul>
           <li><a href="<?= e(base_url('venues')) ?>">Venues</a></li>
           <li><a href="<?= e(base_url('providers')) ?>">Venue Providers</a></li>
-          <li><a href="<?= e(base_url('event-types')) ?>">Event types</a></li>
+          <li><a href="<?= e(base_url('event-types')) ?>">Event Types</a></li>
           <li><a href="<?= e(base_url('locations')) ?>">Locations</a></li>
           <li><a href="#" title="Coming soon">Inspiration</a></li>
         </ul>
@@ -26,9 +26,9 @@
         <ul>
           <li><a href="<?= e(base_url('become-a-venue-partner')) ?>">Become a Venue Partner</a></li>
           <?php if (function_exists('portal_enabled') && portal_enabled()): ?>
-            <li><a href="<?= e(base_url('portal/login')) ?>">Partner login</a></li>
+            <li><a href="<?= e(base_url('portal/login')) ?>">Partner Portal</a></li>
           <?php else: ?>
-            <li><a href="#" title="Coming soon">Partner login</a></li>
+            <li><a href="#" title="Coming soon">Partner Portal</a></li>
           <?php endif; ?>
         </ul>
       </div>
@@ -38,7 +38,7 @@
         <ul>
           <li><a href="<?= e(base_url('about')) ?>">About us</a></li>
           <li><a href="<?= e(base_url('contact')) ?>">Contact</a></li>
-          <li><a href="<?= e(base_url('delist-venue')) ?>">Delist a venue</a></li>
+          <li><a href="<?= e(base_url('delist-venue')) ?>">Delist a Venue</a></li>
           <li><a href="#" title="Coming soon">Blog</a></li>
         </ul>
       </div>

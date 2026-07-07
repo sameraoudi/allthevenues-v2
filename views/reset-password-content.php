@@ -35,7 +35,7 @@ $requestUrl = base_url('forgot-password');
           <p class="lead-hint">At least 10 characters. A longer passphrase is recommended. Don’t reuse a password from another site.</p>
           <?php if (turnstile_field() !== ''): ?><div class="onb-turnstile"><?= turnstile_field() ?></div><?php endif; ?>
           <div class="atv-enq-nav">
-            <button type="submit" class="atv-btn">Set new password &amp; sign in</button>
+            <button type="submit" class="atv-btn">Set New Password &amp; Sign In</button>
           </div>
         </form>
         <p class="onb-expire">This link expires in 48 hours and can be used once.</p>

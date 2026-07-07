@@ -7,7 +7,7 @@
     <p class="atv-404__sub">The page you’re looking for is no longer here, but there are plenty of other UAE venues to explore.</p>
     <div class="atv-404__actions">
       <a class="atv-btn" href="<?= e(base_url('venues')) ?>">Browse venues <?= icon('arrow-right') ?></a>
-      <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('/')) ?>">Back to home</a>
+      <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('/')) ?>">Back to Home</a>
     </div>
   </div>
 </section>

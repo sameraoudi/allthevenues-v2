@@ -60,7 +60,7 @@ $venuesUrl = base_url('venues');
             <?php endforeach; ?>
           </select>
         </div>
-        <button type="submit" class="atv-btn">Find venues</button>
+        <button type="submit" class="atv-btn">Find Venues</button>
       </div>
       <p class="atv-assist">Not sure where to start?
         <a href="<?= e(base_url('enquire') . '?mode=assisted') ?>">Let us help you find a venue.</a>
@@ -156,6 +156,6 @@ $venuesUrl = base_url('venues');
       <h3>Are you a venue provider?</h3>
       <p>Showcase your venue to event planners and receive structured enquiries through a curated UAE venue platform.</p>
     </div>
-    <a class="atv-btn atv-btn--sand" href="<?= e(base_url('enquire') . '?mode=partner') ?>">Become a venue partner</a>
+    <a class="atv-btn atv-btn--sand" href="<?= e(base_url('enquire') . '?mode=partner') ?>">Become a Venue Partner</a>
   </div>
 </div>

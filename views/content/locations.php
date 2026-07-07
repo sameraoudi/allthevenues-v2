@@ -66,7 +66,7 @@ declare(strict_types=1);
       <h2>Not sure which area fits?</h2>
       <p>Tell us about your event and we'll suggest venues in the right location.</p>
     </div>
-    <a class="atv-btn atv-btn--sand atv-et-cta__btn" href="<?= e(base_url('enquire')) ?>">Get help finding a venue</a>
+    <a class="atv-btn atv-btn--sand atv-et-cta__btn" href="<?= e(base_url('enquire')) ?>">Get Help Finding a Venue</a>
   </section>
 
 </div>

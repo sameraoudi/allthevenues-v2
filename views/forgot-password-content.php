@@ -32,7 +32,7 @@ $fpError = $fpError ?? null;
           </div>
           <?php if (turnstile_field() !== ''): ?><div class="atv-field"><?= turnstile_field() ?></div><?php endif; ?>
           <div class="atv-enq-nav">
-            <button type="submit" class="atv-btn">Send reset link</button>
+            <button type="submit" class="atv-btn">Send Reset Link</button>
           </div>
         </form>
         <p class="onb-expire"><a href="<?= e(base_url('portal/login')) ?>">Back to sign in</a></p>

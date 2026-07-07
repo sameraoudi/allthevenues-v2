@@ -13,8 +13,8 @@ declare(strict_types=1);
       <p class="atv-enq__ref">Your reference<br><strong><?= e($reference) ?></strong></p>
       <p class="atv-enq__reassure">We&rsquo;ve emailed you a copy for your records. If you manage this venue in our provider portal, you can delist it yourself instantly.</p>
       <div class="atv-enq-nav atv-enq-nav--center">
-        <a class="atv-btn" href="<?= e(base_url('/')) ?>">Back to home</a>
-        <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('portal/login')) ?>">Provider login</a>
+        <a class="atv-btn" href="<?= e(base_url('/')) ?>">Back to Home</a>
+        <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('portal/login')) ?>">Provider Login</a>
       </div>
     </div>
   </div>

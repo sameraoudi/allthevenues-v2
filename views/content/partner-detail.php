@@ -129,7 +129,7 @@ $venuesUrl  = base_url('venues') . query_string(['partner' => $id]);
       <div class="vd-enqbar">
         <h4>Interested in a venue from <?= e($name) ?>?</h4>
         <p>Share your event details once, and we'll help connect you with the right contact.</p>
-        <a class="atv-btn atv-btn--sand" href="<?= e($enquireUrl) ?>">Enquire about this provider</a>
+        <a class="atv-btn atv-btn--sand" href="<?= e($enquireUrl) ?>">Enquire About This Provider</a>
       </div>
     </aside>
   </div>

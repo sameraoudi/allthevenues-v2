@@ -46,8 +46,8 @@ $jsonld = [
     <p>Explore <?= e($eventLower) ?> venues in <?= e($cityName) ?> — compare capacity, setting and key details, then send one simple enquiry through All The Venues. We'll connect you to the right venue and provider.</p>
     <div class="atv-lp-count"><?= e($total . ' ' . $eventLower . ' venues in ' . $cityName) ?></div>
     <div class="atv-lp-actions">
-      <a class="atv-btn" href="<?= e($enquireUrl) ?>">Make an enquiry</a>
-      <a class="atv-btn atv-btn--ghost" href="<?= e($filterUrl) ?>">Browse all venues</a>
+      <a class="atv-btn" href="<?= e($enquireUrl) ?>">Make an Enquiry</a>
+      <a class="atv-btn atv-btn--ghost" href="<?= e($filterUrl) ?>">Browse All Venues</a>
     </div>
   </section>
 
@@ -107,7 +107,7 @@ $jsonld = [
       <h2><?= e('Planning a ' . $eventLower . ' in ' . $cityName . '?') ?></h2>
       <p><?= e('Tell us your date, guest count, and style, and we\'ll help connect you with suitable ' . $cityName . ' ' . $eventLower . ' venues.') ?></p>
     </div>
-    <a class="atv-btn atv-btn--sand" href="<?= e($enquireUrl) ?>">Make an enquiry</a>
+    <a class="atv-btn atv-btn--sand" href="<?= e($enquireUrl) ?>">Make an Enquiry</a>
   </section>
 </div>
 

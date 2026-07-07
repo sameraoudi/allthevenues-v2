@@ -19,7 +19,7 @@ declare(strict_types=1);
 
   <div class="atv-et-bridge">
     <p><b>Already know what you need?</b> Share your event details and we'll help match you with suitable venues.</p>
-    <a class="atv-btn atv-btn--sand atv-et-bridge__btn" href="<?= e(base_url('enquire')) ?>">Make an enquiry</a>
+    <a class="atv-btn atv-btn--sand atv-et-bridge__btn" href="<?= e(base_url('enquire')) ?>">Make an Enquiry</a>
   </div>
 
   <section class="atv-et-mosaic">
@@ -57,7 +57,7 @@ declare(strict_types=1);
       <h2>Not sure which fits?</h2>
       <p>Tell us about your event and we'll point you to the right venues and providers.</p>
     </div>
-    <a class="atv-btn atv-btn--sand atv-et-cta__btn" href="<?= e(base_url('enquire')) ?>">Get help finding a venue</a>
+    <a class="atv-btn atv-btn--sand atv-et-cta__btn" href="<?= e(base_url('enquire')) ?>">Get Help Finding a Venue</a>
   </section>
 
 </div>

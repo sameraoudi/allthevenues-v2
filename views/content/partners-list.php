@@ -99,7 +99,7 @@ if (!empty($f['featured'])) { $m = $f; unset($m['featured']); $chips[] = ['Featu
           </label>
         </div>
 
-        <button type="submit" class="atv-btn venues-filters__apply">Apply filters</button>
+        <button type="submit" class="atv-btn venues-filters__apply">Apply Filters</button>
       </form>
     </aside>
 
@@ -107,7 +107,7 @@ if (!empty($f['featured'])) { $m = $f; unset($m['featured']); $chips[] = ['Featu
       <?php if (!$partners): ?>
         <div class="venues-empty">
           <p class="h5 mb-2">No providers match your filters.</p>
-          <?php if ($chips): ?><a class="atv-btn" href="<?= e($listUrl) ?>">Clear filters</a><?php endif; ?>
+          <?php if ($chips): ?><a class="atv-btn" href="<?= e($listUrl) ?>">Clear Filters</a><?php endif; ?>
         </div>
       <?php else: ?>
         <div class="pgrid">

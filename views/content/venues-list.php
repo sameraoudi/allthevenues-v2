@@ -151,7 +151,7 @@ $hasFilters = (bool)$chips;
         <div class="venues-empty">
           <p class="h5 mb-2">No venues match your filters.</p>
           <p class="text-muted mb-3">Try widening your search.</p>
-          <?php if ($hasFilters): ?><a class="atv-btn" href="<?= e($listUrl) ?>">Clear filters</a><?php endif; ?>
+          <?php if ($hasFilters): ?><a class="atv-btn" href="<?= e($listUrl) ?>">Clear Filters</a><?php endif; ?>
         </div>
       <?php else: ?>
         <?php foreach ($venues as $venue): ?>
