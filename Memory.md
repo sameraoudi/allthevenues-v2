@@ -135,9 +135,15 @@ no dead-ends. **DELISTING SHIPPED** (Delist-1 `75a4fe8` [migration 023: `deliste
 `delisted_at/by/reason/details`] + Delist-2 `7baa66c`) — reversible published-venue take-down: partner
 request→admin approve→`delisted` (404, slug kept), **self-serve re-list**, admin can delist/re-list via the
 editor status dropdown, non-approved operators via a public `/delist-venue` form → inbox "Delist request" badge.
-Verified both sides. **Next: a small portal-polish fix** (partner can currently EDIT an `archived` venue — hide
-archived from the portal entirely; add a delete-draft confirm; fix the delete button's blue hover → warn), then
-**PU-A** portal shell (#7 dashboard [+ **label active requests in the venues list** — Samer], #2/#4/#5/#6/#8).
+Verified both sides. **Portal-polish SHIPPED** (`6c3284e`): archived venues hidden from partners (`status<>'archived'` in both
+owner-scoped SELECTs → 404), draft-delete confirm (moved `data-confirm` to the form), `.atv-btn--warn` amber
+delete hover. **PU-A1 SHIPPED** (`9250c32`, no migration) — portal rebuilt into an app shell: navy sidebar
+(Dashboard · My Venues · Add Venue · Claims + count pills, mobile hamburger), real **dashboard** (5 count tiles +
+Next steps + Recent decisions via `portal_dashboard_counts/next_steps/recent`), **My Venues** at `/portal/venues`
+with per-venue request badges (#7b, `portal_venue_state_badge`), minimal footer, **partner** terminology (portal
+UI + partner emails only; DB/routes/admin/public "Venue Providers" untouched). Enquiries omitted (VISION
+managed-leads); photos = a dashboard tile. **Next: PU-A2** (Guide #8 + Account page — adds those two nav items).
+Then the post-launch backlog's top tier is DONE.
 **PU-D2 SHIPPED** (#17, commit `452b1a5`, no migration) — published-venue event-type edits are now a governed
 change request folded into the U-P5 edit CR: the proposed set rides in `proposed_changes_json._event_type_ids`
 (inert to the scalar field-loop); `cr_approve` applies it (validate active ids → DELETE+INSERT) in the same

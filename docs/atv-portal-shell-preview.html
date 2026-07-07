@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATV — Partner portal shell (PU-A1 preview)</title>
+<style>
+  :root{
+    --navy:#0E1B2A; --blue:#6C93B7; --action:#426F94; --action-hover:#315B7C;
+    --sand:#D9C7A8; --ink:#1c2b38; --muted:#6b7b88; --line:#e4e8ec; --bg:#f3f1ec;
+    --ok:#2f7d5b; --okbg:#e7f3ec; --warn:#8a6d1f; --warnbg:#f6efdb; --danger:#a5433b; --dangerbg:#f6e7e5;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Segoe UI,Inter,sans-serif;font-size:14px;}
+  h1,h2,h3{font-family:Georgia,'Cormorant Garamond',serif;font-weight:600;margin:0;}
+  a{color:var(--action);text-decoration:none;}
+  .shell{display:grid;grid-template-columns:216px 1fr;min-height:100vh;}
+  /* sidebar */
+  .side{background:var(--navy);color:#c7d0d8;display:flex;flex-direction:column;}
+  .side .brand{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .side .brand .n{font-family:Georgia,serif;font-size:19px;color:#fff;} .side .brand .n span{color:var(--blue);}
+  .side .brand .tag{display:block;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--sand);margin-top:3px;}
+  .side nav{display:flex;flex-direction:column;padding:12px 12px;gap:2px;flex:1;}
+  .side nav a{color:#c7d0d8;padding:9px 12px;border-radius:8px;font-size:13.5px;display:flex;align-items:center;gap:9px;}
+  .side nav a:hover{background:rgba(255,255,255,.06);color:#fff;}
+  .side nav a.on{background:var(--action);color:#fff;}
+  .side nav a .pill{margin-left:auto;background:var(--sand);color:var(--navy);font-size:11px;font-weight:700;border-radius:20px;padding:0 7px;}
+  .side .who{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:#9fb0bd;}
+  .side .who b{color:#fff;display:block;font-size:13px;}
+  .ico{width:16px;height:16px;flex:0 0 auto;opacity:.85;}
+  /* main */
+  .main{display:flex;flex-direction:column;min-height:100vh;}
+  .content{padding:24px 30px;flex:1;max-width:960px;}
+  .h1row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
+  h1.page{font-size:26px;} .sub{color:var(--muted);font-size:13px;margin-bottom:20px;}
+  .btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:8px 15px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;background:var(--action);color:#fff;}
+  .btn-ghost{background:#fff;border-color:var(--line);color:var(--action);}
+  /* tiles */
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px;}
+  .tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:15px 17px;box-shadow:0 6px 16px rgba(14,27,42,.05);}
+  .tile .n{font-size:26px;font-weight:700;color:var(--navy);} .tile .l{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .tile.alert .n{color:var(--warn);}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px;box-shadow:0 6px 16px rgba(14,27,42,.05);}
+  .panel h2{font-size:17px;margin-bottom:10px;}
+  .steps{list-style:none;margin:0;padding:0;} .steps li{display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid #f4f2ee;font-size:13.5px;}
+  .steps li:last-child{border-bottom:0;} .steps .dot{width:8px;height:8px;border-radius:50%;background:var(--warn);flex:0 0 auto;}
+  .steps a{margin-left:auto;font-size:12.5px;}
+  /* my venues table */
+  table{width:100%;border-collapse:collapse;} th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);}
+  td{padding:11px 10px;border-bottom:1px solid #f4f2ee;font-size:13.5px;}
+  .st{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;}
+  .st-pub{background:var(--okbg);color:var(--ok);} .st-draft{background:#eef1f4;color:var(--muted);} .st-off{background:#eef1f4;color:var(--muted);}
+  .req{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;margin-left:6px;}
+  .req-review{background:#e7eef4;color:var(--action);} .req-changes{background:var(--warnbg);color:var(--warn);} .req-delist{background:var(--dangerbg);color:var(--danger);}
+  /* footer */
+  .foot{border-top:1px solid var(--line);padding:14px 30px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+  .foot a{color:var(--muted);} .foot .links a{margin-left:14px;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><span class="n">All The <span>Venues</span></span><span class="tag">Partner Portal</span></div>
+    <nav>
+      <a href="#" class="on"><span class="ico">▦</span> Dashboard</a>
+      <a href="#"><span class="ico">▤</span> My Venues <span class="pill">6</span></a>
+      <a href="#"><span class="ico">＋</span> Add Venue</a>
+      <a href="#"><span class="ico">◇</span> Claims <span class="pill">2</span></a>
+      <a href="#"><span class="ico">?</span> Guide</a>
+      <a href="#"><span class="ico">◔</span> Account</a>
+    </nav>
+    <div class="who"><b>Omar Haddad</b> Nikki Beach · <a href="#" style="color:var(--sand);">Sign out</a></div>
+  </aside>
+
+  <div class="main">
+    <div class="content">
+      <div class="h1row">
+        <div><h1 class="page">Welcome back, Omar</h1><p class="sub">Nikki Beach · here's where your venues stand.</p></div>
+        <a class="btn" href="#">Add a venue</a>
+      </div>
+
+      <div class="tiles">
+        <div class="tile"><div class="n">6</div><div class="l">Venues managed</div></div>
+        <div class="tile alert"><div class="n">1</div><div class="l">Pending review</div></div>
+        <div class="tile alert"><div class="n">2</div><div class="l">Open change requests</div></div>
+        <div class="tile alert"><div class="n">2</div><div class="l">Claims pending</div></div>
+        <div class="tile alert"><div class="n">3</div><div class="l">Photos awaiting review</div></div>
+      </div>
+
+      <div class="panel">
+        <h2>Next steps</h2>
+        <ul class="steps">
+          <li><span class="dot"></span> <b>Marina Terrace &amp; Deck</b> — changes requested by All The Venues <a href="#">Review &amp; resubmit</a></li>
+          <li><span class="dot"></span> <b>Beach House JBR</b> — draft, add a photo to submit <a href="#">Add photos</a></li>
+          <li><span class="dot"></span> Claim on <b>Sunset Rooftop</b> — proof requested <a href="#">Add proof</a></li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h2>Recent decisions</h2>
+        <ul class="steps">
+          <li>✓ <b>Palm Pavilion</b> event-type change approved <span style="margin-left:auto;color:var(--muted);font-size:12px;">2 days ago</span></li>
+          <li>✓ Claim on <b>Garden Villa</b> approved — now in My Venues <span style="margin-left:auto;color:var(--muted);font-size:12px;">4 days ago</span></li>
+        </ul>
+      </div>
+
+      <!-- MY VENUES with request badges (#7b) -->
+      <div class="panel">
+        <h2>My Venues</h2>
+        <table>
+          <thead><tr><th>Venue</th><th>Location</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr><td><b>Marina Terrace &amp; Deck</b></td><td>Dubai Marina, Dubai</td>
+              <td><span class="st st-pub">Published</span><span class="req req-changes">Changes requested</span></td>
+              <td style="text-align:right;"><a class="btn-ghost btn" href="#">View</a></td></tr>
+            <tr><td><b>Palm Pavilion</b></td><td>Palm Jumeirah, Dubai</td>
+              <td><span class="st st-pub">Published</span><span class="req req-review">Edit under review</span></td>
+              <td style="text-align:right;"><a class="btn-ghost btn" href="#">View</a></td></tr>
+            <tr><td><b>Beach House JBR</b></td><td>JBR, Dubai</td>
+              <td><span class="st st-draft">Draft</span></td>
+              <td style="text-align:right;"><a class="btn-ghost btn" href="#">View</a></td></tr>
+            <tr><td><b>Old Souk Hall</b></td><td>Deira, Dubai</td>
+              <td><span class="st st-off">Delisted</span><span class="req req-delist">Delist pending</span></td>
+              <td style="text-align:right;"><a class="btn-ghost btn" href="#">View</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span>© 2026 All The Venues · Partner Portal</span>
+      <span class="links"><a href="#">Privacy Policy</a><a href="#">Terms of Use</a><a href="#">Contact</a></span>
+    </div>
+  </div>
+</div>
+</body>
+</html>
