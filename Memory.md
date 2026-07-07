@@ -119,9 +119,14 @@ structured review). **Deployed: U-P0→U-P6b** (all portal units to date). **#9 
 flow END-TO-END TESTED by Samer (7 Jul 2026) — works.** **U-P7a + U-P7b SHIPPED + deployed** (provider image
 uploads + admin review), **staging 301→apex SHIPPED**, **U-P8a + U-P8b SHIPPED** (venue claims — submit + admin
 review), **U-P9a + U-P9b + U-P9c SHIPPED** (onboarding + email set-password [migration 022]; event-type editor; portal-login
-Turnstile + gated footer link + email copy). **PORTAL #3 BUILD-COMPLETE + inert behind `PORTAL_ENABLED` (OFF).**
-Only **U-P9d** remains = owner-run go-live (flip prod `config.php` flag; runbook `docs/ATV-PORTAL-GOLIVE-RUNBOOK.md`).
-Fast-follows: published-venue event-type change-request; admin event-type editor UI. Known gaps: **`db/001_schema.sql`
+Turnstile + gated footer link + email copy). **PORTAL #3 IS LIVE** — Samer flipped `PORTAL_ENABLED=true` (U-P9d,
+7 Jul 2026); onboarding + disabling verified. **Post-launch backlog** (20-item QA) triaged in
+`docs/ATV-PORTAL-POSTLAUNCH-BACKLOG.md`; order PU-B→PU-D→PU-A. **PU-B forgot-password/reset SHIPPED** (commit
+`a236ebc`, no migration — reuses `password_tokens` purpose='reset'; `/forgot-password` + `/reset-password`, partner
++ staff, no enumeration, `password_policy_error()` extracted + shared with set-password). **Next: PU-D** (three-step
+add-venue #15 + layout/capacity #18 + capacity validation #19 + Best-for/Event-types #13 + error banner #14 +
+legacy-venue event-type change request #17), then **PU-A** portal shell. Fast-follows folded into PU-D (#17) + backlog.
+Known gaps: **`db/001_schema.sql`
 drift** (016/019/020/021 live only as numbered ALTERs — never folded into 001; a fresh import runs 001 + all
 migrations in sequence, so this is fine, but a one-off "sync 001 with 016–021" task would restore true
 single-file parity). Remaining post-launch: rest of #3, U6 passive watch.
