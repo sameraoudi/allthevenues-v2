@@ -58,77 +58,114 @@ $ltypeIcons = venue_layout_types();
 
 <?php
 $vid       = (int)$venue['id'];
-$isDraft   = in_array((string)$venue['status'], ['draft', 'needs_changes'], true);
+$vStatus   = (string)$venue['status'];
 // #15 — total uploaded photos (any review_status) drives the submit gate.
 $phc = $pdo->prepare('SELECT COUNT(*) FROM venue_images WHERE venue_id = :vid');
 $phc->execute([':vid' => $vid]);
 $photoCount = (int)$phc->fetchColumn();
+
+/* PU-D1-fix-2 #1C — one source of truth for the submission state, shared with the
+   server (portal_active_newvenue_cr). Distinguish: under review · changes requested
+   (incl. the pre-fix stuck 'pending'+needs_changes-CR rows) · draft. */
+$partnerIdCtx = (int)($partnerId ?? 0);
+$nvCr         = portal_active_newvenue_cr($pdo, $vid, $partnerIdCtx);
+$nvCrStatus   = $nvCr !== null ? (string)$nvCr['status'] : '';
+$nvCrNote     = $nvCr !== null ? trim((string)($nvCr['review_note'] ?? '')) : '';
+
+$underReview  = ($vStatus === 'pending' && $nvCrStatus === 'pending');
+$needsChanges = ($vStatus === 'needs_changes')
+             || ($vStatus === 'pending' && $nvCrStatus === 'needs_changes');
+$isDraftState = ($vStatus === 'draft');
+$showFlow     = $underReview || $needsChanges || $isDraftState;
+
+// Readiness (shared by draft + re-submit), mirrors the server gate exactly.
+$etCount   = count(portal_venue_event_type_ids($pdo, $vid));
+$missing   = portal_venue_missing_required($venue, $etCount);
+$detailsOk = ($missing === []);
+$photosOk  = ($photoCount > 0);
+$stepReady = $detailsOk && $photosOk;   // #3 — Step 3 reachable
+$canSubmit = $stepReady;
+$blockers  = [];
+if (!$detailsOk) { $blockers[] = 'complete required details (' . implode(', ', $missing) . ')'; }
+if (!$photosOk)  { $blockers[] = 'add at least one photo'; }
 ?>
 <div class="lead-detail__head">
   <h1><?= e((string)$venue['name']) ?></h1>
   <div>
-    <?php if ($isDraft): ?>
+    <?php if ($isDraftState): ?>
       <span class="status-chip">Draft — not submitted</span>
+    <?php elseif ($underReview): ?>
+      <span class="lead-status lead-status--pending">Awaiting review</span>
+    <?php elseif ($needsChanges): ?>
+      <span class="lead-status lead-status--needs_changes">Changes requested</span>
     <?php else: ?>
-      <span class="lead-status lead-status--<?= e((string)$venue['status']) ?>"><?= e(venue_admin_status_label((string)$venue['status'])) ?></span>
+      <span class="lead-status lead-status--<?= e($vStatus) ?>"><?= e(venue_admin_status_label($vStatus)) ?></span>
     <?php endif; ?>
     <a class="atv-btn atv-btn--sm" href="<?= e(base_url('portal/venues/' . $vid . '/edit')) ?>">Edit venue</a>
   </div>
 </div>
 
-<?php
-if ($isDraft):
-  /* PU-D1-fix — Step 3 readiness mirrors the server submit gate exactly:
-     required details complete AND >=1 photo. Same source of truth as
-     portal_submit_venue_for_review() so UI and backstop can't diverge. */
-  $etCount    = count(portal_venue_event_type_ids($pdo, $vid));
-  $missing    = portal_venue_missing_required($venue, $etCount);
-  $detailsOk  = ($missing === []);
-  $photosOk   = ($photoCount > 0);
-  $canSubmit  = $detailsOk && $photosOk;
-  $blockers   = [];
-  if (!$detailsOk) { $blockers[] = 'complete required details (' . implode(', ', $missing) . ')'; }
-  if (!$photosOk)  { $blockers[] = 'add at least one photo'; }
-?>
-  <div class="admin-panel">
-    <h2 class="admin-panel__title">Finish adding this venue</h2>
-    <?php $stepActive = 'submit'; $stepDetailsDone = $detailsOk; $stepPhotosDone = $photosOk; require __DIR__ . '/_stepper.php'; ?>
-    <ul class="pd-prog">
-      <li class="pd-prog__i <?= $detailsOk ? 'pd-prog__i--ok' : 'pd-prog__i--todo' ?>">
-        <span class="pd-tick"><?= $detailsOk ? '&#10003;' : '1' ?></span>
-        <?php if ($detailsOk): ?>
-          Required details complete
-        <?php else: ?>
-          Required details missing: <?= e(implode(', ', $missing)) ?>
-          <a href="<?= e(base_url('portal/venues/' . $vid . '/edit')) ?>">Edit details</a>
-        <?php endif; ?>
-      </li>
-      <li class="pd-prog__i <?= $photosOk ? 'pd-prog__i--ok' : 'pd-prog__i--todo' ?>">
-        <span class="pd-tick"><?= $photosOk ? '&#10003;' : '2' ?></span>
-        <?= $photosOk ? e((string)$photoCount) . ' photo' . ($photoCount === 1 ? '' : 's') . ' uploaded' : 'Add at least one photo' ?>
-        <a href="<?= e(base_url('portal/venues/' . $vid . '/images')) ?>">Add photos (Step 2)</a>
-      </li>
-      <li class="pd-prog__i <?= $canSubmit ? 'pd-prog__i--ok' : 'pd-prog__i--todo' ?>"><span class="pd-tick">3</span> Submit for review</li>
-    </ul>
-    <p class="lead-hint mb-2">Draft venues are private and never public. When you submit, All The Venues reviews the venue and its photos.</p>
-    <form method="post" action="<?= e(base_url('portal/venues/' . $vid . '/submit')) ?>">
-      <?php csrf_field(); ?>
-      <button type="submit" class="atv-btn"<?= $canSubmit ? '' : ' disabled title="Before submitting: ' . e(implode('; ', $blockers)) . '"' ?>>Submit for review</button>
-    </form>
-    <?php if (!$canSubmit): ?><p class="lead-hint mt-2">Before you can submit: <?= e(implode('; ', $blockers)) ?>.</p><?php endif; ?>
-  </div>
-
-  <?php /* PU-D1-fix Part F — delete is offered ONLY for a true draft (never
-           pending/needs_changes/published/archived). needs_changes is NOT a draft. */ ?>
-  <?php if ((string)$venue['status'] === 'draft'): ?>
+<?php if ($showFlow): ?>
+  <?php if ($underReview): /* #1C — submitted, awaiting first review: never a dead-end */ ?>
     <div class="admin-panel">
-      <h2 class="admin-panel__title">Delete this draft</h2>
-      <p class="lead-hint mb-2">This draft hasn&rsquo;t been submitted. Deleting it removes it and any photos you&rsquo;ve uploaded — this can&rsquo;t be undone.</p>
-      <form method="post" action="<?= e(base_url('portal/venues/' . $vid . '/delete')) ?>">
+      <h2 class="admin-panel__title">Submitted &mdash; awaiting All The Venues review</h2>
+      <p class="lead-hint mb-2">Your venue is with All The Venues for review. It stays private until it&rsquo;s approved, and you&rsquo;ll see the outcome here.</p>
+      <p class="lead-hint mb-2">Need to change something first? Withdraw it back to a private draft, edit, then re-submit.</p>
+      <form method="post" action="<?= e(base_url('portal/venues/' . $vid . '/withdraw')) ?>">
         <?php csrf_field(); ?>
-        <button type="submit" class="atv-btn atv-btn--ghost atv-btn--sm atv-btn--danger" data-confirm="Delete this draft? This can't be undone.">Delete draft</button>
+        <button type="submit" class="atv-btn atv-btn--ghost atv-btn--sm" data-confirm="Withdraw this venue back to a draft? It will be removed from the review queue.">Withdraw to draft</button>
       </form>
     </div>
+  <?php else: /* draft OR changes-requested → readiness checklist + (re)submit */
+    $isResubmit = $needsChanges;
+    $submitLabel = $isResubmit ? 'Re-submit for review' : 'Submit for review';
+  ?>
+    <div class="admin-panel">
+      <h2 class="admin-panel__title"><?= $isResubmit ? 'Changes requested' : 'Finish adding this venue' ?></h2>
+      <?php if ($isResubmit): ?>
+        <p class="lead-hint mb-2">All The Venues reviewed your submission and asked for some changes. Update the venue below, then re-submit for another review.</p>
+        <?php if ($nvCrNote !== ''): ?><div class="lead-detail__row"><span class="lead-detail__k">Reviewer note</span><span class="lead-detail__v"><?= nl2br(e($nvCrNote)) ?></span></div><?php endif; ?>
+      <?php endif; ?>
+      <?php $stepActive = 'submit'; $stepDetailsDone = $detailsOk; $stepPhotosDone = $photosOk; require __DIR__ . '/_stepper.php'; ?>
+      <ul class="pd-prog">
+        <li class="pd-prog__i <?= $detailsOk ? 'pd-prog__i--ok' : 'pd-prog__i--todo' ?>">
+          <span class="pd-tick"><?= $detailsOk ? '&#10003;' : '1' ?></span>
+          <?php if ($detailsOk): ?>
+            Required details complete
+          <?php else: ?>
+            Required details missing: <?= e(implode(', ', $missing)) ?>
+            <a href="<?= e(base_url('portal/venues/' . $vid . '/edit')) ?>">Edit details</a>
+          <?php endif; ?>
+        </li>
+        <li class="pd-prog__i <?= $photosOk ? 'pd-prog__i--ok' : 'pd-prog__i--todo' ?>">
+          <span class="pd-tick"><?= $photosOk ? '&#10003;' : '2' ?></span>
+          <?= $photosOk ? e((string)$photoCount) . ' photo' . ($photoCount === 1 ? '' : 's') . ' uploaded' : 'Add at least one photo' ?>
+          <a href="<?= e(base_url('portal/venues/' . $vid . '/images')) ?>">Add photos (Step 2)</a>
+        </li>
+        <li class="pd-prog__i <?= $canSubmit ? 'pd-prog__i--ok' : 'pd-prog__i--todo' ?>"><span class="pd-tick">3</span> <?= e($submitLabel) ?></li>
+      </ul>
+      <p class="lead-hint mb-2"><?= $isResubmit
+          ? 'When you&rsquo;re ready, re-submit and All The Venues will review it again.'
+          : 'Draft venues are private and never public. When you submit, All The Venues reviews the venue and its photos.' ?></p>
+      <form method="post" action="<?= e(base_url('portal/venues/' . $vid . '/submit')) ?>">
+        <?php csrf_field(); ?>
+        <button type="submit" class="atv-btn"<?= $canSubmit ? '' : ' disabled title="Before submitting: ' . e(implode('; ', $blockers)) . '"' ?>><?= e($submitLabel) ?></button>
+      </form>
+      <?php if (!$canSubmit): ?><p class="lead-hint mt-2">Before you can submit: <?= e(implode('; ', $blockers)) ?>.</p><?php endif; ?>
+    </div>
+
+    <?php /* PU-D1-fix Part F — delete is offered ONLY for a true draft (never
+             pending/needs_changes/published/archived). */ ?>
+    <?php if ($isDraftState): ?>
+      <div class="admin-panel">
+        <h2 class="admin-panel__title">Delete this draft</h2>
+        <p class="lead-hint mb-2">This draft hasn&rsquo;t been submitted. Deleting it removes it and any photos you&rsquo;ve uploaded — this can&rsquo;t be undone.</p>
+        <form method="post" action="<?= e(base_url('portal/venues/' . $vid . '/delete')) ?>">
+          <?php csrf_field(); ?>
+          <button type="submit" class="atv-btn atv-btn--ghost atv-btn--sm atv-btn--danger" data-confirm="Delete this draft? This can't be undone.">Delete draft</button>
+        </form>
+      </div>
+    <?php endif; ?>
   <?php endif; ?>
 <?php endif; ?>
 
@@ -172,25 +209,14 @@ if (!empty($pending)):
     $lrStatus = $lr['status'] ?? '';
     $lrNote   = trim((string)($lr['review_note'] ?? ''));
 
-    // #3 U-P6b — a new_venue submission carries its own decision (owner-scoped).
-    // (lib/portal.php is out of this unit's scope, so the lookup is inline here.)
-    $nvStmt = $pdo->prepare(
-        "SELECT status, review_note FROM venue_change_requests
-         WHERE venue_id = :vid AND partner_id = :pid AND type = 'new_venue'
-         ORDER BY id DESC LIMIT 1"
-    );
-    $nvStmt->execute([':vid' => $vid, ':pid' => (int)($partnerId ?? 0)]);
-    $nvReq    = $nvStmt->fetch() ?: null;
-    $nvStatus = $nvReq['status'] ?? '';
-    $nvNote   = trim((string)($nvReq['review_note'] ?? ''));
+    // #3 U-P6b / PU-D1-fix-2 — new_venue decision reuses the shared CR lookup
+    // ($nvCrStatus/$nvCrNote from the top). 'needs_changes' (incl. the stuck
+    // pending rows) is handled by the submission flow above, so only the
+    // 'declined' outcome is surfaced here.
+    $nvStatus = $nvCrStatus;
+    $nvNote   = $nvCrNote;
 ?>
-  <?php if ($nvStatus === 'needs_changes'): ?>
-    <div class="admin-panel">
-      <h2 class="admin-panel__title">Changes requested</h2>
-      <p class="lead-hint mb-2">All The Venues reviewed your venue submission and asked for some changes. Update your venue below and we will re-review it.</p>
-      <?php if ($nvNote !== ''): ?><div class="lead-detail__row"><span class="lead-detail__k">Reviewer note</span><span class="lead-detail__v"><?= nl2br(e($nvNote)) ?></span></div><?php endif; ?>
-    </div>
-  <?php elseif ($nvStatus === 'rejected'): ?>
+  <?php if ($nvStatus === 'rejected'): ?>
     <div class="admin-panel">
       <h2 class="admin-panel__title">Submission declined</h2>
       <p class="lead-hint mb-2">All The Venues reviewed your venue submission and were unable to accept it.</p>

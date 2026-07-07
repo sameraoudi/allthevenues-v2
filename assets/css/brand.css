@@ -1418,6 +1418,9 @@ select:focus-visible,
 .pstep--on .pstep__n { background: var(--action); color: #fff; }
 .pstep--done { color: var(--ink); }
 .pstep--done .pstep__n { background: #1f6a41; color: #fff; }
+/* #3 — Submit not yet reachable (details/photos incomplete): greyed, muted. */
+.pstep--locked { opacity: .55; border-style: dashed; }
+.pstep--locked .pstep__n { background: #eef1f4; color: var(--muted); }
 .status-chip { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; background: #eef1f4; color: var(--muted); }
 .pd-prog { list-style: none; margin: 0 0 4px; padding: 0; }
 .pd-prog__i { display: flex; align-items: center; gap: 9px; padding: 6px 0; font-size: 13.5px; }

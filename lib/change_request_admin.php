@@ -504,7 +504,7 @@ function cr_newvenue_decide(PDO $pdo, array $req, int $adminUserId, string $deci
     $map = [
         'approve_publish' => ['published', 'approved',      'nv_published'],
         'approve_draft'   => ['draft',     'approved',      'nv_draft'],
-        'request_changes' => [null,        'needs_changes', 'nv_changes'],
+        'request_changes' => ['needs_changes', 'needs_changes', 'nv_changes'],
         'reject'          => ['archived',  'rejected',      'nv_rejected'],
     ];
     if (!isset($map[$decision])) {

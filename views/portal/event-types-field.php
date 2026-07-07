@@ -22,7 +22,8 @@ foreach ($all as $et) {
 $isChecked = static fn(int $id): bool => in_array($id, $etChecked, true);
 ?>
 <div class="admin-panel">
-  <h2 class="admin-panel__title">Event types</h2>
+  <?php /* #2 — required to submit: red * (only while editable), keeping the chip below. */ ?>
+  <h2 class="admin-panel__title">Event types<?php if (!$etPublished): ?> <span class="req">*</span><?php endif; ?></h2>
 
   <?php if ($etPublished): ?>
     <p class="lead-hint mb-2">These event types are live on your public listing.</p>

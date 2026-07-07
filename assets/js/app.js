@@ -578,14 +578,37 @@
     if (btn && btn.form) { btn.form.setAttribute('data-confirm', btn.getAttribute('data-confirm')); }
   });
 
-  // Add/Edit venue (PU-D1 #19): no layout capacity may exceed the venue maximum.
-  // Marks offending inputs invalid + blocks submit. Server is authoritative.
+  // Add/Edit venue (PU-D1 #19 / PU-D1-fix-2 #4): no layout capacity may exceed the
+  // venue maximum. Marks offending inputs invalid AND renders the same inline
+  // message the server produces (on input/blur/submit) — never a silent block.
+  // The server stays authoritative: submit is allowed to proceed so it re-renders
+  // the top banner + inline errors + keeps the entered data.
   (function () {
     var form = document.querySelector('[data-layout-form]');
     if (!form) return;
     var maxInput = form.querySelector('[data-layout-capmax]');
     var caps = form.querySelectorAll('[data-layout-cap]');
     if (!maxInput || !caps.length) return;
+    function layoutType(input) {
+      var m = (input.name || '').match(/^layout\[(.+)\]$/);
+      return m ? m[1] : '';
+    }
+    function setError(input, text) {
+      var field = input.closest('.atv-field') || input.parentNode;
+      // Reuse the server-rendered .atv-enq-err if present, so we never duplicate it.
+      var el = field.querySelector('.atv-enq-err');
+      if (text) {
+        if (!el) {
+          el = document.createElement('p');
+          el.className = 'atv-enq-err';
+          el.setAttribute('role', 'alert');
+          field.appendChild(el);
+        }
+        el.textContent = text;
+      } else if (el) {
+        el.parentNode.removeChild(el);
+      }
+    }
     function check() {
       var max = parseInt(maxInput.value, 10);
       var bad = false;
@@ -593,12 +616,14 @@
         var v = parseInt(c.value, 10);
         var over = !isNaN(max) && max > 0 && !isNaN(v) && v > max;
         c.classList.toggle('is-invalid', over);
+        setError(c, over ? (layoutType(c) + ' capacity cannot exceed the venue maximum of ' + max + ' guests.') : '');
         if (over) { bad = true; }
       });
       return bad;
     }
     form.addEventListener('input', check);
-    form.addEventListener('submit', function (ev) { if (check()) { ev.preventDefault(); } });
+    form.addEventListener('blur', check, true);   // capture — fires for the cap inputs
+    form.addEventListener('submit', check);        // show messages; server re-renders authoritatively
   })();
 
   // Portal event-type editor (U-P9b): live "N selected" counter. Progressive

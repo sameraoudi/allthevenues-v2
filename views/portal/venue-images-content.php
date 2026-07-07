@@ -90,7 +90,7 @@ if ($isDraft): /* #15 — Step 2 of the add-venue flow */ ?>
     </div>
 
     <div class="admin-form__actions">
-      <button type="submit" class="atv-btn" data-upload-submit>Submit for review</button>
+      <button type="submit" class="atv-btn" data-upload-submit>Submit photo for review</button>
       <span class="lead-hint">Enabled once you&rsquo;ve chosen a photo and ticked the box.</span>
     </div>
   </form>

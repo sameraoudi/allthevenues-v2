@@ -199,10 +199,30 @@ function portal_venue_missing_required(array $venue, int $eventTypeCount): array
 }
 
 /**
- * #15 — Submit an owned DRAFT (or needs_changes) venue for review. Backstop gate:
- * required details must be complete AND ≥1 photo must exist (blocks an incomplete
- * submit even if the UI is bypassed). On success flips the venue to 'pending' and
- * creates the new_venue change request (the U-P6b admin flow takes it from there).
+ * PU-D1-fix-2 — the latest new_venue change request for an owned venue (owner-
+ * scoped), or null if none. Single source of truth shared by the submit logic and
+ * the venue detail view so "is this awaiting review?" is decided in one place.
+ */
+function portal_active_newvenue_cr(PDO $pdo, int $venueId, int $partnerId): ?array
+{
+    $st = $pdo->prepare(
+        "SELECT * FROM venue_change_requests
+         WHERE venue_id = :vid AND partner_id = :pid AND type = 'new_venue'
+         ORDER BY id DESC LIMIT 1"
+    );
+    $st->execute([':vid' => $venueId, ':pid' => $partnerId]);
+    $row = $st->fetch();
+    return $row === false ? null : $row;
+}
+
+/**
+ * #15 / PU-D1-fix-2 — (re)submit an owned venue for review. Backstop gate:
+ * required details complete AND ≥1 photo (blocks an incomplete submit even if the
+ * UI is bypassed). Idempotent + limbo-proof: allowed from draft / needs_changes /
+ * a 'pending' venue whose latest new_venue CR is NOT pending (the pre-fix stuck
+ * rows); refused only while a new_venue CR is actively 'pending'. On submit the
+ * venue goes to 'pending' and the existing new_venue CR is REOPENED (no duplicate)
+ * — a fresh snapshot, cleared review fields — or a new CR is created if none exists.
  * @return array{ok:bool,error?:string}
  */
 function portal_submit_venue_for_review(PDO $pdo, int $venueId, int $partnerId, int $userId): array
@@ -213,8 +233,15 @@ function portal_submit_venue_for_review(PDO $pdo, int $venueId, int $partnerId, 
     if ($venue === false) {
         return ['ok' => false, 'error' => 'Not found.'];
     }
-    if (!in_array((string)$venue['status'], ['draft', 'needs_changes'], true)) {
-        return ['ok' => false, 'error' => 'This venue has already been submitted.'];
+    $status = (string)$venue['status'];
+    // Only draft / needs_changes / pending are submittable — never published/archived.
+    if (!in_array($status, ['draft', 'needs_changes', 'pending'], true)) {
+        return ['ok' => false, 'error' => 'This venue can no longer be submitted.'];
+    }
+    // Refuse only while a new_venue CR is actively awaiting its first review.
+    $cr = portal_active_newvenue_cr($pdo, $venueId, $partnerId);
+    if ($cr !== null && (string)$cr['status'] === 'pending') {
+        return ['ok' => false, 'error' => 'This venue is already awaiting review.'];
     }
 
     // BACKSTOP GATE — required details complete AND ≥1 photo (any review_status).
@@ -233,21 +260,31 @@ function portal_submit_venue_for_review(PDO $pdo, int $venueId, int $partnerId, 
     $snapCols = array_merge(portal_new_venue_fields(), ['slug']);
     $snapshot = [];
     foreach ($snapCols as $c) { if (array_key_exists($c, $venue)) { $snapshot[$c] = $venue[$c]; } }
+    $json = json_encode($snapshot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
     try {
         $pdo->beginTransaction();
-        $pdo->prepare("UPDATE venues SET status = 'pending' WHERE id = :vid AND partner_id = :pid AND status IN ('draft','needs_changes')")
+        $pdo->prepare("UPDATE venues SET status = 'pending' WHERE id = :vid AND partner_id = :pid AND status IN ('draft','needs_changes','pending')")
             ->execute([':vid' => $venueId, ':pid' => $partnerId]);
-        $cr = $pdo->prepare(
-            "INSERT INTO venue_change_requests
-                (venue_id, partner_id, submitted_by, type, proposed_changes_json, status)
-             VALUES (:vid, :pid, :uid, 'new_venue', :json, 'pending')"
-        );
-        $cr->execute([
-            ':vid' => $venueId, ':pid' => $partnerId, ':uid' => $userId,
-            ':json' => json_encode($snapshot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-        ]);
-        $requestId = (int)$pdo->lastInsertId();
+        if ($cr !== null) {
+            // Reopen the existing CR rather than creating a duplicate.
+            $ur = $pdo->prepare(
+                "UPDATE venue_change_requests
+                 SET status='pending', proposed_changes_json=:json,
+                     reviewed_by=NULL, reviewed_at=NULL, updated_at=NOW()
+                 WHERE id=:rid AND venue_id=:vid AND partner_id=:pid AND type='new_venue'"
+            );
+            $ur->execute([':json' => $json, ':rid' => (int)$cr['id'], ':vid' => $venueId, ':pid' => $partnerId]);
+            $requestId = (int)$cr['id'];
+        } else {
+            $ins = $pdo->prepare(
+                "INSERT INTO venue_change_requests
+                    (venue_id, partner_id, submitted_by, type, proposed_changes_json, status)
+                 VALUES (:vid, :pid, :uid, 'new_venue', :json, 'pending')"
+            );
+            $ins->execute([':vid' => $venueId, ':pid' => $partnerId, ':uid' => $userId, ':json' => $json]);
+            $requestId = (int)$pdo->lastInsertId();
+        }
         $pdo->commit();
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) { $pdo->rollBack(); }
@@ -255,8 +292,44 @@ function portal_submit_venue_for_review(PDO $pdo, int $venueId, int $partnerId, 
         return ['ok' => false, 'error' => 'Something went wrong submitting your venue. Please try again.'];
     }
 
-    audit_log($pdo, $userId, 'submit', 'venue', $venueId, ['status' => 'draft'], ['status' => 'pending', 'request_id' => $requestId]);
+    audit_log($pdo, $userId, 'submit', 'venue', $venueId,
+        ['status' => $status], ['status' => 'pending', 'request_id' => $requestId, 'reopened' => $cr !== null]);
     return ['ok' => true];
+}
+
+/**
+ * PU-D1-fix-2 — withdraw an owned venue that is actively awaiting first review
+ * (venue 'pending' + its latest new_venue CR 'pending') back to a private 'draft',
+ * marking the CR 'withdrawn'. Owner-scoped; a no-op from any other state (returns
+ * false) so the provider is never stuck waiting with no way out. Audits 'withdraw'.
+ */
+function portal_withdraw_to_draft(PDO $pdo, int $venueId, int $partnerId, int $userId): bool
+{
+    $cr = portal_active_newvenue_cr($pdo, $venueId, $partnerId);
+    if ($cr === null || (string)$cr['status'] !== 'pending') {
+        return false;   // not actively awaiting review — nothing to withdraw
+    }
+    $vs = $pdo->prepare('SELECT status FROM venues WHERE id = :vid AND partner_id = :pid LIMIT 1');
+    $vs->execute([':vid' => $venueId, ':pid' => $partnerId]);
+    if ((string)$vs->fetchColumn() !== 'pending') {
+        return false;
+    }
+    try {
+        $pdo->beginTransaction();
+        $uv = $pdo->prepare("UPDATE venues SET status='draft' WHERE id=:vid AND partner_id=:pid AND status='pending'");
+        $uv->execute([':vid' => $venueId, ':pid' => $partnerId]);
+        if ($uv->rowCount() < 1) { $pdo->rollBack(); return false; }
+        $pdo->prepare("UPDATE venue_change_requests SET status='withdrawn', updated_at=NOW() WHERE id=:rid AND status='pending'")
+            ->execute([':rid' => (int)$cr['id']]);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) { $pdo->rollBack(); }
+        error_log('portal_withdraw_to_draft failed (venue=' . $venueId . '): ' . $e->getMessage());
+        return false;
+    }
+    audit_log($pdo, $userId ?: null, 'withdraw', 'venue', $venueId,
+        ['status' => 'pending'], ['status' => 'draft', 'request_id' => (int)$cr['id']]);
+    return true;
 }
 
 /**
