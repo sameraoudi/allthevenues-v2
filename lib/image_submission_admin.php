@@ -257,8 +257,10 @@ function _image_submission_notify(array $img, string $decision, string $reasonLa
 
     $body = '<div style="font-family:Arial,sans-serif;color:#0E1B2A;line-height:1.5;">'
           . '<h2 style="font-size:18px;">All The Venues — Provider Portal</h2>'
+          . '<p>Hello,</p>'
           . '<p>' . $intro . '</p>' . $extra
-          . '<p><a href="' . $esc($link) . '">View your venue photos</a></p></div>';
+          . '<p><a href="' . $esc($link) . '">View your venue photos</a></p>'
+          . '<p style="color:#6b7b88;">— The All The Venues team</p></div>';
 
     return send_mail($to, $subject, $body);
 }

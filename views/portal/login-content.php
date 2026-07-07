@@ -4,6 +4,7 @@ declare(strict_types=1);
 /** Provider (portal) login form. Expects ?string $loginError, array $old. */
 /** @var ?string $loginError @var array $old */
 require_once __DIR__ . '/../../lib/csrf.php';
+require_once __DIR__ . '/../../lib/turnstile.php';   // #3 U-P9c
 $old = $old ?? [];
 ?>
 <section class="atv-enq">
@@ -29,6 +30,7 @@ $old = $old ?? [];
           <label for="p-pass">Password</label>
           <input type="password" id="p-pass" name="password" required autocomplete="current-password">
         </div>
+        <?php if (turnstile_field() !== ''): ?><div class="atv-field"><?= turnstile_field() ?></div><?php endif; ?>
         <div class="atv-enq-nav">
           <button type="submit" class="atv-btn">Sign in</button>
         </div>
@@ -36,3 +38,4 @@ $old = $old ?? [];
     </div>
   </div>
 </section>
+<?php if (turnstile_script_tag() !== '') { echo turnstile_script_tag(); } ?>

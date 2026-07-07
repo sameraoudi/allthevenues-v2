@@ -131,13 +131,15 @@ function send_invite_email(array $user, string $raw, string $providerName): void
     $link = base_url('set-password?token=' . rawurlencode($raw));
 
     $body = '<div style="font-family:Arial,sans-serif;color:#0E1B2A;line-height:1.6;">'
+          . '<h2 style="font-size:18px;">All The Venues — Provider Portal</h2>'
           . '<p>Hello' . ($name !== '' ? ' ' . $esc($name) : '') . ',</p>'
           . '<p>An All The Venues provider account has been created for <strong>' . $esc($providerName) . '</strong>. '
           . 'Use the secure link below to set your password and access the provider portal.</p>'
           . '<p><a href="' . $esc($link) . '" style="display:inline-block;background:#426F94;color:#fff;'
           . 'padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600;">Set your password</a></p>'
           . '<p style="color:#6b7b88;font-size:13px;">This link can be used once and expires in 48 hours. '
-          . 'If you were not expecting this invitation, you can ignore this email.</p></div>';
+          . 'If you were not expecting this invitation, you can ignore this email.</p>'
+          . '<p style="color:#6b7b88;">— The All The Venues team</p></div>';
 
     if (!send_mail($to, 'Set up your All The Venues provider account', $body)) {
         error_log('send_invite_email: send failed to ' . $to . ' (user ' . (int)($user['id'] ?? 0) . ')');

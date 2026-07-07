@@ -25,7 +25,11 @@
         <h4>For partners</h4>
         <ul>
           <li><a href="<?= e(base_url('become-a-venue-partner')) ?>">Become a Venue Partner</a></li>
-          <li><a href="#" title="Coming soon">Partner login</a></li>
+          <?php if (function_exists('portal_enabled') && portal_enabled()): ?>
+            <li><a href="<?= e(base_url('portal/login')) ?>">Partner login</a></li>
+          <?php else: ?>
+            <li><a href="#" title="Coming soon">Partner login</a></li>
+          <?php endif; ?>
         </ul>
       </div>
 

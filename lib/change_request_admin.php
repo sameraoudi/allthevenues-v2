@@ -780,11 +780,13 @@ function _cr_notify_incumbent(string $to, string $venueName, string $newOwner): 
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) { return false; }
     $esc = static fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
     $body = '<div style="font-family:Arial,sans-serif;color:#0E1B2A;line-height:1.5;">'
-          . '<h2 style="font-size:18px;">All The Venues</h2>'
+          . '<h2 style="font-size:18px;">All The Venues — Provider Portal</h2>'
+          . '<p>Hello,</p>'
           . '<p>Management of <strong>' . $esc($venueName) . '</strong> on All The Venues has been reassigned'
           . ($newOwner !== '' ? ' to <strong>' . $esc($newOwner) . '</strong>' : '')
           . ' following a verified ownership claim. It no longer appears in your provider portal.</p>'
-          . '<p>If you believe this is a mistake, please contact All The Venues support.</p></div>';
+          . '<p>If you believe this is a mistake, please contact All The Venues support.</p>'
+          . '<p style="color:#6b7b88;">— The All The Venues team</p></div>';
     return send_mail($to, 'A venue was reassigned — All The Venues', $body);
 }
 
@@ -871,9 +873,11 @@ function cr_notify_provider(array $req, string $decision, string $note): bool
 
     $body = '<div style="font-family:Arial,sans-serif;color:#0E1B2A;line-height:1.5;">'
           . '<h2 style="font-size:18px;">All The Venues — Provider Portal</h2>'
+          . '<p>Hello,</p>'
           . '<p>' . $intro . '</p>'
           . $noteHtml
           . '<p><a href="' . $esc($link) . '">View this venue in your portal</a></p>'
+          . '<p style="color:#6b7b88;">— The All The Venues team</p>'
           . '</div>';
 
     return send_mail($to, $subject, $body);

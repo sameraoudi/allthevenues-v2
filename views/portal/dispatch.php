@@ -12,6 +12,7 @@ require_once __DIR__ . '/../../lib/helpers.php';
 require_once __DIR__ . '/../../lib/csrf.php';
 require_once __DIR__ . '/../../lib/auth.php';
 require_once __DIR__ . '/../../lib/ratelimit.php';
+require_once __DIR__ . '/../../lib/turnstile.php';   // #3 U-P9c — anti-bot on portal login
 require_once __DIR__ . '/../../lib/portal.php';
 
 $pdo = db_pdo();
@@ -104,6 +105,8 @@ switch ($sub) {
             } elseif (!ratelimit_hit('portal_login_ip', client_ip(), 10, 900)
                    || !ratelimit_hit('portal_login_email', $email !== '' ? $email : 'none', 5, 900)) {
                 $loginError = 'Too many attempts. Please try again in a few minutes.';
+            } elseif (!turnstile_verify((string)($_POST['cf-turnstile-response'] ?? ''), client_ip())) {
+                $loginError = 'Please complete the verification and try again.';   // fail closed
             } else {
                 $user = auth_partner_login_attempt($pdo, $email, (string)($_POST['password'] ?? ''));
                 if ($user !== null) {
