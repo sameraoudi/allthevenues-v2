@@ -201,7 +201,7 @@ function venue_images_delete(PDO $pdo, int $venueId, int $imageId): ?array
 function venue_images_permission_options(): array
 {
     return [
-        'approved_by_provider'            => ['Approved by provider', true],
+        'approved_by_provider'            => ['Rights confirmed by provider', true],   // #3 U-P7b relabel (key unchanged)
         'owned_by_atv'                    => ['ATV-owned', true],
         'licensed_stock'                  => ['Licensed (stock)', true],
         'legacy_needs_review'             => ['Needs review', false],

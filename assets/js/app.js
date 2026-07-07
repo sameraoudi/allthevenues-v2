@@ -476,4 +476,34 @@
     form.addEventListener('input', sync);
     sync();
   })();
+
+  // Provider photo submissions (U-P7b) admin review: (a) block Approve & publish
+  // when the chosen rights option is data-block (mirrors the server gate);
+  // (b) swap the approve form's confirm copy when "Set as main photo" is ticked
+  // (the confirm itself fires via the form-level data-confirm handler above);
+  // (c) reveal/hide the reject sub-form. Progressive enhancement only.
+  (function () {
+    var forms = document.querySelectorAll('[data-approve-form]');
+    function syncApprove(form) {
+      var sel  = form.querySelector('[data-classify]');
+      var btn  = form.querySelector('[data-approve-btn]');
+      var prim = form.querySelector('[data-set-primary]');
+      if (!sel || !btn) return;
+      var opt = sel.options[sel.selectedIndex];
+      btn.disabled = !!(opt && opt.getAttribute('data-block') === '1');
+      var conf = (prim && prim.checked) ? btn.getAttribute('data-confirm-main') : btn.getAttribute('data-confirm');
+      form.setAttribute('data-confirm', conf || '');
+    }
+    forms.forEach(function (f) {
+      syncApprove(f);
+      f.addEventListener('change', function () { syncApprove(f); });
+    });
+    document.addEventListener('click', function (ev) {
+      var t = ev.target.closest('[data-reject-toggle]');
+      if (!t) return;
+      ev.preventDefault();
+      var el = document.getElementById(t.getAttribute('data-reject-toggle'));
+      if (el) el.hidden = !el.hidden;
+    });
+  })();
 })();

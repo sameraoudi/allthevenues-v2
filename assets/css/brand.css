@@ -1318,3 +1318,33 @@ select:focus-visible,
 .pimg__row { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: auto; }
 .pimg__row form { margin: 0; }
 .pimg-reason { color: #a12f24; font-weight: 600; }
+
+/* #3 U-P7b — admin provider-photo submissions queue (additive). */
+.isub-checklist { margin-bottom: 16px; }
+.isub-checklist > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--action); }
+.isub-checklist ul { font-size: 12.5px; color: var(--muted); line-height: 1.7; margin: 8px 0 0; padding-left: 20px; }
+.isub-kpis { display: flex; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
+.isub-kpi { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 18px; min-width: 150px; }
+.isub-kpi__n { display: block; font-size: 24px; font-weight: 700; color: var(--navy); }
+.isub-kpi__l { font-size: 12px; color: var(--muted); }
+.isub-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 16px; }
+.isub-live { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.isub-live__thumb { width: 44px; height: 34px; border-radius: 6px; object-fit: cover; border: 1px solid var(--line); background: var(--navy); }
+.isub-live__thumb--main { border-color: var(--sand); box-shadow: 0 0 0 2px var(--sand); }
+.isub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.isub-card { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+.isub-img { position: relative; aspect-ratio: 16 / 10; background: var(--navy); }
+.isub-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.isub-tag { position: absolute; top: 8px; left: 8px; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.isub-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 9px; }
+.isub-cap { font-size: 13.5px; color: var(--ink); }
+.isub-rights { font-size: 12px; color: #40525f; background: #f7f9fb; border: 1px solid var(--line); border-radius: 8px; padding: 8px 11px; line-height: 1.5; }
+.isub-meta { font-size: 12px; color: var(--muted); }
+.isub-decide { border-top: 1px solid var(--line); padding-top: 11px; }
+.isub-field { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 12.5px; margin-bottom: 9px; }
+.isub-field > label { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .3px; }
+.isub-field select { border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; font: inherit; font-size: 12.5px; background: #fff; color: var(--ink); }
+.isub-chk { display: flex; gap: 6px; align-items: center; font-size: 12.5px; color: var(--ink); font-weight: 400; }
+.isub-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.isub-reject textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 12.5px; resize: vertical; min-height: 46px; color: var(--ink); }
+.isub-reject[hidden] { display: none; }

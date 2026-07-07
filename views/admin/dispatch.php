@@ -65,6 +65,13 @@ if ($sub === 'image-review' || strncmp($sub, 'image-review/', 13) === 0) {
     return;
 }
 
+// Provider photo submissions review (#3 U-P7b) — staff. Own sub-routes.
+if ($sub === 'image-submissions' || strncmp($sub, 'image-submissions/', 18) === 0) {
+    auth_require_role(['admin', 'editor']);
+    require __DIR__ . '/image-submissions.php';
+    return;
+}
+
 switch ($sub) {
 
     /* ---- Login (public) -------------------------------------------------- */

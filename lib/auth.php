@@ -144,6 +144,7 @@ function auth_capability_roles(): array
         'settings.manage'     => ['admin'],
         'monetization.manage' => ['admin'],
         'change_requests.manage' => ['admin'],   // portal edit-request review (#3 U-P5b) — admin only
+        'provider_images.manage' => ['admin', 'editor'],   // provider photo review (#3 U-P7b)
     ];
 }
 
