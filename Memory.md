@@ -116,9 +116,11 @@ behind `PORTAL_ENABLED`): flag/skeleton, schema, partner auth, My Venues + read-
 edit, sensitive-field change requests (submit + admin review), and new-venue submissions (submit + admin
 structured review). **Deployed: U-P0→U-P6b** (all portal units to date). **#9 image rights/provenance COMPLETE + deployed**
 (#9a/b/c — provenance schema, admin classification, needs-review report, publish-gate flip). **#9 image-rights
-flow END-TO-END TESTED by Samer (7 Jul 2026) — works.** **U-P7a SHIPPED + deployed** (provider image uploads,
-submit + withdraw). Next: **U-P7b** (admin review of provider photos — design lock approved), then **U-P8**
-(claims), **U-P9** (launch). Known gaps: portal event-type editor; per-action confirm modals; **`db/001_schema.sql`
+flow END-TO-END TESTED by Samer (7 Jul 2026) — works.** **U-P7a + U-P7b SHIPPED + deployed** (provider image
+uploads + admin review), **staging 301→apex SHIPPED**, **U-P8a + U-P8b SHIPPED** (venue claims — submit + admin
+review), **U-P9a SHIPPED** (partner onboarding + email set-password, migration 022 applied). Next: **U-P9b** portal
+event-type editor → **U-P9c** login hardening (Turnstile on `/portal/login`) + footer link → **U-P9d** flip
+`PORTAL_ENABLED` + onboard providers. Known gaps: portal event-type editor (→U-P9b); **`db/001_schema.sql`
 drift** (016/019/020/021 live only as numbered ALTERs — never folded into 001; a fresh import runs 001 + all
 migrations in sequence, so this is fine, but a one-off "sync 001 with 016–021" task would restore true
 single-file parity). Remaining post-launch: rest of #3, U6 passive watch.
@@ -222,10 +224,43 @@ remain.
   publish (sets review_status=approved/status=active + admin-chosen #9 permission_status; optional set-primary) /
   Reject (6 fixed reasons + required note, row retained). **Publish BLOCKED unless the chosen classification ∈
   `venue_images_cleared_statuses()`** (server + JS). Global relabel `approved_by_provider` → "Rights confirmed by
-  provider". Audit + provider email each decision. Bulk/filters/search deferred. **CC build order issued — build
-  pending.**
-- **Open (flagged by Samer):** `staging.allthevenues.com` still fully serves the live `/atv-staging` docroot (only
-  a noindex header) — needs a host-gated **301 → apex**. Held until after U-P7a; build order pending.
+  provider". Audit + provider email each decision. Bulk/filters/search deferred.
+  **SHIPPED + deployed** (commit `c624bfc`): `lib/image_submission_admin.php`, `/admin/image-submissions`
+  (controller + content), `provider_images.manage` cap, nav badge, global relabel. NB: `venue_images_set_primary()`
+  opens its own txn so it can't nest inside the approve txn — CC inlined the identical two-statement swap (atomic).
+- **Staging host retired — 301 `staging.*` → apex SHIPPED + deployed** (commit `46c5685`, `index.php` only): the
+  staging subdomain shared the live `/atv-staging` docroot (served a full duplicate with only a noindex header);
+  now host-gated permanent redirect to `https://<apex>` + full REQUEST_URI (apex derived by stripping `staging.`,
+  forced HTTPS, no loop, before session/output). `views/layout.php` staging-noindex meta left as harmless dead code.
+- **U-P8a — provider venue claims (submit + withdraw + add-proof) SHIPPED + deployed** (commit `008870b`, **no
+  migration** — claims reuse `venue_change_requests` `type='claim'`). Design lock `docs/atv-portal-claim-preview.html`.
+  Scope (Samer): claimable = published, not-owned venues **incl. contested** (admin adjudicates); find by name search;
+  evidence = role + work email + message + optional proof (recommended for contested); one open claim per
+  (venue,provider). `lib/portal.php` +7 claimant-scoped fns; `/portal/claim[...]` routes separate from the owned-venue
+  guard; the `{claim:{…}}` JSON payload. Ships inert (flag OFF).
+- **U-P8b — admin review of venue claims SHIPPED + deployed** (commit `c86ccb8`, no migration). Design lock
+  `docs/atv-portal-claim-review-preview.html`. Extends `/admin/change-requests` (admin-only): `cr_load_claim`
+  (resolves target/current-assignment/claimant/requester + contested + work-email↔website **domain check**),
+  `cr_claim_decide` (approve/request_proof/reject) with a **server-side conflict gate** (contested approve requires
+  `verified_confirm=1`), **transactional reassign** (partner_id→claimant, `management_source='provider_claimed'`,
+  provider_assigned_at/by), evidence-review merged into `proposed_changes_json.review`, full audit (previous+new
+  owner, evidence, notify status), claimant email + incumbent "reassigned" email per notify (before/after/none),
+  pending-only guard. New `views/admin/change-request-claim.php`.
+- **U-P9a — partner onboarding + email set-password SHIPPED + deployed** (commit `e9fe6c4`, **migration 022
+  `password_tokens` APPLIED on prod**). Design lock `docs/atv-portal-onboarding-preview.html`. `db/022` = hashed
+  one-time tokens (invite/reset, unique token_hash, 48h TTL). `lib/password_token.php` (`pt_create` returns raw once
+  + SHA-256 stored + invalidates prior unused; `pt_lookup` valid/expired/used/invalid; `pt_consume`;
+  invite/password status derivation; `send_invite_email`). `/admin/users` gains the **Venue Provider** role (required
+  approved-provider selector + scope warning; empty password_hash + invite token + email on create; staff
+  partner_id forced NULL; **Resend** only while Not-set/Expired; three-status detail). New PUBLIC `/set-password`
+  (+ `/set-password/request`): CSRF + rate-limit + **Turnstile**, password rules (≥10, confirm, not
+  email/name/provider, denylist), transactional set + consume + auth_login, **no email enumeration**, noindex.
+  Ships safe (no partner accounts until created at U-P9d). **⚠️ Operational:** don't create partner users / send
+  invites until U-P9d flips `PORTAL_ENABLED`, or a provider sets a password then hits a 404 portal.
+- **U-P9 remaining:** **U-P9b** portal event-type editor (new-venue + edit forms; removes the "≥1 event type"
+  admin bottleneck) → **U-P9c** login hardening (Turnstile on `/portal/login`) + footer "Partner login" link live +
+  notification-copy pass → **U-P9d** flip `PORTAL_ENABLED` on prod + onboard providers (content). `app.js` per-button
+  confirm (`data-confirm-main`) already exists.
 
 **6 Jul 2026 (post-launch)**
 - **#10 slug-history 301 redirects SHIPPED + verified on prod** (commit `cd694f3`): migration 018 added

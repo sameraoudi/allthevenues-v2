@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATV — Partner onboarding + set-password (U-P9a preview)</title>
+<style>
+  :root{
+    --navy:#0E1B2A; --blue:#6C93B7; --action:#426F94; --action-hover:#315B7C;
+    --sand:#D9C7A8; --ink:#1c2b38; --muted:#6b7b88; --line:#e4e8ec; --bg:#f3f1ec;
+    --ok:#2f7d5b; --okbg:#e7f3ec; --warn:#8a6d1f; --warnbg:#f6efdb; --danger:#a5433b; --dangerbg:#f6e7e5;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Segoe UI,Inter,sans-serif;font-size:14px;}
+  h1,h2,h3{font-family:Georgia,'Cormorant Garamond',serif;font-weight:600;margin:0;}
+  a{color:var(--action);text-decoration:none;}
+  .lbl-screen{max-width:1040px;margin:0 auto;padding:24px;}
+  .screen-tag{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:26px 0 10px;}
+  .wrap{display:grid;grid-template-columns:200px 1fr;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 8px 22px rgba(14,27,42,.06);}
+  .side{background:var(--navy);color:#c7d0d8;padding:20px 0;}
+  .side .brand{color:#fff;font-family:Georgia,serif;font-size:18px;padding:0 20px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .side nav{display:flex;flex-direction:column;padding:12px 10px;gap:2px;}
+  .side nav a{color:#c7d0d8;padding:8px 11px;border-radius:8px;font-size:13px;}
+  .side nav a.on{background:var(--action);color:#fff;}
+  .amain{padding:24px 26px;}
+  .crumb{font-size:12px;color:var(--muted);margin-bottom:10px;}
+  h2.page{font-size:22px;margin-bottom:4px;}
+  .field{margin-bottom:15px;max-width:440px;} .field label.l{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);margin-bottom:6px;}
+  input[type=text],input[type=email],input[type=password],select{border:1px solid var(--line);border-radius:9px;padding:9px 12px;font:inherit;font-size:13.5px;background:#fff;width:100%;}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5;}
+  .cond{border-left:3px solid var(--sand);padding-left:13px;margin:15px 0;}
+  .warn-scope{background:var(--warnbg);border:1px solid #e6d59b;border-radius:9px;padding:9px 12px;color:#6d5a1f;font-size:12.5px;margin-top:8px;max-width:440px;line-height:1.5;}
+  .info{background:#f8fbfd;border:1px solid #d6e2ea;border-radius:10px;padding:11px 14px;color:#2f5064;font-size:12.5px;max-width:440px;margin-bottom:16px;line-height:1.5;}
+  .btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:9px 17px;font-size:13.5px;font-weight:600;cursor:pointer;border:1px solid transparent;}
+  .btn-a{background:var(--action);color:#fff;} .btn-ghost{background:#fff;border-color:var(--line);color:var(--action);} .btn-sm{padding:5px 12px;font-size:12.5px;}
+  /* status chips + detail rows */
+  .st{display:inline-block;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;}
+  .st-ok{background:var(--okbg);color:var(--ok);} .st-pend{background:var(--warnbg);color:var(--warn);} .st-off{background:#eef1f4;color:var(--muted);} .st-exp{background:var(--dangerbg);color:var(--danger);}
+  .drow{display:flex;gap:14px;padding:9px 0;border-bottom:1px solid #f0eee9;max-width:560px;font-size:13.5px;}
+  .drow .k{width:150px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.3px;}
+  /* public set-password card */
+  .pub{background:linear-gradient(160deg,#eef2f0,#e7edf1);border:1px solid var(--line);border-radius:14px;padding:34px 20px;display:flex;justify-content:center;gap:18px;flex-wrap:wrap;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 30px rgba(14,27,42,.10);padding:28px;max-width:380px;width:100%;}
+  .card .brand{font-family:Georgia,serif;font-size:22px;color:var(--navy);text-align:center;margin-bottom:4px;} .card .brand span{color:var(--blue);}
+  .card h3{font-size:20px;text-align:center;margin-bottom:6px;} .card .who{text-align:center;color:var(--muted);font-size:13px;margin-bottom:18px;}
+  .pw-rules{font-size:12px;color:var(--muted);margin:2px 0 14px;line-height:1.5;}
+  .turnstile{background:#f4f6f8;border:1px dashed var(--line);border-radius:10px;padding:13px;text-align:center;color:var(--muted);font-size:12.5px;margin:6px 0 16px;}
+  .btn-block{width:100%;justify-content:center;} .expire{font-size:11.5px;color:var(--muted);text-align:center;margin-top:13px;}
+  .toggle{font-size:12px;color:var(--action);cursor:pointer;float:right;}
+  .email{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;max-width:560px;font-size:13.5px;line-height:1.6;}
+  .email .subj{font-weight:600;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:10px;}
+  .state{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;max-width:340px;font-size:13px;line-height:1.5;}
+  .state h4{font-size:15px;margin-bottom:6px;} .state.exp h4{color:var(--danger);} .state.used h4{color:var(--warn);} .state.inv h4{color:var(--danger);}
+  .states{display:flex;gap:14px;flex-wrap:wrap;}
+</style>
+</head>
+<body>
+<div class="lbl-screen">
+
+  <!-- SCREEN 1 — ADMIN: create a partner account -->
+  <div class="screen-tag">Screen 1 · Admin → Users → New account</div>
+  <div class="wrap">
+    <aside class="side">
+      <div class="brand">All The Venues</div>
+      <nav><a href="#">Dashboard</a><a href="#">Enquiries</a><a href="#">Venues</a><a href="#">Providers</a><a href="#">Change Requests</a><a href="#" class="on">Users</a></nav>
+    </aside>
+    <div class="amain">
+      <div class="crumb">Admin › Users › New account</div>
+      <h2 class="page">New account</h2>
+      <p class="hint" style="margin-bottom:18px;">Create a staff account (Administrator / Editor) or a Venue Provider portal account.</p>
+
+      <div class="field"><label class="l">Name</label><input type="text" value="Omar Haddad"></div>
+      <div class="field"><label class="l">Email</label><input type="email" value="omar@nikkibeach.com"></div>
+      <div class="field"><label class="l">Role</label>
+        <select><option>Administrator</option><option>Editor</option><option selected>Venue Provider</option></select>
+      </div>
+
+      <div class="cond">
+        <div class="field" style="margin-bottom:8px;"><label class="l">Provider</label>
+          <select><option value="">— Select a provider —</option><option selected>Nikki Beach</option><option>Rixos Hotels</option><option>Marina Hospitality LLC</option></select>
+          <p class="hint">Required for Venue Provider accounts. Staff roles have no provider.</p>
+        </div>
+        <div class="warn-scope">This user will be able to access venues assigned to the selected provider. They will
+          not be able to access venues assigned to other providers.</div>
+      </div>
+
+      <div class="info"><strong>No password is set here.</strong> When you create this account we email
+        <b>omar@nikkibeach.com</b> a secure one-time link to set their own password. The account can&rsquo;t sign in
+        until they do. You can resend the invite from the user&rsquo;s page.</div>
+
+      <div class="field"><label class="l">Account status</label>
+        <select><option selected>Active</option><option>Disabled</option></select>
+      </div>
+
+      <button class="btn btn-a">Create account &amp; send invite</button>
+      <button class="btn btn-ghost" style="margin-left:8px;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 2 — ADMIN: user detail with 3 separate statuses -->
+  <div class="screen-tag">Screen 2 · Admin → Users → Omar Haddad (detail — three statuses tracked separately)</div>
+  <div class="wrap">
+    <aside class="side">
+      <div class="brand">All The Venues</div>
+      <nav><a href="#">Dashboard</a><a href="#">Enquiries</a><a href="#">Venues</a><a href="#">Providers</a><a href="#">Change Requests</a><a href="#" class="on">Users</a></nav>
+    </aside>
+    <div class="amain">
+      <div class="crumb">Admin › Users › Omar Haddad</div>
+      <h2 class="page">Omar Haddad</h2>
+      <p class="hint" style="margin-bottom:16px;">Venue Provider · Nikki Beach · omar@nikkibeach.com</p>
+
+      <div class="drow"><span class="k">Account status</span><span><span class="st st-ok">Active</span></span></div>
+      <div class="drow"><span class="k">Invite status</span><span><span class="st st-pend">Pending</span> — awaiting password setup</span></div>
+      <div class="drow"><span class="k">Password status</span><span><span class="st st-off">Not set</span></span></div>
+      <div class="drow"><span class="k">Invite sent</span><span>7 Jul 2026, 14:20 · to omar@nikkibeach.com</span></div>
+      <div class="drow"><span class="k">Invite expires</span><span>9 Jul 2026, 14:20</span></div>
+      <div class="drow"><span class="k">Last invite sent by</span><span>Samer (Administrator)</span></div>
+      <div style="margin-top:16px;">
+        <button class="btn btn-ghost btn-sm">Resend invite</button>
+        <span class="hint" style="margin-left:8px;">Shown only while the password is Not set or the invite has expired. Resending invalidates the previous link.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3 — INVITE EMAIL -->
+  <div class="screen-tag">Screen 3 · Invite email</div>
+  <div class="email">
+    <div class="subj">Subject: Set up your All The Venues provider account</div>
+    Hello Omar,<br><br>
+    An All The Venues provider account has been created for <b>Nikki Beach</b>.<br>
+    Use the secure link below to set your password and access the provider portal.<br><br>
+    <a class="btn btn-a btn-sm" href="#">Set your password</a><br><br>
+    This link can be used once and expires in 48 hours.<br>
+    If you were not expecting this invitation, you can ignore this email.
+  </div>
+
+  <!-- SCREEN 4 — PROVIDER: set password -->
+  <div class="screen-tag">Screen 4 · Provider opens the link → allthevenues.com/set-password?token=…</div>
+  <div class="pub">
+    <div class="card">
+      <div class="brand">All The <span>Venues</span></div>
+      <h3>Set your password</h3>
+      <div class="who">for omar@nikkibeach.com · Nikki Beach</div>
+      <div class="field" style="max-width:none;"><label class="l">New password <span class="toggle">show</span></label><input type="password" placeholder="••••••••••"></div>
+      <div class="field" style="max-width:none;margin-bottom:6px;"><label class="l">Confirm password</label><input type="password" placeholder="••••••••••"></div>
+      <p class="pw-rules">Use at least 10 characters. A longer passphrase is recommended. Don&rsquo;t reuse a password from another site.</p>
+      <div class="turnstile">▢ Cloudflare Turnstile — “I&rsquo;m human” check</div>
+      <button class="btn btn-a btn-block">Set password &amp; sign in</button>
+      <p class="expire">This link expires in 48 hours and can be used once.</p>
+    </div>
+  </div>
+
+  <!-- SCREEN 5 — TOKEN ERROR STATES -->
+  <div class="screen-tag">Screen 5 · Link error states</div>
+  <div class="states">
+    <div class="state exp"><h4>This link has expired</h4>For your security, password setup links can only be used for a
+      limited time. <a href="#">Request a new link</a> or contact All The Venues support.</div>
+    <div class="state used"><h4>This link has already been used</h4>If you&rsquo;ve already set your password, please
+      <a href="#">sign in</a>. If you need help, <a href="#">request a new password link</a>.</div>
+    <div class="state inv"><h4>This link is invalid</h4>Please <a href="#">request a new link</a> or contact All The
+      Venues support.</div>
+  </div>
+
+  <p class="hint" style="margin-top:22px;">Flow: admin creates the provider account (no password) → one-time token
+    emailed → provider sets their password (Turnstile + CSRF + rate-limited) → token consumed, password Set, signed in.
+    Account / invite / password statuses are tracked separately. Requesting a new link never reveals whether an email
+    exists. The token table also powers future staff password resets.</p>
+</div>
+</body>
+</html>
