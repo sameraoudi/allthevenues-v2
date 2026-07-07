@@ -181,7 +181,7 @@ if (!$photosOk)  { $blockers[] = 'add at least one photo'; }
         <p class="lead-hint mb-2">This draft hasn&rsquo;t been submitted. Deleting it removes it and any photos you&rsquo;ve uploaded — this can&rsquo;t be undone.</p>
         <form method="post" action="<?= e(base_url('portal/venues/' . $vid . '/delete')) ?>" data-confirm="Delete this draft venue? This can't be undone.">
           <?php csrf_field(); ?>
-          <button type="submit" class="atv-btn atv-btn--warn atv-btn--sm">Delete draft</button>
+          <button type="submit" class="atv-btn atv-btn--danger-outline atv-btn--sm">Delete draft</button>
         </form>
       </div>
     <?php endif; ?>

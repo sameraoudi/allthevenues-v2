@@ -1065,10 +1065,10 @@ select:focus-visible,
 .atv-btn--danger:hover { background: #9c443c; }
 .atv-btn--ok { background: #2f7d5b; color: #fff; border: 1px solid #2f7d5b; }   /* Delist-1 re-list */
 .atv-btn--ok:hover { background: #276a4d; }
-/* Portal-polish #5 — amber warning button (partner destructive controls). Hover
-   tints amber, never the action-blue of the ghost hover. */
-.atv-btn--warn { background: #fff; border: 1px solid #e6d59b; color: #8a6d1f; }
-.atv-btn--warn:hover { background: #f6efdb; color: #6d5a1f; border-color: #d8c489; }
+/* Portal-polish #5 — maroon outline button (partner destructive controls): maroon
+   text + border, hover tints maroon — never the action-blue of the ghost hover. */
+.atv-btn--danger-outline { background: #fff; border: 1px solid #d8a8a2; color: #a5433b; }
+.atv-btn--danger-outline:hover { background: #f6e7e5; color: #8f3b33; border-color: #c98f88; }
 .img-mgr .img-upload { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
 .img-mgr .img-upload input[type=file] { font-size: 13px; }
 .img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 14px; }
