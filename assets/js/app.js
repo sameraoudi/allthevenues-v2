@@ -506,4 +506,23 @@
       if (el) el.hidden = !el.hidden;
     });
   })();
+
+  // Provider claim-a-venue (U-P8a): reveal agency guidance when the role is an
+  // agency/representative, and enable Submit only once consent is ticked. Server
+  // enforces both regardless (progressive enhancement).
+  (function () {
+    var form = document.querySelector('[data-claim-form]');
+    if (!form) return;
+    var role    = form.querySelector('[data-claim-role]');
+    var agency  = form.querySelector('[data-claim-agency]');
+    var consent = form.querySelector('[data-claim-consent]');
+    var submit  = form.querySelector('[data-claim-submit]');
+    function sync() {
+      if (role && agency) { agency.hidden = !/agency/i.test(role.value); }
+      if (consent && submit) { submit.disabled = !consent.checked; }
+    }
+    form.addEventListener('change', sync);
+    form.addEventListener('input', sync);
+    sync();
+  })();
 })();

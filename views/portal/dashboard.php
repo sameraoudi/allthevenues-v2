@@ -13,7 +13,10 @@ $myVenues = $myVenues ?? [];
     <h1>My venues</h1>
     <p class="portal-sub"><?= e(number_format(count($myVenues))) ?> venue<?= count($myVenues) === 1 ? '' : 's' ?> on your account</p>
   </div>
-  <a class="atv-btn" href="<?= e(base_url('portal/venues/new')) ?>">Submit a new venue</a>
+  <div>
+    <a class="atv-btn atv-btn--ghost" href="<?= e(base_url('portal/claim')) ?>">Claim a venue</a>
+    <a class="atv-btn" href="<?= e(base_url('portal/venues/new')) ?>">Submit a new venue</a>
+  </div>
 </div>
 
 <?php if (!$myVenues): ?>

@@ -52,7 +52,7 @@ $richBlocks = [
 ];
 $ltypeIcons = venue_layout_types();
 ?>
-<p><a class="lead-back" href="<?= e(base_url('portal')) ?>">&larr; Back to my venues</a></p>
+<p><a class="lead-back" href="<?= e(base_url('portal')) ?>">&larr; Back to my venues</a> &nbsp;·&nbsp; <a href="<?= e(base_url('portal/claim')) ?>">Claim a venue</a></p>
 
 <?php if (!empty($flash)): ?><div class="lead-flash lead-flash--<?= e((string)($flash['type'] ?? 'success')) ?>" role="status"><?= e((string)($flash['msg'] ?? '')) ?></div><?php endif; ?>
 

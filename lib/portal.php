@@ -383,3 +383,188 @@ function portal_withdraw_image(PDO $pdo, int $imageId, int $venueId, int $partne
         ['review_status' => 'pending_review'], ['venue_id' => $venueId, 'review_status' => 'withdrawn']);
     return true;
 }
+
+/* ==========================================================================
+ * #3 U-P8a — provider "claim an existing venue" (submit side). Claims are
+ * venue_change_requests rows type='claim' targeting a venue the provider does NOT
+ * already manage. proposed_changes_json holds a {claim:{...}} object. Every query
+ * is claimant-scoped (partner_id); the target is re-validated as claimable on
+ * write. The venue itself is never modified here (admin approves in U-P8b).
+ * ======================================================================== */
+
+/** Escape LIKE wildcards in a user search term. */
+function _portal_like(string $q): string
+{
+    return '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $q) . '%';
+}
+
+/**
+ * Published venues the provider can claim (not already theirs), by name search.
+ * Each row carries a badge signal (partner_id NULL = unassigned, else contested)
+ * and has_open_claim (a pending/needs_changes claim by THIS provider).
+ */
+function portal_claimable_search(PDO $pdo, int $partnerId, string $q, int $limit = 20): array
+{
+    $q = trim($q);
+    if ($q === '') { return []; }
+    $limit = max(1, min(50, $limit));
+    $stmt = $pdo->prepare(
+        "SELECT v.id, v.name, v.slug, v.area, v.partner_id,
+                em.name AS emirate, vt.name AS venue_type_name,
+                EXISTS(SELECT 1 FROM venue_change_requests cr
+                       WHERE cr.venue_id = v.id AND cr.partner_id = :pid1 AND cr.type = 'claim'
+                         AND cr.status IN ('pending','needs_changes')) AS has_open_claim
+         FROM venues v
+         LEFT JOIN emirates    em ON em.id = v.emirate_id
+         LEFT JOIN venue_types vt ON vt.id = v.venue_type_id
+         WHERE v.status = 'published'
+           AND (v.partner_id IS NULL OR v.partner_id <> :pid2)
+           AND v.name LIKE :q
+         ORDER BY v.name ASC
+         LIMIT " . $limit
+    );
+    $stmt->execute([':pid1' => $partnerId, ':pid2' => $partnerId, ':q' => _portal_like($q)]);
+    return $stmt->fetchAll();
+}
+
+/** One claimable venue by id (or null if own / unpublished / nonexistent). */
+function portal_claim_target(PDO $pdo, int $venueId, int $partnerId): ?array
+{
+    $stmt = $pdo->prepare(
+        "SELECT v.id, v.name, v.slug, v.area, v.partner_id,
+                em.name AS emirate, vt.name AS venue_type_name,
+                (v.partner_id IS NOT NULL) AS contested
+         FROM venues v
+         LEFT JOIN emirates    em ON em.id = v.emirate_id
+         LEFT JOIN venue_types vt ON vt.id = v.venue_type_id
+         WHERE v.id = :vid AND v.status = 'published'
+           AND (v.partner_id IS NULL OR v.partner_id <> :pid)
+         LIMIT 1"
+    );
+    $stmt->execute([':vid' => $venueId, ':pid' => $partnerId]);
+    $row = $stmt->fetch();
+    return $row === false ? null : $row;
+}
+
+/** The provider's existing open (pending/needs_changes) claim for a venue, or null. */
+function portal_open_claim(PDO $pdo, int $venueId, int $partnerId): ?array
+{
+    $stmt = $pdo->prepare(
+        "SELECT * FROM venue_change_requests
+         WHERE venue_id = :vid AND partner_id = :pid AND type = 'claim'
+           AND status IN ('pending','needs_changes')
+         ORDER BY id DESC LIMIT 1"
+    );
+    $stmt->execute([':vid' => $venueId, ':pid' => $partnerId]);
+    $row = $stmt->fetch();
+    return $row === false ? null : $row;
+}
+
+/**
+ * Create a pending claim. Re-checks the target is claimable AND there is no open
+ * claim (dup guard) — throws on failure (caller handles). $clean holds the
+ * validated role/work_email/message/proof_url/requester_name. Returns the new id.
+ */
+function portal_create_claim(PDO $pdo, int $venueId, int $partnerId, int $userId, array $clean): int
+{
+    $target = portal_claim_target($pdo, $venueId, $partnerId);
+    if ($target === null) {
+        throw new RuntimeException('venue not claimable');
+    }
+    if (portal_open_claim($pdo, $venueId, $partnerId) !== null) {
+        throw new RuntimeException('open claim exists');
+    }
+
+    $payload = ['claim' => [
+        'role'              => (string)($clean['role'] ?? ''),
+        'work_email'        => (string)($clean['work_email'] ?? ''),
+        'message'           => (string)($clean['message'] ?? ''),
+        'proof_url'         => (string)($clean['proof_url'] ?? ''),
+        'contested'         => (bool)$target['contested'],
+        'requester_name'    => (string)($clean['requester_name'] ?? ''),
+        'target_venue_name' => (string)$target['name'],
+        'target_venue_slug' => (string)$target['slug'],
+    ]];
+
+    $stmt = $pdo->prepare(
+        "INSERT INTO venue_change_requests
+            (venue_id, partner_id, submitted_by, type, proposed_changes_json, status)
+         VALUES (:vid, :pid, :uid, 'claim', :json, 'pending')"
+    );
+    $stmt->execute([
+        ':vid' => $venueId, ':pid' => $partnerId, ':uid' => $userId,
+        ':json' => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+    ]);
+    $id = (int)$pdo->lastInsertId();
+
+    audit_log($pdo, $userId ?: null, 'create', 'change_request', $id, null,
+        ['type' => 'claim', 'venue' => $venueId, 'contested' => (bool)$target['contested']]);
+    return $id;
+}
+
+/** All claims by this provider (any status), newest first, with venue name. */
+function portal_my_claims(PDO $pdo, int $partnerId): array
+{
+    $stmt = $pdo->prepare(
+        "SELECT cr.*, v.name AS venue_name, v.slug AS venue_slug
+         FROM venue_change_requests cr
+         LEFT JOIN venues v ON v.id = cr.venue_id
+         WHERE cr.partner_id = :pid AND cr.type = 'claim'
+         ORDER BY cr.id DESC"
+    );
+    $stmt->execute([':pid' => $partnerId]);
+    return $stmt->fetchAll();
+}
+
+/** Withdraw the provider's OWN pending claim. True if a row was withdrawn. */
+function portal_withdraw_claim(PDO $pdo, int $requestId, int $partnerId): bool
+{
+    $stmt = $pdo->prepare(
+        "UPDATE venue_change_requests
+         SET status = 'withdrawn', updated_at = NOW()
+         WHERE id = :rid AND partner_id = :pid AND type = 'claim' AND status = 'pending'"
+    );
+    $stmt->execute([':rid' => $requestId, ':pid' => $partnerId]);
+    if ($stmt->rowCount() < 1) { return false; }
+    audit_log($pdo, null, 'withdraw', 'change_request', $requestId,
+        ['status' => 'pending'], ['status' => 'withdrawn']);
+    return true;
+}
+
+/**
+ * Add proof to a needs_changes claim (admin asked for it): merge new message/
+ * proof_url into the claim JSON and set status back to 'pending'. Owner-scoped +
+ * type='claim' + status='needs_changes' guard. Returns false if not applicable.
+ */
+function portal_add_claim_proof(PDO $pdo, int $requestId, int $partnerId, array $clean): bool
+{
+    $sel = $pdo->prepare(
+        "SELECT proposed_changes_json FROM venue_change_requests
+         WHERE id = :rid AND partner_id = :pid AND type = 'claim' AND status = 'needs_changes' LIMIT 1"
+    );
+    $sel->execute([':rid' => $requestId, ':pid' => $partnerId]);
+    $row = $sel->fetch();
+    if ($row === false) { return false; }
+
+    $data = json_decode((string)$row['proposed_changes_json'], true);
+    if (!is_array($data)) { $data = []; }
+    if (!isset($data['claim']) || !is_array($data['claim'])) { $data['claim'] = []; }
+    $msg   = (string)($clean['message'] ?? '');
+    $proof = (string)($clean['proof_url'] ?? '');
+    if ($msg !== '')   { $data['claim']['message']   = $msg; }
+    if ($proof !== '') { $data['claim']['proof_url'] = $proof; }
+
+    $upd = $pdo->prepare(
+        "UPDATE venue_change_requests
+         SET proposed_changes_json = :json, status = 'pending', updated_at = NOW()
+         WHERE id = :rid AND partner_id = :pid AND type = 'claim' AND status = 'needs_changes'"
+    );
+    $upd->execute([
+        ':json' => json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        ':rid'  => $requestId, ':pid' => $partnerId,
+    ]);
+    if ($upd->rowCount() < 1) { return false; }
+    audit_log($pdo, null, 'update', 'change_request', $requestId,
+        ['status' => 'needs_changes'], ['status' => 'pending', 'added_proof' => $proof !== '']);
+    return true;
+}

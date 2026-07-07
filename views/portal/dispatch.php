@@ -69,6 +69,24 @@ if ($sub === 'venues' || strncmp($sub, 'venues/', 7) === 0) {
     return;
 }
 
+// Claim an existing venue (#3 U-P8a) — targets venues NOT owned, so it is a
+// separate gated branch (never routed through the owned-venue id guard).
+if ($sub === 'claim' || strncmp($sub, 'claim/', 6) === 0) {
+    auth_require_partner();
+    $partnerId      = (int)(auth_user()['partner_id']);
+    $claimTarget    = 0;
+    $claimAction    = '';
+    $claimRequestId = 0;
+    if (preg_match('#^claim/(\d+)/(withdraw|proof)$#', $sub, $mc)) {
+        $claimRequestId = (int)$mc[1];
+        $claimAction    = $mc[2];
+    } elseif (preg_match('#^claim/(\d+)$#', $sub, $mc)) {
+        $claimTarget = (int)$mc[1];
+    }
+    require __DIR__ . '/claim.php';
+    return;
+}
+
 switch ($sub) {
 
     /* ---- Login (public) -------------------------------------------------- */
