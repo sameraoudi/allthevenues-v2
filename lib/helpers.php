@@ -51,6 +51,23 @@ if (!function_exists('app_path')) {
     }
 }
 
+if (!function_exists('asset_url')) {
+    /**
+     * Cache-busted URL for a bundled static asset: base_url($rel) plus a
+     * ?v=<filemtime> query so a changed file invalidates the year-long browser
+     * cache (see .htaccess Perf-1). Falls back to ASSET_VERSION (or '1') when the
+     * mtime is unavailable. Use for CSS/JS; fonts/images stay unversioned under
+     * the long TTL (their preload/@font-face URLs must match, so no ?v=).
+     */
+    function asset_url(string $rel): string
+    {
+        $mtime = @filemtime(app_path($rel));
+        $ver   = $mtime !== false ? (string)$mtime
+               : (defined('ASSET_VERSION') ? (string)ASSET_VERSION : '1');
+        return base_url($rel) . '?v=' . $ver;
+    }
+}
+
 if (!function_exists('venue_img_src')) {
     /**
      * URL for a migrated media path, with graceful fallback.

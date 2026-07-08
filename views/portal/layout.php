@@ -58,9 +58,11 @@ $year = (int)date('Y');
     <meta name="robots" content="<?= e($robots) ?>">
     <title><?= e($page_title) ?></title>
     <link rel="icon" href="<?= e(base_url('assets/brand/favicon_app_icon/favicon.ico')) ?>" sizes="any">
-    <link rel="stylesheet" href="<?= e(base_url('assets/css/bootstrap.min.css')) ?>">
-    <link rel="stylesheet" href="<?= e(base_url('assets/css/brand.css')) ?>">
-    <link rel="stylesheet" href="<?= e(base_url('assets/css/app.css')) ?>">
+    <link rel="preload" as="font" type="font/woff2" href="<?= e(base_url('assets/fonts/inter-latin.woff2')) ?>" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" href="<?= e(base_url('assets/fonts/cormorant-garamond-latin.woff2')) ?>" crossorigin>
+    <link rel="stylesheet" href="<?= e(asset_url('assets/css/bootstrap.min.css')) ?>">
+    <link rel="stylesheet" href="<?= e(asset_url('assets/css/brand.css')) ?>">
+    <link rel="stylesheet" href="<?= e(asset_url('assets/css/app.css')) ?>">
 </head>
 <body class="admin-body portal-shell-body">
   <div class="pshell" data-portal-shell>
@@ -115,6 +117,6 @@ $year = (int)date('Y');
     </div>
   </div>
 
-  <script src="<?= e(base_url('assets/js/app.js')) ?>"></script>
+  <script defer src="<?= e(asset_url('assets/js/app.js')) ?>"></script>
 </body>
 </html>

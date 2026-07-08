@@ -70,9 +70,11 @@ $nav = array_filter($nav, static fn($item) => empty($item['cap']) || auth_can($i
     <meta name="robots" content="noindex, nofollow">
     <title><?= e($page_title) ?></title>
     <link rel="icon" href="<?= e(base_url('assets/brand/favicon_app_icon/favicon.ico')) ?>" sizes="any">
-    <link rel="stylesheet" href="<?= e(base_url('assets/css/bootstrap.min.css')) ?>">
-    <link rel="stylesheet" href="<?= e(base_url('assets/css/brand.css')) ?>">
-    <link rel="stylesheet" href="<?= e(base_url('assets/css/app.css')) ?>">
+    <link rel="preload" as="font" type="font/woff2" href="<?= e(base_url('assets/fonts/inter-latin.woff2')) ?>" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" href="<?= e(base_url('assets/fonts/cormorant-garamond-latin.woff2')) ?>" crossorigin>
+    <link rel="stylesheet" href="<?= e(asset_url('assets/css/bootstrap.min.css')) ?>">
+    <link rel="stylesheet" href="<?= e(asset_url('assets/css/brand.css')) ?>">
+    <link rel="stylesheet" href="<?= e(asset_url('assets/css/app.css')) ?>">
 </head>
 <body class="admin-body">
   <div class="admin-shell">
@@ -113,6 +115,6 @@ $nav = array_filter($nav, static fn($item) => empty($item['cap']) || auth_can($i
       </main>
     </div>
   </div>
-  <script src="<?= e(base_url('assets/js/app.js')) ?>"></script>
+  <script defer src="<?= e(asset_url('assets/js/app.js')) ?>"></script>
 </body>
 </html>

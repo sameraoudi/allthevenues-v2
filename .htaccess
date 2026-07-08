@@ -36,6 +36,35 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
     Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://gc.zgo.at https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data: https://allthevenues.goatcounter.com; font-src 'self'; connect-src 'self' https://allthevenues.goatcounter.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://www.google.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
 </IfModule>
 
+# === Static-asset browser caching (Perf-1) ===
+# Long-lived cache for immutable static assets ONLY (scoped by extension), so
+# HTML / dynamic responses keep their default no-cache behaviour. CSS/JS carry a
+# ?v=<mtime> cache-buster (asset_url()) so a deploy invalidates them; fonts/images
+# rarely change and stay unversioned under the same TTL. LiteSpeed honours both
+# mod_expires and the mod_headers fallback.
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css                 "access plus 1 year"
+    ExpiresByType application/javascript   "access plus 1 year"
+    ExpiresByType text/javascript          "access plus 1 year"
+    ExpiresByType font/woff2               "access plus 1 year"
+    ExpiresByType font/woff                "access plus 1 year"
+    ExpiresByType image/png                "access plus 1 year"
+    ExpiresByType image/jpeg               "access plus 1 year"
+    ExpiresByType image/webp               "access plus 1 year"
+    ExpiresByType image/svg+xml            "access plus 1 year"
+    ExpiresByType image/gif                "access plus 1 year"
+    ExpiresByType image/x-icon             "access plus 1 year"
+    ExpiresByType image/vnd.microsoft.icon "access plus 1 year"
+</IfModule>
+<IfModule mod_headers.c>
+    # Authoritative Cache-Control for matched static assets (adds "immutable";
+    # replaces any value mod_expires set). Unmatched responses (HTML) untouched.
+    <FilesMatch "\.(css|js|woff2?|png|jpe?g|webp|svg|ico|gif)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
+
 # --- Deny web access to internal docs + markdown source (served files only;
 #     PHP filesystem reads for the legal pages are unaffected) ---
 RedirectMatch 403 ^/docs(/|$)
