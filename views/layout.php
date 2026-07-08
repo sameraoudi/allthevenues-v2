@@ -51,7 +51,8 @@ require_once __DIR__ . '/../lib/icons.php';
     <?php /* Preload the two above-the-fold fonts (unversioned to match brand.css url()). */ ?>
     <link rel="preload" as="font" type="font/woff2" href="<?= e(base_url('assets/fonts/inter-latin.woff2')) ?>" crossorigin>
     <link rel="preload" as="font" type="font/woff2" href="<?= e(base_url('assets/fonts/cormorant-garamond-latin.woff2')) ?>" crossorigin>
-    <link rel="stylesheet" href="<?= e(asset_url('assets/css/bootstrap.min.css')) ?>">
+    <?php /* Perf-2: Bootstrap removed from the public layout (base reset + the few
+             utilities it provided now live in brand.css). Admin still loads it. */ ?>
     <link rel="stylesheet" href="<?= e(asset_url('assets/css/brand.css')) ?>">
     <link rel="stylesheet" href="<?= e(asset_url('assets/css/app.css')) ?>">
 </head>
@@ -69,7 +70,6 @@ require_once __DIR__ . '/../lib/icons.php';
 
     <?php require __DIR__ . '/partials/footer.php'; ?>
 
-    <script defer src="<?= e(asset_url('assets/js/bootstrap.bundle.min.js')) ?>"></script>
     <script defer src="<?= e(asset_url('assets/js/app.js')) ?>"></script>
     <?php
     // GoatCounter analytics — production apex ONLY (not staging/localhost) so

@@ -28,6 +28,37 @@
   src: url('../fonts/cormorant-garamond-italic-latin.woff2') format('woff2');
 }
 
+/* ---- Base reset (Perf-2) -------------------------------------------------
+   Replaces the normalization Bootstrap provided — the public layout no longer
+   loads Bootstrap. brand.css layout assumes box-sizing:border-box + body margin
+   0 + collapsed heading/paragraph top-margins, so these MUST stay. Values match
+   Bootstrap Reboot so rendering is unchanged. */
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; }
+h1, h2, h3, h4, h5, h6 { margin-top: 0; margin-bottom: .5rem; line-height: 1.2; }
+p { margin-top: 0; margin-bottom: 1rem; }
+ul, ol { margin-top: 0; }
+figure { margin: 0 0 1rem; }
+img, svg { vertical-align: middle; }
+/* Form controls inherit page typography (Bootstrap Reboot did this — keeps
+   field height/spacing identical). */
+button, input, optgroup, select, textarea { margin: 0; font-family: inherit; font-size: inherit; line-height: inherit; }
+
+/* Utility classes still referenced by public views (were provided by Bootstrap;
+   values match Bootstrap's so rendering is identical). */
+.d-flex { display: flex !important; }
+.flex-column { flex-direction: column !important; }
+.flex-grow-1 { flex: 1 1 auto !important; }   /* sticky footer: <main> fills the viewport */
+.min-vh-100 { min-height: 100vh !important; }
+.text-muted { color: rgba(33, 37, 41, .75) !important; }
+.h5 { font-size: 1.25rem; font-weight: 500; line-height: 1.2; }
+.mb-0 { margin-bottom: 0 !important; }
+.mb-1 { margin-bottom: .25rem !important; }
+.mb-2 { margin-bottom: .5rem !important; }
+.mb-3 { margin-bottom: 1rem !important; }
+.mt-2 { margin-top: .5rem !important; }
+.mt-3 { margin-top: 1rem !important; }
+
 /* ---- Design tokens ------------------------------------------------------- */
 :root {
   --navy:#0E1B2A; --blue:#6C93B7; --action:#426F94; --action-hover:#315B7C;
