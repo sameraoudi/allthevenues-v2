@@ -43,7 +43,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
     // ---- Add proof to a needs_changes claim ----
     if ($claimAction === 'proof') {
-        $clean = ['message' => $plain('message', 2000), 'proof_url' => $proof];
+        $clean = ['message' => $plain('message', 2000), 'proof_url' => $proof, 'actor' => $userName];
         try {
             $ok = portal_add_claim_proof($pdo, $claimRequestId, $partnerId, $clean);
         } catch (Throwable $e) {
@@ -91,6 +91,47 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $_SESSION['portal_flash'] = ['type' => 'error', 'msg' => 'That venue can’t be claimed (it may be yours already, unpublished, or you already have an open claim).'];
         redirect('portal/claim');
     }
+}
+
+// ---- GET: claim detail (#11) — owner-scoped timeline view ----
+if ($claimAction === 'view' && $claimRequestId > 0) {
+    $claim = portal_claim_for_partner($pdo, $claimRequestId, $partnerId);
+    if ($claim === null) {
+        http_response_code(404);
+        $page_title          = 'Not found — Partner Portal';
+        $portal_content_view = __DIR__ . '/../content/404_content.php';
+        require __DIR__ . '/layout.php';
+        return;
+    }
+    $events              = portal_claim_timeline($claim);
+    $flash               = $_SESSION['portal_flash'] ?? null;
+    unset($_SESSION['portal_flash']);
+    $page_title          = 'Claim — Partner Portal';
+    $portal_active       = 'claims';
+    $portal_content_view = __DIR__ . '/claim-detail.php';
+    require __DIR__ . '/layout.php';
+    return;
+}
+
+// ---- GET: roomy "Add proof" screen (#9) — only while awaiting proof ----
+if ($claimAction === 'proof' && $claimRequestId > 0) {
+    $claim = portal_claim_for_partner($pdo, $claimRequestId, $partnerId);
+    if ($claim === null || (string)$claim['status'] !== 'needs_changes') {
+        $_SESSION['portal_flash'] = ['type' => 'error', 'msg' => 'That claim is not awaiting proof.'];
+        redirect('portal/claim');
+    }
+    // The latest proof_requested note (what All The Venues asked for).
+    $reqNote = '';
+    foreach (portal_claim_timeline($claim) as $ev) {
+        if (($ev['type'] ?? '') === 'proof_requested') { $reqNote = (string)($ev['note'] ?? ''); }
+    }
+    $flash               = $_SESSION['portal_flash'] ?? null;
+    unset($_SESSION['portal_flash']);
+    $page_title          = 'Add proof — Partner Portal';
+    $portal_active       = 'claims';
+    $portal_content_view = __DIR__ . '/claim-proof.php';
+    require __DIR__ . '/layout.php';
+    return;
 }
 
 // ---- GET: search + optional selected target + your claims ----

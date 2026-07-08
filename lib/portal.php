@@ -1058,6 +1058,14 @@ function portal_create_claim(PDO $pdo, int $venueId, int $partnerId, int $userId
         'target_venue_name' => (string)$target['name'],
         'target_venue_slug' => (string)$target['slug'],
     ]];
+    // PU-C #10 — seed the append-only history with the submission event.
+    portal_claim_append_event($payload, 'claim_submitted', [
+        'actor'      => (string)($clean['requester_name'] ?? ''),
+        'role'       => (string)($clean['role'] ?? ''),
+        'work_email' => (string)($clean['work_email'] ?? ''),
+        'message'    => (string)($clean['message'] ?? ''),
+        'proof_url'  => (string)($clean['proof_url'] ?? ''),
+    ]);
 
     $stmt = $pdo->prepare(
         "INSERT INTO venue_change_requests
@@ -1124,8 +1132,14 @@ function portal_add_claim_proof(PDO $pdo, int $requestId, int $partnerId, array 
     if (!isset($data['claim']) || !is_array($data['claim'])) { $data['claim'] = []; }
     $msg   = (string)($clean['message'] ?? '');
     $proof = (string)($clean['proof_url'] ?? '');
-    if ($msg !== '')   { $data['claim']['message']   = $msg; }
-    if ($proof !== '') { $data['claim']['proof_url'] = $proof; }
+
+    // PU-C #10 — APPEND a proof_added event; NEVER overwrite the original claim.
+    portal_claim_append_event($data, 'proof_added', [
+        'by'        => 'partner',
+        'actor'     => (string)($clean['actor'] ?? ''),
+        'message'   => $msg,
+        'proof_url' => $proof,
+    ]);
 
     $upd = $pdo->prepare(
         "UPDATE venue_change_requests
@@ -1140,4 +1154,76 @@ function portal_add_claim_proof(PDO $pdo, int $requestId, int $partnerId, array 
     audit_log($pdo, null, 'update', 'change_request', $requestId,
         ['status' => 'needs_changes'], ['status' => 'pending', 'added_proof' => $proof !== '']);
     return true;
+}
+
+/* ==========================================================================
+ * PU-C #10 — claim history: an append-only "events" timeline in the claim JSON.
+ * ======================================================================== */
+
+/**
+ * Append an event to a claim payload's events[] (mutates $data). Each event is
+ * {type, at, ...fields}. Event types: claim_submitted · proof_requested ·
+ * proof_added · approved · rejected · withdrawn.
+ */
+function portal_claim_append_event(array &$data, string $type, array $fields = []): void
+{
+    if (!isset($data['events']) || !is_array($data['events'])) { $data['events'] = []; }
+    $data['events'][] = array_merge(['type' => $type, 'at' => date('Y-m-d H:i:s')], $fields);
+}
+
+/**
+ * Ordered event timeline for a claim CR row (decoded from JSON). If the claim has
+ * no events[] (pre-PU-C), synthesize a best-effort timeline: the submission (from
+ * the "claim" snapshot + created_at) plus the last decision (from status +
+ * review_note + reviewed_at). Returns a list of normalized event arrays.
+ */
+function portal_claim_timeline(array $cr): array
+{
+    $data = json_decode((string)($cr['proposed_changes_json'] ?? ''), true);
+    if (!is_array($data)) { $data = []; }
+    $events = (isset($data['events']) && is_array($data['events'])) ? $data['events'] : [];
+    if ($events) { return $events; }
+
+    // --- backward-compat synthesis ---
+    $claim = is_array($data['claim'] ?? null) ? $data['claim'] : [];
+    $out = [[
+        'type'       => 'claim_submitted',
+        'at'         => (string)($cr['created_at'] ?? ''),
+        'actor'      => (string)($claim['requester_name'] ?? ''),
+        'role'       => (string)($claim['role'] ?? ''),
+        'work_email' => (string)($claim['work_email'] ?? ''),
+        'message'    => (string)($claim['message'] ?? ''),
+        'proof_url'  => (string)($claim['proof_url'] ?? ''),
+    ]];
+    $status = (string)($cr['status'] ?? '');
+    $map    = ['needs_changes' => 'proof_requested', 'approved' => 'approved',
+               'rejected' => 'rejected', 'withdrawn' => 'withdrawn'];
+    if (isset($map[$status])) {
+        $out[] = [
+            'type' => $map[$status],
+            'at'   => (string)($cr['reviewed_at'] ?? $cr['updated_at'] ?? ''),
+            'by'   => 'admin',
+            'note' => (string)($cr['review_note'] ?? ''),
+        ];
+    }
+    return $out;
+}
+
+/**
+ * One owned claim CR (any status) + its venue context, or null if not found / not
+ * owned / not a claim. Owner-scoped (caller → 404). For the partner claim detail.
+ */
+function portal_claim_for_partner(PDO $pdo, int $requestId, int $partnerId): ?array
+{
+    $s = $pdo->prepare(
+        "SELECT cr.*, v.name AS venue_name, v.slug AS venue_slug, v.status AS venue_status,
+                v.area AS venue_area, e.name AS venue_emirate
+         FROM venue_change_requests cr
+         LEFT JOIN venues   v ON v.id = cr.venue_id
+         LEFT JOIN emirates e ON e.id = v.emirate_id
+         WHERE cr.id = :rid AND cr.partner_id = :pid AND cr.type = 'claim' LIMIT 1"
+    );
+    $s->execute([':rid' => $requestId, ':pid' => $partnerId]);
+    $row = $s->fetch();
+    return $row === false ? null : $row;
 }

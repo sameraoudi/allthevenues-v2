@@ -91,6 +91,13 @@ $requesterLine = trim((string)($cl['requester_name'] ?? '') . ($roleLabel !== ''
   <?php endif; ?>
 </div>
 
+<?php /* PU-C #10 — the same append-only claim history the partner sees. */ ?>
+<div class="admin-panel">
+  <h3 class="admin-panel__title">Claim history</h3>
+  <?php $events = portal_claim_timeline($req); require __DIR__ . '/../portal/_claim-timeline.php'; ?>
+  <p class="lead-hint mt-2">Each step is preserved. Your decision below appends to this timeline.</p>
+</div>
+
 <?php if ($isPending): ?>
   <form class="admin-form" method="post" action="<?= e(base_url('admin/change-requests/' . $id)) ?>" data-claim-form data-claim-contested="<?= $contested ? '1' : '0' ?>">
     <?php csrf_field(); ?>

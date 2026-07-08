@@ -114,7 +114,7 @@ if ($sub === 'claim' || strncmp($sub, 'claim/', 6) === 0) {
     $claimTarget    = 0;
     $claimAction    = '';
     $claimRequestId = 0;
-    if (preg_match('#^claim/(\d+)/(withdraw|proof)$#', $sub, $mc)) {
+    if (preg_match('#^claim/(\d+)/(withdraw|proof|view)$#', $sub, $mc)) {
         $claimRequestId = (int)$mc[1];
         $claimAction    = $mc[2];
     } elseif (preg_match('#^claim/(\d+)$#', $sub, $mc)) {

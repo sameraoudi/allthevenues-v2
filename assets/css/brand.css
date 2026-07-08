@@ -1496,6 +1496,25 @@ select:focus-visible,
 .claim-proof__form textarea, .claim-proof__form input { border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; font: inherit; font-size: 12.5px; color: var(--ink); }
 .claim-proof__form button { align-self: flex-start; margin-top: 4px; }
 
+/* PU-C — claim history timeline (#10) + rejected reason (#11) + proof screen (#9). */
+.claim-reason { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+.claim-reason--rej { color: #a12f24; }
+.claim-tl { list-style: none; margin: 6px 0 0; padding: 0; position: relative; }
+.claim-tl:before { content: ''; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 2px; background: var(--line); }
+.claim-tl__i { position: relative; padding: 0 0 16px 26px; }
+.claim-tl__i:last-child { padding-bottom: 0; }
+.claim-tl__dot { position: absolute; left: 1px; top: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 2px solid var(--action); }
+.claim-tl__dot--ok   { border-color: #1f6a41; background: #1f6a41; }
+.claim-tl__dot--warn { border-color: #8a6d1b; }
+.claim-tl__dot--rej  { border-color: #a12f24; background: #a12f24; }
+.claim-tl__t { font-size: 13.5px; font-weight: 600; }
+.claim-tl__when { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.claim-tl__body { font-size: 13px; color: #40525f; margin-top: 5px; line-height: 1.5; background: #f7f9fb; border: 1px solid var(--line); border-radius: 8px; padding: 8px 11px; }
+.claim-tl__body a { word-break: break-all; }
+.claim-vsum { display: flex; gap: 11px; align-items: center; background: #f7f9fb; border: 1px solid var(--line); border-radius: 9px; padding: 9px 12px; margin-bottom: 14px; font-size: 13px; }
+.claim-vsum__th { width: 44px; height: 34px; border-radius: 6px; background: linear-gradient(135deg, #c9d6e2, #9fb4c6); flex: 0 0 auto; }
+.claim-reqnote { background: #eef4f8; border: 1px solid #d6e2ea; border-radius: 9px; padding: 10px 13px; color: #2f5064; font-size: 13px; margin-bottom: 16px; line-height: 1.5; }
+
 /* #3 U-P9a — partner onboarding + set-password (additive). */
 .onb-st { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 20px; }
 .onb-st.st-ok   { background: #d7ecdd; color: #1f6a41; }

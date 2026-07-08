@@ -135,36 +135,36 @@ $claimStatus = [
   <?php else: ?>
     <?php foreach ($myClaims as $c):
       $st = (string)$c['status'];
-      [$stLabel, $stClass] = $claimStatus[$st] ?? [ucfirst($st), 'st-arch'];
-      $rid = (int)$c['id'];
-      $when = ($c['updated_at'] ?? $c['created_at'] ?? null);
+      [$stLabel, $stClass] = $claimStatus[$st] ?? [ucfirst(str_replace('_', ' ', $st)), 'st-arch'];
+      $rid  = (int)$c['id'];
+      $when = ($c['created_at'] ?? null);
       $data = json_decode((string)($c['proposed_changes_json'] ?? ''), true);
       $role = is_array($data) ? (string)($data['claim']['role'] ?? '') : '';
+      $note = trim((string)($c['review_note'] ?? ''));
+      $reviewedAt = $c['reviewed_at'] ?? null;
+      // #11 — for rejected / proof-requested, surface the reviewer's reason + date.
+      $showReason = in_array($st, ['rejected', 'needs_changes'], true) && $note !== '';
     ?>
       <div class="claim-row">
         <div>
           <div class="claim-nm"><?= e((string)($c['venue_name'] ?? 'Venue')) ?></div>
-          <div class="claim-lo"><?= $when ? e(date('j M Y', strtotime((string)$when))) : '' ?><?= $role !== '' ? ' · role: ' . e($role) : '' ?></div>
+          <div class="claim-lo"><?= $when ? 'Submitted ' . e(date('j M Y', strtotime((string)$when))) : '' ?><?= $role !== '' ? ' · role: ' . e($role) : '' ?></div>
+          <?php if ($showReason): ?>
+            <div class="claim-reason<?= $st === 'rejected' ? ' claim-reason--rej' : '' ?>">
+              <strong><?= $st === 'rejected' ? 'Reason' : 'Requested' ?>:</strong> <?= e($note) ?><?php if ($reviewedAt): ?> &middot; <?= e(date('j M Y', strtotime((string)$reviewedAt))) ?><?php endif; ?>
+            </div>
+          <?php endif; ?>
         </div>
         <div class="claim-row__act">
           <span class="claim-st <?= e($stClass) ?>"><?= e($stLabel) ?></span>
-          <?php if ($st === 'pending'): ?>
+          <a class="atv-btn atv-btn--sm atv-btn--ghost" href="<?= e(base_url('portal/claim/' . $rid . '/view')) ?>">View</a>
+          <?php if ($st === 'needs_changes'): ?>
+            <a class="atv-btn atv-btn--sm" href="<?= e(base_url('portal/claim/' . $rid . '/proof')) ?>">Add proof</a>
+          <?php elseif ($st === 'pending'): ?>
             <form method="post" action="<?= e(base_url('portal/claim/' . $rid . '/withdraw')) ?>">
               <?php csrf_field(); ?>
               <button type="submit" class="atv-btn atv-btn--sm atv-btn--danger" data-confirm="Withdraw this claim?">Withdraw</button>
             </form>
-          <?php elseif ($st === 'needs_changes'): ?>
-            <details class="claim-proof">
-              <summary>Add proof</summary>
-              <form method="post" action="<?= e(base_url('portal/claim/' . $rid . '/proof')) ?>" class="claim-proof__form">
-                <?php csrf_field(); ?>
-                <label for="pf-msg-<?= $rid ?>">Message</label>
-                <textarea id="pf-msg-<?= $rid ?>" name="message" rows="2" maxlength="2000" placeholder="Add any detail our team asked for."></textarea>
-                <label for="pf-url-<?= $rid ?>">Proof link</label>
-                <input type="text" id="pf-url-<?= $rid ?>" name="proof_url" maxlength="255" placeholder="https://…">
-                <button type="submit" class="atv-btn atv-btn--sm">Send to our team</button>
-              </form>
-            </details>
           <?php endif; ?>
         </div>
       </div>

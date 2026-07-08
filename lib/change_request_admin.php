@@ -894,6 +894,9 @@ function cr_claim_decide(PDO $pdo, array $req, int $adminUserId, string $decisio
     $data = cr_decode_changes($req['proposed_changes_json']);
     if (!is_array($data)) { $data = []; }
     $data['review'] = $review;
+    // PU-C #10 — append the decision to the append-only history (same transaction).
+    $evMap = ['approve' => 'approved', 'request_proof' => 'proof_requested', 'reject' => 'rejected'];
+    portal_claim_append_event($data, $evMap[$decision] ?? $decision, ['by' => 'admin', 'note' => $note]);
     $mergedJson = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
     /* ---------------- APPROVE (reassign) ---------------- */
