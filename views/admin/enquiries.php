@@ -15,6 +15,7 @@ require_once __DIR__ . '/../../lib/venues.php';
 require_once __DIR__ . '/../../lib/enquiry.php';
 require_once __DIR__ . '/../../lib/enquiry_admin.php';
 require_once __DIR__ . '/../../lib/mail.php';
+require_once __DIR__ . '/../../lib/email_template.php';
 
 $me   = auth_current_user();
 $rest = trim(substr((string)$sub, strlen('enquiries')), '/');   // '' | '5' | '5/status'
@@ -180,12 +181,11 @@ if (preg_match('#^(\d+)/(status|note|assign|delete)$#', $rest, $m)) {
             ['status' => $enq['status']],
             ['status' => 'forwarded', 'partner_id' => $partnerId, 'routed_to_email' => $routedEmail]);
 
-        // Best-effort partner email.
+        // Best-effort partner email — branded template (lib/email_template.php).
         if (($_POST['send_email'] ?? '') === '1') {
-            $esc = static fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
             $venueNames = implode(', ', array_map(static fn($v) => (string)$v['name'], $enq['venues']));
 
-            // Label lookups for coded fields.
+            // Resolve coded fields to display labels for the email presenter.
             $flexOpts  = enquiry_date_flexibility();
             $flexLabel = $enq['date_flexibility'] ? ($flexOpts[$enq['date_flexibility']] ?? $enq['date_flexibility']) : '';
             $ioOpts    = venue_indoor_outdoor_options();
@@ -195,26 +195,37 @@ if (preg_match('#^(\d+)/(status|note|assign|delete)$#', $rest, $m)) {
                 trim((string)($enq['emirate_name'] ?? '')),
                 trim((string)($enq['city_pref'] ?? '')),
             ])));
+            $eventDate = '';
+            if (trim((string)($enq['event_date'] ?? '')) !== '') {
+                $ts = strtotime((string)$enq['event_date']);
+                $eventDate = $ts !== false ? date('j F Y', $ts) : (string)$enq['event_date'];
+            }
 
-            $body = '<div style="font-family:Arial,sans-serif;color:#0E1B2A;">'
-                . '<h2>New lead from All The Venues — ' . $esc($enq['reference']) . '</h2>'
-                . '<p><strong>Contact:</strong> ' . $esc($enq['name']) . ' &lt;' . $esc($enq['email']) . '&gt;'
-                . ($enq['phone'] ? ' · ' . $esc($enq['phone']) : '') . '</p>'
-                . ($enq['company'] ? '<p><strong>Company:</strong> ' . $esc($enq['company']) . '</p>' : '')
-                . ($venueNames ? '<p><strong>Venue(s):</strong> ' . $esc($venueNames) . '</p>' : '')
-                . ($enq['event_type_name'] ? '<p><strong>Event type:</strong> ' . $esc($enq['event_type_name']) . '</p>' : '')
-                . ($enq['event_date'] ? '<p><strong>Date:</strong> ' . $esc($enq['event_date']) . '</p>' : '')
-                . ($flexLabel ? '<p><strong>Date flexibility:</strong> ' . $esc($flexLabel) . '</p>' : '')
-                . ($guests ? '<p><strong>Guests:</strong> ' . $esc($guests) . '</p>' : '')
-                . ($enq['budget_range'] ? '<p><strong>Budget:</strong> ' . $esc($enq['budget_range']) . '</p>' : '')
-                . ($location ? '<p><strong>Location:</strong> ' . $esc($location) . '</p>' : '')
-                . ($ioLabel ? '<p><strong>Indoor / outdoor:</strong> ' . $esc($ioLabel) . '</p>' : '')
-                . ($enq['venue_preference'] ? '<p><strong>Venue preference:</strong><br>' . nl2br($esc($enq['venue_preference'])) . '</p>' : '')
-                . ($enq['fb_requirements'] ? '<p><strong>Food &amp; beverage:</strong><br>' . nl2br($esc($enq['fb_requirements'])) . '</p>' : '')
-                . ($enq['av_requirements'] ? '<p><strong>AV &amp; technical:</strong><br>' . nl2br($esc($enq['av_requirements'])) . '</p>' : '')
-                . ($enq['notes'] ? '<p><strong>Notes:</strong><br>' . nl2br($esc($enq['notes'])) . '</p>' : '')
-                . '</div>';
-            if (!send_mail($routedEmail, 'New lead ' . $enq['reference'] . ' — All The Venues', $body)) {
+            $lead = [
+                'reference'        => (string)$enq['reference'],
+                'venue'            => $venueNames,
+                'name'             => (string)$enq['name'],
+                'email'            => (string)$enq['email'],
+                'phone'            => (string)($enq['phone'] ?? ''),
+                'company'          => (string)($enq['company'] ?? ''),
+                'event_type'       => (string)($enq['event_type_name'] ?? ''),
+                'event_date'       => $eventDate,
+                'date_flexibility' => (string)$flexLabel,
+                'guests'           => (string)$guests,
+                'budget'           => (string)($enq['budget_range'] ?? ''),
+                'location'         => $location,
+                'indoor_outdoor'   => (string)$ioLabel,
+                'venue_preference' => (string)($enq['venue_preference'] ?? ''),
+                'fb_requirements'  => (string)($enq['fb_requirements'] ?? ''),
+                'av_requirements'  => (string)($enq['av_requirements'] ?? ''),
+                'notes'            => (string)($enq['notes'] ?? ''),
+            ];
+            $subject = 'New enquiry'
+                . ($venueNames !== '' ? ' for ' . $venueNames : '')
+                . ' — ' . $enq['reference'];
+
+            ['html' => $html, 'text' => $text] = email_lead_forward($lead);
+            if (!send_mail($routedEmail, $subject, $html, $text)) {
                 error_log('enquiry ' . $enq['reference'] . ': partner forward email to ' . $routedEmail . ' failed');
             }
         }
