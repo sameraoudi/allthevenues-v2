@@ -175,8 +175,14 @@ already partially folded into the old 001; `db/MIGRATION.md` updated with a "Sch
   fonts, absolute URLs, styled-text wordmark — no header image). Applied to the **lead-forward** email (`43e6784`,
   with Email/Call-the-client CTAs + Partner Portal promo) and all **customer-facing confirmations** (`510ae34`:
   enquiry user+admin, contact, become-partner, delist). Design lock `docs/atv-lead-email-preview.html`. **Remaining
-  email batch (optional fast-follow):** partner-portal transactional emails (account invite / review decisions /
-  password reset) + the contact/partner/delist ADMIN notification bodies — all can reuse the same helpers.
+  email batch:** DONE — batch 3 (`e8fc714`) branded **every remaining email** (partner invite + password reset with
+  branded token buttons; all cr_notify_provider decisions edit/new_venue/claim/delist + incumbent-reassigned; photo
+  approve/reject; contact/partner/delist ADMIN notifications). **ALL platform emails are now on-brand.**
+- **Admin event-type editor SHIPPED** (`81b3428`, no migration) — `venue_admin_event_types_save()` (any status, not
+  owner-scoped, applies immediately) + fieldset in the admin venue editor; shared `_venue_event_types_replace()` core
+  now used by both admin + portal (portal governance guard preserved).
+- **STATUS (8 Jul 2026): everything on the board is DONE** — post-launch backlog fully cleared, Contacts & Ownership,
+  all branded emails, DB001-sync, admin event-type editor. No open build items.
 **PU-D2 SHIPPED** (#17, commit `452b1a5`, no migration) — published-venue event-type edits are now a governed
 change request folded into the U-P5 edit CR: the proposed set rides in `proposed_changes_json._event_type_ids`
 (inert to the scalar field-loop); `cr_approve` applies it (validate active ids → DELETE+INSERT) in the same
