@@ -167,6 +167,13 @@ pending_image_count/total_image_count); readiness re-evaluates on load. **POST-L
 (PU-B, PU-D1/D2, delisting, portal-polish, PU-A1/A2, copy passes, PU-C, Contacts & Ownership, PU-E). **Remaining =
 optional only:** **DB001-sync** (consolidate `db/001_schema.sql` to current schema — repo-only, zero-risk, spec
 written + issued, awaiting run) + the **admin event-type editor UI** fast-follow.
+- **BRANDED EMAILS SHIPPED (8 Jul):** new reusable `lib/email_template.php` (`email_layout` + `email_section`/
+  `email_rows`/`email_button`/`email_ref_box`/`email_confirmation`; email-safe tables+inline styles, web-safe
+  fonts, absolute URLs, styled-text wordmark — no header image). Applied to the **lead-forward** email (`43e6784`,
+  with Email/Call-the-client CTAs + Partner Portal promo) and all **customer-facing confirmations** (`510ae34`:
+  enquiry user+admin, contact, become-partner, delist). Design lock `docs/atv-lead-email-preview.html`. **Remaining
+  email batch (optional fast-follow):** partner-portal transactional emails (account invite / review decisions /
+  password reset) + the contact/partner/delist ADMIN notification bodies — all can reuse the same helpers.
 **PU-D2 SHIPPED** (#17, commit `452b1a5`, no migration) — published-venue event-type edits are now a governed
 change request folded into the U-P5 edit CR: the proposed set rides in `proposed_changes_json._event_type_ids`
 (inert to the scalar field-loop); `cr_approve` applies it (validate active ids → DELETE+INSERT) in the same
