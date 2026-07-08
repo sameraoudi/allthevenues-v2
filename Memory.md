@@ -165,8 +165,11 @@ optional `?venue_id` filter (preserved across approve/reject); the admin new-ven
 status + a "Review pending photos" link to the filtered queue (`cr_load_new_venue` returns
 pending_image_count/total_image_count); readiness re-evaluates on load. **POST-LAUNCH BACKLOG FULLY CLEARED**
 (PU-B, PU-D1/D2, delisting, portal-polish, PU-A1/A2, copy passes, PU-C, Contacts & Ownership, PU-E). **Remaining =
-optional only:** **DB001-sync** (consolidate `db/001_schema.sql` to current schema — repo-only, zero-risk, spec
-written + issued, awaiting run) + the **admin event-type editor UI** fast-follow.
+optional only:** the **admin event-type editor UI** fast-follow (+ optional email batch, below). **DB001-sync DONE**
+(`11a411d`, repo-only) — `db/001_schema.sql` consolidated to the current full schema (through migration 023);
+fresh build = 001 + 002; 003–023 retained as history (must NOT be replayed on a 001-built DB); equivalence proof =
+empty diff + byte-identical to the live migrated `sameraou_atv2`. NB CC found early migrations (003–006) were
+already partially folded into the old 001; `db/MIGRATION.md` updated with a "Schema files & fresh import" section.
 - **BRANDED EMAILS SHIPPED (8 Jul):** new reusable `lib/email_template.php` (`email_layout` + `email_section`/
   `email_rows`/`email_button`/`email_ref_box`/`email_confirmation`; email-safe tables+inline styles, web-safe
   fonts, absolute URLs, styled-text wordmark — no header image). Applied to the **lead-forward** email (`43e6784`,
