@@ -10,6 +10,32 @@ dump.
 
 ---
 
+## Schema files & fresh import (as of migration 023)
+
+`db/001_schema.sql` has been **consolidated to the current full schema** (all
+changes through migration 023 folded in). A **fresh database build now needs only
+two files, in order**:
+
+```
+db/001_schema.sql      # full current schema (consolidated)
+db/002_seed_taxonomy.sql   # reference/taxonomy seed (unchanged)
+```
+
+The numbered migrations **`003`–`023` are retained as the incremental history /
+applied patches for EXISTING environments** (prod/staging, which already have
+them). **Do NOT replay `003`–`023` on a database freshly built from `001`** — that
+schema is already complete, and several early migrations are unguarded `ALTER`s
+that would error `1060 duplicate column` (they are already present in the
+consolidated `001`).
+
+Equivalence was proven on MySQL 5.7: a DB built from the new `001` + `002` is
+schema-identical (mysqldump `--no-data`, AUTO_INCREMENT normalized) to a DB built
+from the old chain `001`+`002`+`003`…`023`, and to the live fully-migrated
+database. Migration `002` (seed data) is unchanged — seed stays separate from the
+schema.
+
+---
+
 ## What it does
 
 `db/migrate_catalogue.php` (idempotent — truncates the target catalogue tables

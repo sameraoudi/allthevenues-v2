@@ -1,338 +1,377 @@
 -- =============================================================================
--- All The Venues — Phase-1 schema (U1a)
--- Target database: sameraou_atv2
--- Spec: docs/ATV-SCHEMA.md §1–§4 (authoritative).
+-- All The Venues — database schema
+-- Target database: sameraou_atv2   (MySQL 5.7, apply via phpMyAdmin)
 --
--- Conventions:
---   * ENGINE=InnoDB, CHARSET=utf8mb4, COLLATE=utf8mb4_unicode_ci throughout.
---   * All PKs and FK columns are INT UNSIGNED for consistent FK typing.
---   * slug columns are VARCHAR(191) so a UNIQUE index fits utf8mb4 limits.
---   * FK ON DELETE: CASCADE for owned children (images, layouts, join rows);
---     SET NULL for optional references (taxonomy, partner) so deleting a
---     lookup row never destroys catalogue rows.
---   * Tables created in dependency order; safe to run top-to-bottom.
---   * CREATE TABLE IF NOT EXISTS for re-run friendliness.
+-- Consolidated full schema as of migration 023 (2026-07-08).
+-- Fresh import = 001 + 002 (seed). Migrations 003–023 remain as the incremental
+-- history for existing environments; do NOT replay them on a DB freshly built
+-- from this file.
 --
--- Apply via phpMyAdmin against sameraou_atv2 (localhost-only on the server).
+-- Conventions: ENGINE=InnoDB, CHARSET=utf8mb4, COLLATE=utf8mb4_unicode_ci
+-- throughout; INT UNSIGNED PKs/FKs; slug columns VARCHAR(191). Tables use
+-- CREATE TABLE IF NOT EXISTS for re-run friendliness; FK checks are disabled for
+-- the CREATE block so table order doesn't matter on import.
 -- =============================================================================
 
 SET NAMES utf8mb4;
-SET foreign_key_checks = 1;
+SET FOREIGN_KEY_CHECKS = 0;
 
--- -----------------------------------------------------------------------------
--- §1  Taxonomy / reference tables (seeded in 002_seed_taxonomy.sql)
--- -----------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS event_types (
-    id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    name        VARCHAR(100) NOT NULL,
-    slug        VARCHAR(191) NOT NULL,
-    sort_order  INT NOT NULL DEFAULT 0,
-    active      TINYINT(1) NOT NULL DEFAULT 1,
-    PRIMARY KEY (id),
-    UNIQUE KEY uq_event_types_slug (slug),
-    KEY idx_event_types_active (active)
+CREATE TABLE IF NOT EXISTS `audit_log` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned DEFAULT NULL,
+  `action` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `entity_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `entity_id` int(10) unsigned DEFAULT NULL,
+  `old_value_json` json DEFAULT NULL,
+  `new_value_json` json DEFAULT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_audit_user` (`user_id`),
+  KEY `idx_audit_entity` (`entity_type`,`entity_id`),
+  KEY `idx_audit_created` (`created_at`),
+  CONSTRAINT `fk_audit_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `emirates` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT '0',
+  `active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_emirates_slug` (`slug`),
+  KEY `idx_emirates_active` (`active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `enquiries` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `reference` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `company` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `event_type_id` int(10) unsigned DEFAULT NULL,
+  `event_date` date DEFAULT NULL,
+  `date_flexibility` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `emirate_id` int(10) unsigned DEFAULT NULL,
+  `city_pref` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `guest_count` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `budget_range` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `venue_preference` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `indoor_outdoor` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `fb_requirements` text COLLATE utf8mb4_unicode_ci,
+  `av_requirements` text COLLATE utf8mb4_unicode_ci,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `consent_to_share` tinyint(1) NOT NULL DEFAULT '0',
+  `source_page` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `mode` enum('venue','assisted','partner','general','partner_signup','contact') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'general',
+  `partner_id` int(10) unsigned DEFAULT NULL,
+  `provider_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `website` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `venues_managed` int(10) unsigned DEFAULT NULL,
+  `status` enum('new','reviewed','forwarded','accepted','contacted','won','lost','closed','spam') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'new',
+  `is_historical` tinyint(1) NOT NULL DEFAULT '0',
+  `legacy_id` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_enquiries_reference` (`reference`),
+  UNIQUE KEY `uq_enquiries_legacy` (`legacy_id`),
+  KEY `idx_enquiries_email` (`email`),
+  KEY `idx_enquiries_status` (`status`),
+  KEY `idx_enquiries_event_type` (`event_type_id`),
+  KEY `idx_enquiries_emirate` (`emirate_id`),
+  KEY `idx_enquiries_partner` (`partner_id`),
+  KEY `idx_enquiries_created` (`created_at`),
+  CONSTRAINT `fk_enquiries_emirate` FOREIGN KEY (`emirate_id`) REFERENCES `emirates` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_enquiries_event_type` FOREIGN KEY (`event_type_id`) REFERENCES `event_types` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_enquiries_partner` FOREIGN KEY (`partner_id`) REFERENCES `partners` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `enquiry_venues` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `enquiry_id` int(10) unsigned NOT NULL,
+  `venue_id` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_enquiry_venue` (`enquiry_id`,`venue_id`),
+  KEY `idx_ev_venue` (`venue_id`),
+  CONSTRAINT `fk_ev_enquiry` FOREIGN KEY (`enquiry_id`) REFERENCES `enquiries` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_ev_venue` FOREIGN KEY (`venue_id`) REFERENCES `venues` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `event_types` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT '0',
+  `active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_event_types_slug` (`slug`),
+  KEY `idx_event_types_active` (`active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `lead_routing` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `enquiry_id` int(10) unsigned NOT NULL,
+  `venue_id` int(10) unsigned DEFAULT NULL,
+  `partner_id` int(10) unsigned DEFAULT NULL,
+  `routed_to_email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('pending','sent','accepted','declined','expired') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `routed_at` datetime DEFAULT NULL,
+  `response_at` datetime DEFAULT NULL,
+  `admin_note` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`),
+  KEY `idx_routing_enquiry` (`enquiry_id`),
+  KEY `idx_routing_venue` (`venue_id`),
+  KEY `idx_routing_partner` (`partner_id`),
+  KEY `idx_routing_status` (`status`),
+  CONSTRAINT `fk_routing_enquiry` FOREIGN KEY (`enquiry_id`) REFERENCES `enquiries` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_routing_partner` FOREIGN KEY (`partner_id`) REFERENCES `partners` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_routing_venue` FOREIGN KEY (`venue_id`) REFERENCES `venues` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `partners` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `slug` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `org_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `partner_group` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `contact_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `website` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `emirate_id` int(10) unsigned DEFAULT NULL,
+  `city_text` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `about` text COLLATE utf8mb4_unicode_ci,
+  `logo_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cover_image_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cover_thumb_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cover_image_alt` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('draft','pending','approved','suspended') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'draft',
+  `is_featured` tinyint(1) NOT NULL DEFAULT '0',
+  `is_verified` tinyint(1) NOT NULL DEFAULT '0',
+  `commission_rate` decimal(5,2) DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `approved_at` datetime DEFAULT NULL,
+  `legacy_id` int(10) unsigned DEFAULT NULL,
+  `cover_permission_status` enum('approved_by_provider','owned_by_atv','licensed_stock','legacy_needs_review','public_website_needs_permission','remove_replace') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cover_image_source` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cover_source_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cover_provider_approved_by` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cover_approval_date` date DEFAULT NULL,
+  `cover_usage_notes` text COLLATE utf8mb4_unicode_ci,
+  `cover_expires_at` date DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_partners_slug` (`slug`),
+  UNIQUE KEY `uq_partners_legacy` (`legacy_id`),
+  KEY `idx_partners_emirate` (`emirate_id`),
+  KEY `idx_partners_status` (`status`),
+  KEY `idx_partners_featured` (`is_featured`),
+  CONSTRAINT `fk_partners_emirate` FOREIGN KEY (`emirate_id`) REFERENCES `emirates` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `password_tokens` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `purpose` enum('invite','reset') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'invite',
+  `token_hash` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `sent_to` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `expires_at` datetime NOT NULL,
+  `used_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_pt_hash` (`token_hash`),
+  KEY `idx_pt_user` (`user_id`,`purpose`),
+  KEY `idx_pt_expires` (`expires_at`),
+  KEY `fk_pt_creator` (`created_by`),
+  CONSTRAINT `fk_pt_creator` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_pt_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `slug_redirects` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `entity_type` enum('venue','provider') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `old_slug` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `entity_id` int(10) unsigned NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_slug_redirect` (`entity_type`,`old_slug`),
+  KEY `idx_slug_redirect_entity` (`entity_type`,`entity_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `role` enum('admin','editor','partner') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'editor',
+  `status` enum('active','disabled') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active',
+  `partner_id` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_login_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_users_email` (`email`),
+  KEY `idx_users_role` (`role`),
+  KEY `idx_users_partner` (`partner_id`),
+  CONSTRAINT `fk_users_partner` FOREIGN KEY (`partner_id`) REFERENCES `partners` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `venue_change_requests` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `venue_id` int(10) unsigned DEFAULT NULL,
+  `partner_id` int(10) unsigned NOT NULL,
+  `submitted_by` int(10) unsigned DEFAULT NULL,
+  `type` enum('edit','new_venue','image','claim','delist') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `proposed_changes_json` json DEFAULT NULL,
+  `status` enum('pending','approved','rejected','needs_changes','withdrawn') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `review_note` text COLLATE utf8mb4_unicode_ci,
+  `reviewed_by` int(10) unsigned DEFAULT NULL,
+  `reviewed_at` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_vcr_partner_status` (`partner_id`,`status`),
+  KEY `idx_vcr_venue` (`venue_id`),
+  KEY `idx_vcr_status_created` (`status`,`created_at`),
+  KEY `idx_vcr_type` (`type`),
+  KEY `fk_vcr_user` (`submitted_by`),
+  KEY `fk_vcr_reviewer` (`reviewed_by`),
+  CONSTRAINT `fk_vcr_partner` FOREIGN KEY (`partner_id`) REFERENCES `partners` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_vcr_reviewer` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_vcr_user` FOREIGN KEY (`submitted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_vcr_venue` FOREIGN KEY (`venue_id`) REFERENCES `venues` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `venue_documents` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `venue_id` int(10) unsigned NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `file_path` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_documents_venue` (`venue_id`),
+  CONSTRAINT `fk_documents_venue` FOREIGN KEY (`venue_id`) REFERENCES `venues` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `venue_event_types` (
+  `venue_id` int(10) unsigned NOT NULL,
+  `event_type_id` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`venue_id`,`event_type_id`),
+  KEY `idx_vet_event` (`event_type_id`),
+  CONSTRAINT `fk_vet_event` FOREIGN KEY (`event_type_id`) REFERENCES `event_types` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_vet_venue` FOREIGN KEY (`venue_id`) REFERENCES `venues` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `venue_images` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `venue_id` int(10) unsigned NOT NULL,
+  `file_path` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `thumb_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `alt_text` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_primary` tinyint(1) NOT NULL DEFAULT '0',
+  `sort_order` int(11) NOT NULL DEFAULT '0',
+  `status` enum('active','hidden') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `permission_status` enum('approved_by_provider','owned_by_atv','licensed_stock','legacy_needs_review','public_website_needs_permission','remove_replace') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'legacy_needs_review',
+  `image_source` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `source_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `provider_approved_by` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `approval_date` date DEFAULT NULL,
+  `usage_notes` text COLLATE utf8mb4_unicode_ci,
+  `expires_at` date DEFAULT NULL,
+  `review_status` enum('pending_review','approved','rejected','withdrawn','archived') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'approved',
+  `rights_confirmed` tinyint(1) NOT NULL DEFAULT '0',
+  `rights_confirmed_by` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `rights_confirmed_at` datetime DEFAULT NULL,
+  `uploaded_by` int(10) unsigned DEFAULT NULL,
+  `original_filename` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `file_size` int(10) unsigned DEFAULT NULL,
+  `img_width` int(11) DEFAULT NULL,
+  `img_height` int(11) DEFAULT NULL,
+  `reviewed_by` int(11) DEFAULT NULL,
+  `reviewed_at` datetime DEFAULT NULL,
+  `review_note` text COLLATE utf8mb4_unicode_ci,
+  `review_reason` varchar(80) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_images_venue` (`venue_id`),
+  KEY `idx_images_primary` (`venue_id`,`is_primary`),
+  KEY `idx_vimg_permission` (`permission_status`),
+  KEY `idx_vimg_review_status` (`review_status`),
+  CONSTRAINT `fk_images_venue` FOREIGN KEY (`venue_id`) REFERENCES `venues` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `venue_layout_capacity` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `venue_id` int(10) unsigned NOT NULL,
+  `layout_type` enum('Banquet','Reception','Theatre','Classroom','Cabaret','Boardroom','U-shape','H-shape') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `capacity` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_venue_layout` (`venue_id`,`layout_type`),
+  KEY `idx_layout_venue` (`venue_id`),
+  CONSTRAINT `fk_layout_venue` FOREIGN KEY (`venue_id`) REFERENCES `venues` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `venue_types` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT '0',
+  `active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_venue_types_slug` (`slug`),
+  KEY `idx_venue_types_active` (`active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `venues` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `slug` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `partner_id` int(10) unsigned DEFAULT NULL,
+  `management_source` enum('unassigned','admin_assigned','provider_created','provider_claimed','legacy_import') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'unassigned',
+  `provider_assigned_at` datetime DEFAULT NULL,
+  `provider_assigned_by` int(10) unsigned DEFAULT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('draft','pending','published','needs_changes','archived','delisted') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'draft',
+  `is_featured` tinyint(1) NOT NULL DEFAULT '0',
+  `is_verified` tinyint(1) NOT NULL DEFAULT '0',
+  `venue_type_id` int(10) unsigned DEFAULT NULL,
+  `indoor_outdoor` enum('indoor','outdoor','both') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'indoor',
+  `emirate_id` int(10) unsigned DEFAULT NULL,
+  `area` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `map_embed` text COLLATE utf8mb4_unicode_ci,
+  `lat` decimal(10,7) DEFAULT NULL,
+  `lng` decimal(10,7) DEFAULT NULL,
+  `contact_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `contact_email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `contact_phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `best_for` text COLLATE utf8mb4_unicode_ci,
+  `highlights` text COLLATE utf8mb4_unicode_ci,
+  `facilities` text COLLATE utf8mb4_unicode_ci,
+  `food_beverage` text COLLATE utf8mb4_unicode_ci,
+  `av_support` text COLLATE utf8mb4_unicode_ci,
+  `restrictions` text COLLATE utf8mb4_unicode_ci,
+  `packages` text COLLATE utf8mb4_unicode_ci,
+  `special_offer` text COLLATE utf8mb4_unicode_ci,
+  `atv_special_offer` text COLLATE utf8mb4_unicode_ci,
+  `video_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `website` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `capacity_max` int(10) unsigned DEFAULT NULL,
+  `capacity_min` int(10) unsigned DEFAULT NULL,
+  `pricing_level` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `minimum_spend` decimal(12,2) DEFAULT NULL,
+  `atv_rating` decimal(2,1) DEFAULT NULL,
+  `atv_review` text COLLATE utf8mb4_unicode_ci,
+  `main_image` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `published_at` datetime DEFAULT NULL,
+  `legacy_id` int(10) unsigned DEFAULT NULL,
+  `floor_area` decimal(10,2) DEFAULT NULL,
+  `floor_area_unit` enum('sqm','sqft') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delisted_at` datetime DEFAULT NULL,
+  `delisted_by` int(10) unsigned DEFAULT NULL,
+  `delist_reason` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delist_details` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_venues_slug` (`slug`),
+  UNIQUE KEY `uq_venues_legacy` (`legacy_id`),
+  KEY `idx_venues_partner` (`partner_id`),
+  KEY `idx_venues_type` (`venue_type_id`),
+  KEY `idx_venues_emirate` (`emirate_id`),
+  KEY `idx_venues_status` (`status`),
+  KEY `idx_venues_featured` (`is_featured`),
+  CONSTRAINT `fk_venues_emirate` FOREIGN KEY (`emirate_id`) REFERENCES `emirates` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_venues_partner` FOREIGN KEY (`partner_id`) REFERENCES `partners` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_venues_type` FOREIGN KEY (`venue_type_id`) REFERENCES `venue_types` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS venue_types (
-    id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    name        VARCHAR(100) NOT NULL,
-    slug        VARCHAR(191) NOT NULL,
-    sort_order  INT NOT NULL DEFAULT 0,
-    active      TINYINT(1) NOT NULL DEFAULT 1,
-    PRIMARY KEY (id),
-    UNIQUE KEY uq_venue_types_slug (slug),
-    KEY idx_venue_types_active (active)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS emirates (
-    id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    name        VARCHAR(100) NOT NULL,
-    slug        VARCHAR(191) NOT NULL,
-    sort_order  INT NOT NULL DEFAULT 0,
-    active      TINYINT(1) NOT NULL DEFAULT 1,
-    PRIMARY KEY (id),
-    UNIQUE KEY uq_emirates_slug (slug),
-    KEY idx_emirates_active (active)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------------------------------
--- §2  Core catalogue tables
--- -----------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS partners (
-    id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    slug          VARCHAR(191) NOT NULL,
-    org_name      VARCHAR(255) NOT NULL,
-    partner_group VARCHAR(100) DEFAULT NULL,
-    contact_name  VARCHAR(255) DEFAULT NULL,
-    email         VARCHAR(255) DEFAULT NULL,
-    phone         VARCHAR(50)  DEFAULT NULL,
-    website       VARCHAR(255) DEFAULT NULL,
-    emirate_id    INT UNSIGNED DEFAULT NULL,
-    city_text     VARCHAR(150) DEFAULT NULL,
-    about         TEXT         DEFAULT NULL,          -- sanitized HTML
-    logo_path     VARCHAR(255) DEFAULT NULL,
-    cover_image_path VARCHAR(255) DEFAULT NULL,
-    cover_thumb_path VARCHAR(255) DEFAULT NULL,
-    cover_image_alt  VARCHAR(255) DEFAULT NULL,
-    status        ENUM('draft','pending','approved','suspended') NOT NULL DEFAULT 'draft',
-    is_featured   TINYINT(1)   NOT NULL DEFAULT 0,
-    is_verified   TINYINT(1)   NOT NULL DEFAULT 0,
-    commission_rate DECIMAL(5,2) DEFAULT NULL,
-    notes         TEXT         DEFAULT NULL,          -- admin-only
-    created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    approved_at   DATETIME     DEFAULT NULL,
-    PRIMARY KEY (id),
-    UNIQUE KEY uq_partners_slug (slug),
-    KEY idx_partners_emirate (emirate_id),
-    KEY idx_partners_status (status),
-    KEY idx_partners_featured (is_featured),
-    CONSTRAINT fk_partners_emirate FOREIGN KEY (emirate_id)
-        REFERENCES emirates (id) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS venues (
-    id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    slug           VARCHAR(191) NOT NULL,
-    partner_id     INT UNSIGNED DEFAULT NULL,
-    management_source    ENUM('unassigned','admin_assigned','provider_created','provider_claimed','legacy_import') NOT NULL DEFAULT 'unassigned',
-    provider_assigned_at DATETIME     DEFAULT NULL,
-    provider_assigned_by INT UNSIGNED DEFAULT NULL,
-    name           VARCHAR(255) NOT NULL,
-    status         ENUM('draft','pending','published','needs_changes','archived') NOT NULL DEFAULT 'draft',
-    is_featured    TINYINT(1)   NOT NULL DEFAULT 0,
-    is_verified    TINYINT(1)   NOT NULL DEFAULT 0,
-    -- Classification
-    venue_type_id  INT UNSIGNED DEFAULT NULL,
-    indoor_outdoor ENUM('indoor','outdoor','both') NOT NULL DEFAULT 'indoor',
-    emirate_id     INT UNSIGNED DEFAULT NULL,
-    area           VARCHAR(150) DEFAULT NULL,
-    address        VARCHAR(255) DEFAULT NULL,
-    map_embed      TEXT         DEFAULT NULL,
-    lat            DECIMAL(10,7) DEFAULT NULL,
-    lng            DECIMAL(10,7) DEFAULT NULL,
-    contact_name   VARCHAR(255) DEFAULT NULL,
-    contact_email  VARCHAR(255) DEFAULT NULL,
-    contact_phone  VARCHAR(50)  DEFAULT NULL,
-    -- Content (sanitized HTML where rich text)
-    description    TEXT         DEFAULT NULL,
-    best_for       TEXT         DEFAULT NULL,
-    highlights     TEXT         DEFAULT NULL,          -- curated "what makes it special" (admin-edited, sanitized)
-    facilities     TEXT         DEFAULT NULL,
-    food_beverage  TEXT         DEFAULT NULL,
-    av_support     TEXT         DEFAULT NULL,
-    restrictions   TEXT         DEFAULT NULL,
-    packages       TEXT         DEFAULT NULL,
-    special_offer  TEXT         DEFAULT NULL,
-    atv_special_offer TEXT      DEFAULT NULL,
-    video_url      VARCHAR(255) DEFAULT NULL,
-    website        VARCHAR(255) DEFAULT NULL,         -- venue's own site (backfilled from legacy; see db/007)
-    -- Capacity / price
-    capacity_max   INT UNSIGNED DEFAULT NULL,
-    capacity_min   INT UNSIGNED DEFAULT NULL,
-    pricing_level  VARCHAR(50)  DEFAULT NULL,         -- derived; budget label
-    minimum_spend  DECIMAL(12,2) DEFAULT NULL,
-    -- ATV editorial
-    atv_rating     DECIMAL(2,1) DEFAULT NULL,
-    atv_review     TEXT         DEFAULT NULL,         -- sanitized
-    main_image     VARCHAR(255) DEFAULT NULL,
-    created_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    published_at   DATETIME     DEFAULT NULL,
-    PRIMARY KEY (id),
-    UNIQUE KEY uq_venues_slug (slug),
-    KEY idx_venues_partner (partner_id),
-    KEY idx_venues_type (venue_type_id),
-    KEY idx_venues_emirate (emirate_id),
-    KEY idx_venues_status (status),
-    KEY idx_venues_featured (is_featured),
-    CONSTRAINT fk_venues_partner FOREIGN KEY (partner_id)
-        REFERENCES partners (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT fk_venues_type FOREIGN KEY (venue_type_id)
-        REFERENCES venue_types (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT fk_venues_emirate FOREIGN KEY (emirate_id)
-        REFERENCES emirates (id) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS venue_layout_capacity (
-    id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    venue_id     INT UNSIGNED NOT NULL,
-    layout_type  ENUM('Banquet','Reception','Theatre','Classroom','Cabaret','Boardroom','U-shape','H-shape') NOT NULL,
-    capacity     INT UNSIGNED NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE KEY uq_venue_layout (venue_id, layout_type),
-    KEY idx_layout_venue (venue_id),
-    CONSTRAINT fk_layout_venue FOREIGN KEY (venue_id)
-        REFERENCES venues (id) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS venue_event_types (
-    venue_id      INT UNSIGNED NOT NULL,
-    event_type_id INT UNSIGNED NOT NULL,
-    PRIMARY KEY (venue_id, event_type_id),
-    KEY idx_vet_event (event_type_id),
-    CONSTRAINT fk_vet_venue FOREIGN KEY (venue_id)
-        REFERENCES venues (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_vet_event FOREIGN KEY (event_type_id)
-        REFERENCES event_types (id) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS venue_images (
-    id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    venue_id    INT UNSIGNED NOT NULL,
-    file_path   VARCHAR(255) NOT NULL,
-    thumb_path  VARCHAR(255) DEFAULT NULL,
-    alt_text    VARCHAR(255) DEFAULT NULL,
-    is_primary  TINYINT(1)   NOT NULL DEFAULT 0,
-    sort_order  INT          NOT NULL DEFAULT 0,
-    status      ENUM('active','hidden') NOT NULL DEFAULT 'active',
-    created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    KEY idx_images_venue (venue_id),
-    KEY idx_images_primary (venue_id, is_primary),
-    CONSTRAINT fk_images_venue FOREIGN KEY (venue_id)
-        REFERENCES venues (id) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS venue_documents (
-    id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    venue_id    INT UNSIGNED NOT NULL,
-    title       VARCHAR(255) DEFAULT NULL,
-    file_path   VARCHAR(255) NOT NULL,
-    created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    KEY idx_documents_venue (venue_id),
-    CONSTRAINT fk_documents_venue FOREIGN KEY (venue_id)
-        REFERENCES venues (id) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------------------------------
--- §3  People / access
--- -----------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS users (
-    id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    name          VARCHAR(255) NOT NULL,
-    email         VARCHAR(255) NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role          ENUM('admin','editor','partner') NOT NULL DEFAULT 'editor',
-    status        ENUM('active','disabled') NOT NULL DEFAULT 'active',
-    partner_id    INT UNSIGNED DEFAULT NULL,           -- null for staff
-    created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    last_login_at DATETIME     DEFAULT NULL,
-    PRIMARY KEY (id),
-    UNIQUE KEY uq_users_email (email),
-    KEY idx_users_role (role),
-    KEY idx_users_partner (partner_id),
-    CONSTRAINT fk_users_partner FOREIGN KEY (partner_id)
-        REFERENCES partners (id) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS audit_log (
-    id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    user_id        INT UNSIGNED DEFAULT NULL,
-    action         VARCHAR(100) NOT NULL,
-    entity_type    VARCHAR(100) DEFAULT NULL,
-    entity_id      INT UNSIGNED DEFAULT NULL,
-    old_value_json JSON         DEFAULT NULL,
-    new_value_json JSON         DEFAULT NULL,
-    ip_address     VARCHAR(45)  DEFAULT NULL,           -- IPv4/IPv6
-    created_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    KEY idx_audit_user (user_id),
-    KEY idx_audit_entity (entity_type, entity_id),
-    KEY idx_audit_created (created_at),
-    CONSTRAINT fk_audit_user FOREIGN KEY (user_id)
-        REFERENCES users (id) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------------------------------
--- §4  Enquiries / leads  (schema now; data migrates in U3)
--- -----------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS enquiries (
-    id               INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    reference        VARCHAR(30)  NOT NULL,             -- generated, human-facing
-    name             VARCHAR(255) DEFAULT NULL,
-    email            VARCHAR(255) DEFAULT NULL,
-    phone            VARCHAR(50)  DEFAULT NULL,
-    company          VARCHAR(255) DEFAULT NULL,
-    event_type_id    INT UNSIGNED DEFAULT NULL,
-    event_date       DATE         DEFAULT NULL,
-    date_flexibility VARCHAR(100) DEFAULT NULL,
-    emirate_id       INT UNSIGNED DEFAULT NULL,
-    city_pref        VARCHAR(150) DEFAULT NULL,
-    guest_count      VARCHAR(30)  DEFAULT NULL,         -- range label (app config)
-    budget_range     VARCHAR(50)  DEFAULT NULL,         -- range label (app config)
-    venue_preference VARCHAR(255) DEFAULT NULL,
-    indoor_outdoor   VARCHAR(30)  DEFAULT NULL,
-    fb_requirements  TEXT         DEFAULT NULL,
-    av_requirements  TEXT         DEFAULT NULL,
-    notes            TEXT         DEFAULT NULL,
-    consent_to_share TINYINT(1)   NOT NULL DEFAULT 0,
-    source_page      VARCHAR(255) DEFAULT NULL,
-    mode             ENUM('venue','assisted','partner','general','partner_signup','contact') NOT NULL DEFAULT 'general',
-    partner_id       INT UNSIGNED DEFAULT NULL,          -- partner-mode enquiries (?partner=id)
-    provider_type    VARCHAR(50)  DEFAULT NULL,          -- partner_signup: provider category
-    website          VARCHAR(255) DEFAULT NULL,          -- partner_signup: provider site
-    venues_managed   INT UNSIGNED DEFAULT NULL,          -- partner_signup: # venues managed
-    status           ENUM('new','reviewed','forwarded','accepted','contacted','won','lost','closed','spam') NOT NULL DEFAULT 'new',
-    is_historical    TINYINT(1)   NOT NULL DEFAULT 0,
-    legacy_id        INT UNSIGNED DEFAULT NULL,
-    created_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    UNIQUE KEY uq_enquiries_reference (reference),
-    UNIQUE KEY uq_enquiries_legacy (legacy_id),
-    KEY idx_enquiries_email (email),
-    KEY idx_enquiries_status (status),
-    KEY idx_enquiries_event_type (event_type_id),
-    KEY idx_enquiries_emirate (emirate_id),
-    KEY idx_enquiries_partner (partner_id),
-    KEY idx_enquiries_created (created_at),
-    CONSTRAINT fk_enquiries_event_type FOREIGN KEY (event_type_id)
-        REFERENCES event_types (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT fk_enquiries_emirate FOREIGN KEY (emirate_id)
-        REFERENCES emirates (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT fk_enquiries_partner FOREIGN KEY (partner_id)
-        REFERENCES partners (id) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS enquiry_venues (
-    id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    enquiry_id  INT UNSIGNED NOT NULL,
-    venue_id    INT UNSIGNED NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE KEY uq_enquiry_venue (enquiry_id, venue_id),
-    KEY idx_ev_venue (venue_id),
-    CONSTRAINT fk_ev_enquiry FOREIGN KEY (enquiry_id)
-        REFERENCES enquiries (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_ev_venue FOREIGN KEY (venue_id)
-        REFERENCES venues (id) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS lead_routing (
-    id              INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    enquiry_id      INT UNSIGNED NOT NULL,
-    venue_id        INT UNSIGNED DEFAULT NULL,
-    partner_id      INT UNSIGNED DEFAULT NULL,
-    routed_to_email VARCHAR(255) DEFAULT NULL,
-    status          ENUM('pending','sent','accepted','declined','expired') NOT NULL DEFAULT 'pending',
-    routed_at       DATETIME     DEFAULT NULL,
-    response_at     DATETIME     DEFAULT NULL,
-    admin_note      TEXT         DEFAULT NULL,
-    PRIMARY KEY (id),
-    KEY idx_routing_enquiry (enquiry_id),
-    KEY idx_routing_venue (venue_id),
-    KEY idx_routing_partner (partner_id),
-    KEY idx_routing_status (status),
-    CONSTRAINT fk_routing_enquiry FOREIGN KEY (enquiry_id)
-        REFERENCES enquiries (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_routing_venue FOREIGN KEY (venue_id)
-        REFERENCES venues (id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT fk_routing_partner FOREIGN KEY (partner_id)
-        REFERENCES partners (id) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- End of 001_schema.sql
