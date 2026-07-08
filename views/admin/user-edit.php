@@ -100,12 +100,22 @@ if (!$isNew && $isPartner && isset($inviteStatus, $passwordStatus)):
       </div>
       <div class="atv-field atv-field--full" data-partner-field<?= $isPartner ? '' : ' hidden' ?>>
         <label for="f-partner">Provider <span class="req">*</span></label>
-        <select id="f-partner" name="partner_id" class="<?= $has('partner_id') ? 'is-invalid' : '' ?>">
-          <option value="">— Select a provider —</option>
-          <?php foreach ($providerOptions as $p): ?><option value="<?= (int)$p['id'] ?>"<?= $sel('partner_id', (int)$p['id']) ?>><?= e((string)$p['org_name']) ?></option><?php endforeach; ?>
-        </select>
+        <div class="contact-provider-row">
+          <select id="f-partner" name="partner_id" class="<?= $has('partner_id') ? 'is-invalid' : '' ?>" data-partner-select>
+            <option value="">— Select a provider —</option>
+            <?php foreach ($providerOptions as $p): ?><option value="<?= (int)$p['id'] ?>"<?= $sel('partner_id', (int)$p['id']) ?>><?= e((string)$p['org_name']) ?></option><?php endforeach; ?>
+          </select>
+          <button type="button" class="atv-btn atv-btn--sm atv-btn--ghost" data-view-contacts data-contacts-url="<?= e(base_url('admin/users/provider-contacts')) ?>">View contacts</button>
+        </div>
         <p class="lead-hint">Required for Venue Provider accounts. Staff roles have no provider.</p>
         <?php $err('partner_id'); ?>
+        <div class="cpanel" data-contacts-panel hidden></div>
+        <?php if ($isNew): ?>
+          <label class="contact-overwrite" data-contact-overwrite hidden>
+            <input type="checkbox" name="contact_overwrite" value="1">
+            <span><strong>Overwrite existing contact:</strong> this provider already has a contact on record. Tick to replace the provider &amp; its venues&rsquo; contact with this user. Off by default &mdash; nothing is overwritten unless you tick this.</span>
+          </label>
+        <?php endif; ?>
         <div class="onb-scope">This user will be able to access venues assigned to the selected provider. They will not be able to access venues assigned to other providers.</div>
       </div>
     </div>

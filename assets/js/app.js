@@ -568,6 +568,62 @@
     sync();
   })();
 
+  // Admin new/edit user (Contacts-A): "View contacts" fetches the provider's
+  // contact summary (same-origin, CSP 'self') and reveals the Overwrite option
+  // only when the provider already has a contact. Server enforces the role gate.
+  (function () {
+    var btn = document.querySelector('[data-view-contacts]');
+    if (!btn) return;
+    var sel       = document.querySelector('[data-partner-select]');
+    var panel     = document.querySelector('[data-contacts-panel]');
+    var overwrite = document.querySelector('[data-contact-overwrite]');
+    if (!panel) return;
+    function esc(s) { var d = document.createElement('div'); d.textContent = (s == null ? '' : String(s)); return d.innerHTML; }
+    function line(name, email, phone) {
+      var p = [];
+      if (name)  p.push(esc(name));
+      if (email) p.push(esc(email));
+      if (phone) p.push(esc(phone));
+      return p.length ? p.join(' &middot; ') : '<span class="none">None</span>';
+    }
+    function resetOverwrite() {
+      if (!overwrite) return;
+      overwrite.hidden = true;
+      var cb = overwrite.querySelector('input');
+      if (cb) cb.checked = false;
+    }
+    btn.addEventListener('click', function () {
+      var pid = sel ? sel.value : '';
+      panel.hidden = false;
+      if (!pid) { panel.innerHTML = '<p class="none">Select a provider first.</p>'; return; }
+      panel.innerHTML = '<p class="none">Loading…</p>';
+      fetch(btn.getAttribute('data-contacts-url') + '?provider_id=' + encodeURIComponent(pid),
+            { credentials: 'same-origin', headers: { 'X-Requested-With': 'fetch' } })
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+        .then(function (d) {
+          var prov = d.provider || {}, venues = d.venues || [];
+          var html = '<h4>Contacts on record for ' + esc(prov.org_name || 'this provider') + '</h4>';
+          html += '<div class="crow"><span class="k">Provider contact</span><span>'
+               + (prov.has ? line(prov.contact_name, prov.contact_email, prov.contact_phone) : '<span class="none">None on record</span>')
+               + '</span></div>';
+          if (venues.length) {
+            venues.forEach(function (v) {
+              var vl = esc(v.venue) + (v.count > 1 ? ' (+' + (v.count - 1) + ' more)' : '') + ' (venue)';
+              html += '<div class="crow"><span class="k">' + vl + '</span><span>' + line(v.contact_name, v.contact_email, v.contact_phone) + '</span></div>';
+            });
+          } else {
+            html += '<div class="crow"><span class="k">Venue contacts</span><span class="none">None</span></div>';
+          }
+          panel.innerHTML = html;
+          if (overwrite) {
+            if (prov.has) { overwrite.hidden = false; } else { resetOverwrite(); }
+          }
+        })
+        .catch(function () { panel.innerHTML = '<p class="none">Could not load contacts.</p>'; });
+    });
+    if (sel) sel.addEventListener('change', function () { panel.hidden = true; panel.innerHTML = ''; resetOverwrite(); });
+  })();
+
   // Password show/hide toggles (U-P9a set-password + anywhere with data-pw-toggle).
   document.addEventListener('click', function (ev) {
     var t = ev.target.closest('[data-pw-toggle]');

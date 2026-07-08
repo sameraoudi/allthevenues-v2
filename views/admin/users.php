@@ -55,6 +55,27 @@ if ($rest === 'resend') {
     redirect('admin/users/edit?id=' . $id);
 }
 
+/* ============ Provider contacts (Contacts-A "View contacts" JSON) ======== */
+if ($rest === 'provider-contacts') {
+    header('Content-Type: application/json; charset=utf-8');
+    // Admin-gated by dispatch; add a same-origin defence (CSP is already 'self').
+    $sfs = (string)($_SERVER['HTTP_SEC_FETCH_SITE'] ?? '');
+    if ($sfs !== '' && $sfs !== 'same-origin') {
+        http_response_code(403);
+        echo json_encode(['error' => 'forbidden']);
+        return;
+    }
+    require_once __DIR__ . '/../../lib/contact_sync.php';
+    $pid = (int)($_GET['provider_id'] ?? 0);
+    if ($pid <= 0) {
+        http_response_code(400);
+        echo json_encode(['error' => 'bad_request']);
+        return;
+    }
+    echo json_encode(contact_provider_summary($pdo, $pid), JSON_UNESCAPED_UNICODE);
+    return;
+}
+
 /* ============================ LIST ====================================== */
 if ($rest === '') {
     $rows  = user_admin_list($pdo);
@@ -196,6 +217,20 @@ if ($rest === 'new' || $rest === 'edit') {
                                 send_invite_email(['id' => $newId, 'name' => $name, 'email' => $email], $tok['raw'], $providerName);
                             } catch (Throwable $e) {
                                 error_log('invite send failed on create (user=' . $newId . '): ' . $e->getMessage());
+                            }
+                            // Contacts-A A4 — the new partner user becomes the provider's contact.
+                            // Server-enforced: role=partner + provider present (both true here).
+                            // No provider contact → always set (+ fill contactless venues);
+                            // provider HAS a contact → overwrite provider + all venues ONLY when ticked.
+                            if ($partnerId) {
+                                require_once __DIR__ . '/../../lib/contact_sync.php';
+                                $providerHasContact = contact_has(_contact_provider_row($pdo, $partnerId) ?? []);
+                                $overwrite = ((string)($_POST['contact_overwrite'] ?? '') === '1');
+                                if (!$providerHasContact) {
+                                    contact_set_from_user($pdo, $partnerId, $name, $email, false, $meId ?: null);
+                                } elseif ($overwrite) {
+                                    contact_set_from_user($pdo, $partnerId, $name, $email, true, $meId ?: null);
+                                }
                             }
                             $_SESSION['admin_flash'] = ['type' => 'success', 'msg' => 'Provider account created — set-up invite emailed to ' . $email . '.'];
                         } else {
