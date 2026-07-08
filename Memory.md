@@ -152,11 +152,16 @@ buttons** (View portal / View Live public, published-only) on the table + venue 
 (`portal_claim_append_event`/`portal_claim_timeline` w/ backward-compat synthesis; `cr_claim_decide` appends
 approve/proof_requested/reject in the same txn as the ownership write — regression verified); partner sees all 5
 claim statuses incl. **rejected + reason** with a new claim detail `/portal/claim/{id}/view` + shared
-`_claim-timeline.php`; roomy `/portal/claim/{id}/proof` screen (#9). **Next: "Contacts & Ownership" unit** (design
-locked, space memory `atv-contacts-ownership`: per-provider ownership; provider/venue contact gap-fill;
-new-user-becomes-contact; View-contacts on user assignment; contacts on claim review; **orphan-based** displacement
-warn+confirm-disable on claim approve — never auto). Then **PU-E** (#20 admin new-venue-review → image link) +
-fast-follows (admin event-type editor UI; sync `db/001` with 016–023).
+`_claim-timeline.php`; roomy `/portal/claim/{id}/proof` screen (#9). **Contacts & Ownership SHIPPED** (Contacts-A `5ddee34`
+[+ backfill run on prod: **58 venues filled from providers, 0 ambiguous**] + Contacts-B `cc9cf63`, no migration).
+`lib/contact_sync.php` (fill-if-empty provider↔venue; NB partners uses `email`/`phone`, aliased to
+contact_email/phone on read); fill-on-save in admin venue + provider editors; `db/backfill_contacts.php`
+(dry-run/commit/idempotent); user-create (role=partner only) **View-contacts** JSON endpoint + **becomes-contact**
+(auto if provider has none / overwrite checkbox if it does; server-gated). Claim review shows **current contacts**
+(venue + provider); **orphan-aware disable** — approve reassign unchanged, then only if admin ticked the box AND the
+previous owner is genuinely orphaned (re-checked as COUNT venues=0 INSIDE the txn) → disable that provider's partner
+accounts; forged checkbox ignored; audited. Reassign regression verified. **Remaining: PU-E** (#20 admin
+new-venue-review → image-approval link) + fast-follows (admin event-type editor UI; sync `db/001` with 016–023).
 **PU-D2 SHIPPED** (#17, commit `452b1a5`, no migration) — published-venue event-type edits are now a governed
 change request folded into the U-P5 edit CR: the proposed set rides in `proposed_changes_json._event_type_ids`
 (inert to the scalar field-loop); `cr_approve` applies it (validate active ids → DELETE+INSERT) in the same
