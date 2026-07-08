@@ -134,6 +134,20 @@ $layoutValues = $layoutValues ?? [];   // layout_type => capacity (edit prefill;
   </div>
 
   <div class="admin-panel">
+    <h2 class="admin-panel__title">Event types</h2>
+    <p class="lead-hint mb-2">Event types power search + the event-type pages; edits apply immediately.</p>
+    <?php
+      $etChecked   = array_map('intval', $etChecked ?? []);   // current tags (edit); [] on create
+      $etIsChecked = static fn(int $id): bool => in_array($id, $etChecked, true);
+    ?>
+    <div class="et-grid">
+      <?php foreach (venue_event_types($pdo) as $et): $eid = (int)$et['id']; ?>
+        <label class="et-chk"><input type="checkbox" name="event_types[]" value="<?= $eid ?>"<?= $etIsChecked($eid) ? ' checked' : '' ?>> <?= e((string)$et['name']) ?></label>
+      <?php endforeach; ?>
+    </div>
+  </div>
+
+  <div class="admin-panel">
     <h2 class="admin-panel__title">Venue contact (internal)</h2>
     <p class="lead-hint mb-2">Admin-only — never shown publicly.</p>
     <div class="admin-form__grid">

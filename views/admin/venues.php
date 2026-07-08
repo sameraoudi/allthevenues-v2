@@ -180,6 +180,7 @@ if ($rest === 'new') {
                 try {
                     $newId = venue_admin_create($pdo, $clean);
                     venue_layout_capacity_save($pdo, $newId, (array)($_POST['layout'] ?? []));
+                    venue_admin_event_types_save($pdo, $newId, (array)($_POST['event_types'] ?? []));
                     audit_log($pdo, (int)($me['id'] ?? 0) ?: null, 'create', 'venue', $newId, null, $clean);
                     // Contacts-A A2 — fill any contact gap (fill-if-empty, both directions).
                     require_once __DIR__ . '/../../lib/contact_sync.php';
@@ -379,6 +380,7 @@ if ($rest === 'edit') {
                     $upd->execute();
 
                     venue_layout_capacity_save($pdo, $id, (array)($_POST['layout'] ?? []));
+                    venue_admin_event_types_save($pdo, $id, (array)($_POST['event_types'] ?? []));
 
                     // #10 — record the old pretty slug → this venue for SEO-safe 301s.
                     slug_redirect_capture($pdo, 'venue', (string)($venue['slug'] ?? ''), $clean['slug'], $id);
@@ -409,6 +411,8 @@ if ($rest === 'edit') {
     // Layout capacities for the form prefill (layout_type => capacity).
     $layoutValues = [];
     foreach (venue_layout_capacity($pdo, $id) as $lr) { $layoutValues[(string)$lr['layout_type']] = (int)$lr['capacity']; }
+    // Current event-type tags for prechecking the Event types fieldset.
+    $etChecked = venue_event_type_ids($pdo, $id);
 
     $admin_active       = 'venues';
     $page_title         = 'Edit venue — Admin';

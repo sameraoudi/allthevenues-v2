@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/venues.php';
+require_once __DIR__ . '/audit.php';   // audit_log() for event-type edits
 
 /** Venue status enum → [label, css-modifier]. */
 function venue_admin_statuses(): array
@@ -172,6 +173,69 @@ function venue_layout_capacity_save(PDO $pdo, int $venueId, array $input): void
         error_log('venue_layout_capacity_save failed (venue=' . $venueId . '): ' . $e->getMessage());
         throw $e;
     }
+}
+
+/** Current event-type ids linked to a venue (distinct ints; for form prefill). */
+function venue_event_type_ids(PDO $pdo, int $venueId): array
+{
+    $stmt = $pdo->prepare('SELECT event_type_id FROM venue_event_types WHERE venue_id = :vid');
+    $stmt->execute([':vid' => $venueId]);
+    return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+}
+
+/**
+ * Shared core: replace a venue's event-type tags with the sanitized set of $ids
+ * (distinct positive ints that exist as ACTIVE event_types; an empty set clears
+ * all tags). Transactional (DELETE + INSERT IGNORE); audited under $actorId only
+ * when the set actually changes. The CALLER owns any authorization / governance
+ * gate — this core enforces none. Returns false on DB failure (writes nothing).
+ */
+function _venue_event_types_replace(PDO $pdo, int $venueId, array $ids, ?int $actorId): bool
+{
+    $wanted = array_values(array_unique(array_filter(array_map('intval', $ids), static fn($i) => $i > 0)));
+    $valid  = [];
+    if ($wanted) {
+        $ph = implode(',', array_fill(0, count($wanted), '?'));
+        $q  = $pdo->prepare("SELECT id FROM event_types WHERE active = 1 AND id IN ($ph)");
+        $q->execute($wanted);
+        $valid = array_map('intval', $q->fetchAll(PDO::FETCH_COLUMN));
+    }
+
+    $old = venue_event_type_ids($pdo, $venueId);
+
+    try {
+        $pdo->beginTransaction();
+        $pdo->prepare('DELETE FROM venue_event_types WHERE venue_id = :vid')->execute([':vid' => $venueId]);
+        if ($valid) {
+            $ins = $pdo->prepare('INSERT IGNORE INTO venue_event_types (venue_id, event_type_id) VALUES (:vid, :eid)');
+            foreach ($valid as $eid) { $ins->execute([':vid' => $venueId, ':eid' => $eid]); }
+        }
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) { $pdo->rollBack(); }
+        error_log('_venue_event_types_replace failed (venue=' . $venueId . '): ' . $e->getMessage());
+        return false;
+    }
+
+    sort($old);
+    $newSorted = $valid;
+    sort($newSorted);
+    if ($old !== $newSorted) {
+        audit_log($pdo, $actorId, 'update', 'venue_event_types', $venueId, $old, $valid);
+    }
+    return true;
+}
+
+/**
+ * Admin event-type editor: (re)tag ANY venue of ANY status — applies immediately.
+ * Admin is the authority, so unlike the portal analogue this is NOT owner-scoped
+ * and NOT status-gated (no change-request/governance gate). CSRF + RBAC are
+ * enforced by the venue-editor controller. Returns true (false only on DB error).
+ */
+function venue_admin_event_types_save(PDO $pdo, int $venueId, array $ids): bool
+{
+    $actor = (function_exists('auth_user') ? (int)(auth_user()['id'] ?? 0) : 0) ?: null;
+    return _venue_event_types_replace($pdo, $venueId, $ids, $actor);
 }
 
 /**
