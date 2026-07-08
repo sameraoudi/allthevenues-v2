@@ -214,6 +214,80 @@ function email_lead_forward(array $lead): array
     return ['html' => $html, 'text' => _email_lead_forward_text($lead)];
 }
 
+/* ==========================================================================
+ * PART C — generic customer-facing confirmation ("we received your …").
+ * Reused by the enquiry / contact / partner-request / delist confirmations.
+ * ======================================================================== */
+
+/**
+ * Branded customer confirmation email (html + plain-text AltBody).
+ * $opts: title (header tag + <title>), heading (big H1; defaults to title),
+ * intro (list of paragraph HTML — caller escapes), reference (shown in the ref
+ * box; omitted if empty), sections (list of [label, innerHtml] — empty ones
+ * skipped), note (muted confidential line), link ([label,url] subtle text link),
+ * preheader, text (explicit plain-text AltBody; auto-built from intro/reference/
+ * note when omitted).
+ * @return array{html:string, text:string}
+ */
+function email_confirmation(array $opts): array
+{
+    $title     = (string)($opts['title'] ?? 'Thank you');
+    $heading   = (string)($opts['heading'] ?? $title);
+    $reference = trim((string)($opts['reference'] ?? ''));
+    $intro     = is_array($opts['intro'] ?? null) ? $opts['intro'] : [];
+    $sections  = is_array($opts['sections'] ?? null) ? $opts['sections'] : [];
+    $note      = trim((string)($opts['note'] ?? ''));
+    $link      = (isset($opts['link']) && is_array($opts['link']) && count($opts['link']) === 2) ? $opts['link'] : null;
+    $preheader = (string)($opts['preheader'] ?? ($heading . ($reference !== '' ? ' — ' . $reference : '')));
+
+    $c = '<tr><td style="padding:26px 28px 6px;">'
+       . '<h1 style="font-family:Georgia,\'Times New Roman\',serif;font-size:24px;font-weight:normal;color:#0E1B2A;margin:0 0 10px;">' . e($heading) . '</h1>';
+    foreach ($intro as $p) {
+        $c .= '<p style="font-size:15px;line-height:1.6;color:#40525f;margin:0 0 10px;">' . $p . '</p>';
+    }
+    $c .= '</td></tr>';
+
+    if ($reference !== '') {
+        $c .= '<tr><td style="padding:10px 28px 4px;">' . email_ref_box($reference) . '</td></tr>';
+    }
+
+    foreach ($sections as $sec) {
+        $label = (string)($sec[0] ?? '');
+        $inner = (string)($sec[1] ?? '');
+        if (trim(strip_tags($inner)) === '') { continue; }
+        $c .= '<tr><td style="padding:18px 28px 0;">' . email_section($label, $inner) . '</td></tr>';
+    }
+
+    if ($note !== '') {
+        $c .= '<tr><td style="padding:18px 28px 0;"><p style="font-size:12.5px;line-height:1.6;color:#6b7b88;margin:0;">' . e($note) . '</p></td></tr>';
+    }
+
+    if ($link !== null) {
+        $c .= '<tr><td style="padding:16px 28px 26px;"><a href="' . e((string)$link[1]) . '" style="font-size:14px;font-weight:bold;color:#426F94;text-decoration:none;">' . e((string)$link[0]) . ' &rarr;</a></td></tr>';
+    } else {
+        $c .= '<tr><td style="padding:0 28px 26px;">&nbsp;</td></tr>';
+    }
+
+    $html = email_layout($title, $c, $preheader);
+
+    if (isset($opts['text'])) {
+        $text = (string)$opts['text'];
+    } else {
+        $tl = [];
+        foreach ($intro as $p) {
+            $line = html_entity_decode(strip_tags(str_ireplace(['<br>', '<br/>', '<br />'], "\n", $p)), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $tl[] = trim($line);
+        }
+        if ($reference !== '') { $tl[] = ''; $tl[] = 'Reference: ' . $reference; }
+        if ($note !== '')      { $tl[] = ''; $tl[] = $note; }
+        $tl[] = '';
+        $tl[] = '— All The Venues';
+        $text = implode("\n", $tl);
+    }
+
+    return ['html' => $html, 'text' => $text];
+}
+
 /** Plain-text AltBody for the lead-forward email — same facts, no markup, empties omitted. */
 function _email_lead_forward_text(array $lead): string
 {

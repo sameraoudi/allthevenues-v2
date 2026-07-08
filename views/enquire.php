@@ -89,12 +89,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     $rows   = enquiry_summary_rows($pdo, $clean, $context['venues']);
                     $bodies = enquiry_emails($saved['reference'], $clean, $rows);
                     $subject = 'Your enquiry ' . $saved['reference'] . ' — All The Venues';
-                    if (!send_mail($clean['email'], $subject, $bodies['user'])) {
+                    if (!send_mail($clean['email'], $subject, $bodies['user_html'], $bodies['user_text'])) {
                         error_log('enquiry ' . $saved['reference'] . ': user email failed');
                     }
                     $recips = defined('MAIL_ADMIN_RECIPIENTS') ? (string)MAIL_ADMIN_RECIPIENTS : '';
                     foreach (array_filter(array_map('trim', explode(',', $recips))) as $to) {
-                        if (!send_mail($to, 'New enquiry ' . $saved['reference'], $bodies['admin'])) {
+                        if (!send_mail($to, 'New enquiry ' . $saved['reference'], $bodies['admin_html'], $bodies['admin_text'])) {
                             error_log('enquiry ' . $saved['reference'] . ': admin email to ' . $to . ' failed');
                         }
                     }

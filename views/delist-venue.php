@@ -19,6 +19,7 @@ require_once __DIR__ . '/../lib/enquiry.php';
 require_once __DIR__ . '/../lib/turnstile.php';
 require_once __DIR__ . '/../lib/ratelimit.php';
 require_once __DIR__ . '/../lib/mail.php';
+require_once __DIR__ . '/../lib/email_template.php';
 
 $pdo = db_pdo();
 
@@ -127,12 +128,16 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                         }
                     }
 
-                    $userBody = '<p>Thanks for contacting All The Venues.</p>'
-                        . '<p>We\'ve received your request to delist <strong>' . e($clean['venue_name'])
-                        . '</strong> (ref <strong>' . e($saved['reference']) . '</strong>). Our team will verify and '
-                        . 'follow up. If you manage this venue on All The Venues, you can also delist it instantly '
-                        . 'from your provider portal.</p>';
-                    if ($clean['email'] !== '' && !send_mail($clean['email'], 'We received your delist request ' . $saved['reference'] . ' — All The Venues', $userBody)) {
+                    $conf = email_confirmation([
+                        'title'     => 'We received your delist request',
+                        'intro'     => [
+                            'Hi ' . e((string)$clean['name']) . ',',
+                            'Thanks for contacting All The Venues. We&rsquo;ve received your request to delist <strong>' . e((string)$clean['venue_name']) . '</strong>. Our team will verify and follow up.',
+                            'If you manage this venue on All The Venues, you can also delist it instantly from your provider portal.',
+                        ],
+                        'reference' => $saved['reference'],
+                    ]);
+                    if ($clean['email'] !== '' && !send_mail($clean['email'], 'We received your delist request ' . $saved['reference'] . ' — All The Venues', $conf['html'], $conf['text'])) {
                         error_log('delist ' . $saved['reference'] . ': user email failed');
                     }
                 } catch (Throwable $mailEx) {

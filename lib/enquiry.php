@@ -493,40 +493,78 @@ function enquiry_summary_rows(PDO $pdo, array $clean, array $venues): array
     return $rows;
 }
 
-/** Build the user confirmation + admin notification email bodies (HTML). */
+/**
+ * Build the user confirmation + admin notification emails on the reusable brand
+ * template (lib/email_template.php). Returns html + plain-text AltBody for both.
+ * @return array{user_html:string,user_text:string,admin_html:string,admin_text:string}
+ */
 function enquiry_emails(string $reference, array $clean, array $summaryRows): array
 {
-    $esc = static fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+    require_once __DIR__ . '/email_template.php';
 
-    $rowsHtml = '';
+    // Submission summary → email_rows() pairs (HTML) + a plain-text mirror.
+    $rowPairs = [];
+    $textRows = [];
     foreach ($summaryRows as $label => $value) {
-        $rowsHtml .= '<tr>'
-            . '<td style="padding:6px 12px 6px 0;color:#5b6b7a;vertical-align:top;">' . $esc($label) . '</td>'
-            . '<td style="padding:6px 0;color:#0E1B2A;">' . nl2br($esc($value)) . '</td>'
-            . '</tr>';
+        $rowPairs[] = [$label, nl2br(e((string)$value))];
+        if (trim((string)$value) !== '') { $textRows[] = $label . ': ' . trim((string)$value); }
     }
+    $summaryHtml = email_rows($rowPairs);   // '' when every row is empty
 
-    $userHtml = '<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:auto;color:#0E1B2A;">'
-        . '<h2 style="font-family:Georgia,serif;color:#0E1B2A;">Thank you for your enquiry</h2>'
-        . '<p>Hi ' . $esc($clean['name']) . ',</p>'
-        . '<p>We\'ve received your enquiry and our team will be in touch shortly. '
-        . 'Your reference is <strong>' . $esc($reference) . '</strong>.</p>'
-        . '<h3 style="font-family:Georgia,serif;">Your enquiry</h3>'
-        . '<table style="border-collapse:collapse;font-size:14px;">' . $rowsHtml . '</table>'
-        . '<p style="color:#5b6b7a;font-size:13px;margin-top:20px;">Secure and confidential. '
-        . 'Your details are only shared with relevant venue partners.</p>'
-        . '<p style="color:#5b6b7a;font-size:13px;">— All The Venues</p>'
-        . '</div>';
+    // ---- USER confirmation ----
+    $userText = [
+        'Hi ' . $clean['name'] . ',',
+        '',
+        "We've received your enquiry and our team will be in touch shortly.",
+        '',
+        'Reference: ' . $reference,
+    ];
+    if ($textRows) {
+        $userText[] = '';
+        $userText[] = 'YOUR ENQUIRY';
+        foreach ($textRows as $r) { $userText[] = '  - ' . $r; }
+    }
+    $userText[] = '';
+    $userText[] = 'Secure and confidential. Your details are only shared with relevant venue partners.';
+    $userText[] = '';
+    $userText[] = 'Explore more venues: ' . base_url('venues');
+    $userText[] = '';
+    $userText[] = '— All The Venues';
 
-    $adminHtml = '<div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;color:#0E1B2A;">'
-        . '<h2>New enquiry — ' . $esc($reference) . '</h2>'
-        . '<table style="border-collapse:collapse;font-size:14px;">'
-        . '<tr><td style="padding:6px 12px 6px 0;color:#5b6b7a;">Name</td><td style="padding:6px 0;">' . $esc($clean['name']) . '</td></tr>'
-        . '<tr><td style="padding:6px 12px 6px 0;color:#5b6b7a;">Email</td><td style="padding:6px 0;">' . $esc($clean['email']) . '</td></tr>'
-        . '<tr><td style="padding:6px 12px 6px 0;color:#5b6b7a;">Phone</td><td style="padding:6px 0;">' . $esc($clean['phone']) . '</td></tr>'
-        . ($clean['company'] ? '<tr><td style="padding:6px 12px 6px 0;color:#5b6b7a;">Company</td><td style="padding:6px 0;">' . $esc($clean['company']) . '</td></tr>' : '')
-        . $rowsHtml
-        . '</table></div>';
+    $user = email_confirmation([
+        'title'     => 'Thank you for your enquiry',
+        'intro'     => [
+            'Hi ' . e((string)$clean['name']) . ',',
+            'We&rsquo;ve received your enquiry and our team will be in touch shortly.',
+        ],
+        'reference' => $reference,
+        'sections'  => $summaryHtml !== '' ? [['Your enquiry', $summaryHtml]] : [],
+        'note'      => 'Secure and confidential. Your details are only shared with relevant venue partners.',
+        'link'      => ['Explore more venues', base_url('venues')],
+        'text'      => implode("\n", $userText),
+    ]);
 
-    return ['user' => $userHtml, 'admin' => $adminHtml];
+    // ---- ADMIN notification (internal, on-brand) ----
+    $adminPairs = array_merge([
+        ['Name',    e((string)$clean['name'])],
+        ['Email',   e((string)$clean['email'])],
+        ['Phone',   e((string)($clean['phone'] ?? ''))],
+        ['Company', e((string)($clean['company'] ?? ''))],
+    ], $rowPairs);
+    $adminContent = '<tr><td style="padding:24px 28px 20px;">'
+        . email_section('Enquiry details', email_rows($adminPairs)) . '</td></tr>';
+    $adminHtml = email_layout('New enquiry — ' . $reference, $adminContent, 'New enquiry ' . $reference);
+
+    $adminText = ['New enquiry — ' . $reference, ''];
+    foreach ([['Name', $clean['name']], ['Email', $clean['email']], ['Phone', $clean['phone'] ?? ''], ['Company', $clean['company'] ?? '']] as [$l, $v]) {
+        if (trim((string)$v) !== '') { $adminText[] = $l . ': ' . trim((string)$v); }
+    }
+    foreach ($textRows as $r) { $adminText[] = $r; }
+
+    return [
+        'user_html'  => $user['html'],
+        'user_text'  => $user['text'],
+        'admin_html' => $adminHtml,
+        'admin_text' => implode("\n", $adminText),
+    ];
 }

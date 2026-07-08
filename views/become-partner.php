@@ -18,6 +18,7 @@ require_once __DIR__ . '/../lib/enquiry.php';
 require_once __DIR__ . '/../lib/turnstile.php';
 require_once __DIR__ . '/../lib/ratelimit.php';
 require_once __DIR__ . '/../lib/mail.php';
+require_once __DIR__ . '/../lib/email_template.php';
 require_once __DIR__ . '/../lib/venues.php';
 
 $pdo = db_pdo();
@@ -144,10 +145,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                         }
                     }
 
-                    $userBody = '<p>Thank you for your interest in partnering with All The Venues.</p>'
-                        . '<p>We\'ve received your request (ref <strong>' . e($saved['reference']) . '</strong>) and '
-                        . 'our team will review it and be in touch shortly.</p>';
-                    if ($clean['email'] !== '' && !send_mail($clean['email'], 'Your partner request ' . $saved['reference'] . ' — All The Venues', $userBody)) {
+                    $conf = email_confirmation([
+                        'title'     => 'Thank you for your interest',
+                        'intro'     => [
+                            'Hi ' . e((string)$clean['name']) . ',',
+                            'Thank you for your interest in partnering with All The Venues. We&rsquo;ve received your request and our team will review it and be in touch shortly.',
+                        ],
+                        'reference' => $saved['reference'],
+                    ]);
+                    if ($clean['email'] !== '' && !send_mail($clean['email'], 'Your partner request ' . $saved['reference'] . ' — All The Venues', $conf['html'], $conf['text'])) {
                         error_log('partner ' . $saved['reference'] . ': user email failed');
                     }
                 } catch (Throwable $mailEx) {
