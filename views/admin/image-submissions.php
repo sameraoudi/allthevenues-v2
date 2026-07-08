@@ -20,9 +20,14 @@ $uid = (int)($me['id'] ?? 0);
 $listUrl = base_url('admin/image-submissions');
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+    // PU-E (#20) — keep the venue filter across a decision so the admin stays in
+    // this venue's photos (until it clears) instead of bouncing to the full queue.
+    $postVenueId = (int)($_POST['venue_id'] ?? 0);
+    $backTo = 'admin/image-submissions' . ($postVenueId > 0 ? '?venue_id=' . $postVenueId : '');
+
     if (!csrf_validate()) {
         $_SESSION['admin_flash'] = ['type' => 'error', 'msg' => 'Your session expired. Please try again.'];
-        redirect('admin/image-submissions');
+        redirect($backTo);
     }
     $action  = (string)($_POST['action'] ?? '');
     $imageId = (int)($_POST['image_id'] ?? 0);
@@ -30,7 +35,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
     if ($img === null) {
         $_SESSION['admin_flash'] = ['type' => 'error', 'msg' => 'That photo could not be found.'];
-        redirect('admin/image-submissions');
+        redirect($backTo);
     }
 
     if ($action === 'approve') {
@@ -52,10 +57,23 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         'type' => (!empty($res['ok']) ? (!empty($res['warning']) ? 'warning' : 'success') : 'error'),
         'msg'  => $msg,
     ];
-    redirect('admin/image-submissions');
+    redirect($backTo);
 }
 
-$groups = image_submissions_grouped($pdo);
+// PU-E (#20) — optional venue filter (?venue_id=N) linked from the new-venue
+// review. A blank/invalid id falls back to the full queue. The name is resolved
+// for the "filtering" banner; a valid id with no pending photos shows an empty
+// filtered view (with the back-to-all link) rather than the whole queue.
+$filterVenueId   = (int)($_GET['venue_id'] ?? 0);
+$filterVenueName = '';
+if ($filterVenueId > 0) {
+    $vn = $pdo->prepare('SELECT name FROM venues WHERE id = :id LIMIT 1');
+    $vn->execute([':id' => $filterVenueId]);
+    $filterVenueName = (string)($vn->fetchColumn() ?: '');
+    if ($filterVenueName === '') { $filterVenueId = 0; }   // unknown venue → full queue
+}
+
+$groups = image_submissions_grouped($pdo, $filterVenueId > 0 ? $filterVenueId : null);
 $count  = image_submissions_count($pdo);
 
 // KPIs: photos awaiting, venues with submissions, oldest waiting (days).

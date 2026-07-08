@@ -26,19 +26,28 @@ function image_submissions_count(PDO $pdo): int
     }
 }
 
-/** All pending submissions grouped by venue, each with its current live gallery. */
-function image_submissions_grouped(PDO $pdo): array
+/**
+ * Pending submissions grouped by venue, each with its current live gallery.
+ * PU-E (#20) — pass $venueId to return ONLY that venue's pending group (for the
+ * venue-filtered queue linked from the new-venue review).
+ */
+function image_submissions_grouped(PDO $pdo, ?int $venueId = null): array
 {
-    $stmt = $pdo->query(
-        "SELECT vi.*, v.name AS venue_name, v.slug AS venue_slug, v.partner_id,
-                p.org_name AS provider_name, u.name AS uploader_name, u.email AS uploader_email
-         FROM venue_images vi
-         JOIN venues v        ON v.id = vi.venue_id
-         LEFT JOIN partners p ON p.id = v.partner_id
-         LEFT JOIN users u    ON u.id = vi.uploaded_by
-         WHERE vi.review_status = 'pending_review'
-         ORDER BY v.name ASC, vi.id ASC"
-    );
+    $sql = "SELECT vi.*, v.name AS venue_name, v.slug AS venue_slug, v.partner_id,
+                   p.org_name AS provider_name, u.name AS uploader_name, u.email AS uploader_email
+            FROM venue_images vi
+            JOIN venues v        ON v.id = vi.venue_id
+            LEFT JOIN partners p ON p.id = v.partner_id
+            LEFT JOIN users u    ON u.id = vi.uploaded_by
+            WHERE vi.review_status = 'pending_review'";
+    $params = [];
+    if ($venueId !== null && $venueId > 0) {
+        $sql .= ' AND vi.venue_id = :vid';
+        $params[':vid'] = $venueId;
+    }
+    $sql .= ' ORDER BY v.name ASC, vi.id ASC';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
     $rows = $stmt->fetchAll();
 
     $groups = [];

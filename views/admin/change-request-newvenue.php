@@ -77,6 +77,28 @@ $row = static function (string $label, ?string $value, string $reqLabel = '') us
   <?php if (!$comp['can_publish']): ?>
     <p class="lead-flash lead-flash--error mb-0" role="status">Publishing blocked — missing: <?= e(implode(', ', $missing)) ?>.</p>
   <?php endif; ?>
+
+  <?php
+    /* PU-E (#20) — photo readiness: steer the admin straight to this venue's
+       pending photos when the cleared-image gate isn't yet satisfied. */
+    $clearedImgs = (int)($nv['image_count'] ?? 0);
+    $pendingImgs = (int)($nv['pending_image_count'] ?? 0);
+    $totalImgs   = (int)($nv['total_image_count'] ?? 0);
+  ?>
+  <?php if ($clearedImgs < 1): ?>
+    <div class="cr-photo-readiness">
+      <?php if ($pendingImgs >= 1): ?>
+        <p class="mb-2">This venue has <strong><?= $pendingImgs ?></strong> photo<?= $pendingImgs === 1 ? '' : 's' ?> awaiting review.</p>
+        <a class="atv-btn atv-btn--sm" href="<?= e(base_url('admin/image-submissions?venue_id=' . $venueId)) ?>">Review pending photos</a>
+      <?php elseif ($totalImgs === 0): ?>
+        <p class="mb-1">No photos have been uploaded yet.</p>
+        <p class="lead-hint mb-0">The provider must upload at least one photo (with rights) before this can be published.</p>
+      <?php else: ?>
+        <p class="mb-1">No photos are awaiting review.</p>
+        <p class="lead-hint mb-0">Previous uploads weren&rsquo;t approved — the provider must upload at least one photo (with rights) before this can be published.</p>
+      <?php endif; ?>
+    </div>
+  <?php endif; ?>
 </div>
 
 <div class="admin-panel">

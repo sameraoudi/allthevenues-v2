@@ -731,6 +731,8 @@ select:focus-visible,
 .cr-tick--miss { color: #a12f24; }
 .cr-req-flag { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; padding: 1px 6px; border-radius: 4px; background: #f7d9d5; color: #a12f24; margin-left: 6px; }
 .atv-btn:disabled { opacity: .45; cursor: not-allowed; }   /* e.g. Approve & publish before completeness */
+/* PU-E (#20) — photo-readiness box on the new-venue review. */
+.cr-photo-readiness { margin-top: 12px; padding: 12px 14px; background: #f7f9fb; border: 1px solid var(--line); border-radius: 9px; }
 
 .lead-pagination { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
 .lead-page { padding: 6px 11px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; color: var(--action); background: #fff; }

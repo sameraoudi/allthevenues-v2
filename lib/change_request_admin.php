@@ -489,6 +489,8 @@ function cr_load_new_venue(PDO $pdo, array $req): array
     $typeName = $emirateName = null;
     $eventTypes = [];
     $imageCount = 0;
+    $pendingImageCount = 0;
+    $totalImageCount = 0;
 
     if ($venue !== null) {
         $fk = _cr_fk_maps($pdo);
@@ -514,6 +516,16 @@ function cr_load_new_venue(PDO $pdo, array $req): array
         );
         $cs->execute(array_merge([$venueId], $cleared));
         $imageCount = (int)$cs->fetchColumn();
+
+        // PU-E (#20) — pending-review + total photo counts, to steer the admin to
+        // this venue's photos when the cleared-image gate isn't yet satisfied.
+        $pc = $pdo->prepare("SELECT COUNT(*) FROM venue_images WHERE venue_id = :vid AND review_status = 'pending_review'");
+        $pc->execute([':vid' => $venueId]);
+        $pendingImageCount = (int)$pc->fetchColumn();
+
+        $tc = $pdo->prepare('SELECT COUNT(*) FROM venue_images WHERE venue_id = :vid');
+        $tc->execute([':vid' => $venueId]);
+        $totalImageCount = (int)$tc->fetchColumn();
     }
 
     return [
@@ -522,6 +534,8 @@ function cr_load_new_venue(PDO $pdo, array $req): array
         'emirate_name' => $emirateName,
         'event_types'  => $eventTypes,
         'image_count'  => $imageCount,   // #9c: count of CLEARED images (gate input)
+        'pending_image_count' => $pendingImageCount,   // PU-E (#20)
+        'total_image_count'   => $totalImageCount,      // PU-E (#20)
     ];
 }
 

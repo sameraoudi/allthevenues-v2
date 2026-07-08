@@ -9,7 +9,10 @@ declare(strict_types=1);
  * the publish gate + required reject note regardless of the JS enhancements.
  */
 /** @var array $groups @var int $count @var ?int $oldestDays @var ?array $flash */
+/** @var int $filterVenueId @var string $filterVenueName */
 $flash        = $flash ?? null;
+$filterVenueId   = $filterVenueId ?? 0;
+$filterVenueName = $filterVenueName ?? '';
 $classifyOpts = image_submission_classify_options();
 $rejectOpts   = image_submission_reject_reasons();
 $blocked      = array_diff(array_keys($classifyOpts), venue_images_cleared_statuses()); // gated options
@@ -33,6 +36,13 @@ $thumb = static fn(array $img): string => venue_img_src(($img['thumb_path'] ?? '
 ?>
 <?php if ($flash): ?>
   <div class="lead-flash lead-flash--<?= e((string)$flash['type']) ?>" role="status"><?= e((string)$flash['msg']) ?></div>
+<?php endif; ?>
+
+<?php if ($filterVenueId > 0): /* PU-E (#20) — venue-filtered view (linked from the new-venue review) */ ?>
+  <div class="lead-flash lead-flash--info" role="status">
+    Showing pending photos for <strong><?= e($filterVenueName) ?></strong> only.
+    <a href="<?= e($actionUrl) ?>">&larr; Back to all pending photos</a>
+  </div>
 <?php endif; ?>
 
 <p class="lead-hint mb-2">Review photos submitted by venue providers. Photos remain hidden from the public site until approved. Provider rights confirmation is recorded on upload, but ATV still reviews each image for quality, suitability, and rights risk before publishing.</p>
@@ -112,6 +122,7 @@ $thumb = static fn(array $img): string => venue_img_src(($img['thumb_path'] ?? '
                   <?php csrf_field(); ?>
                   <input type="hidden" name="action" value="approve">
                   <input type="hidden" name="image_id" value="<?= $iid ?>">
+                  <?php if ($filterVenueId > 0): ?><input type="hidden" name="venue_id" value="<?= (int)$filterVenueId ?>"><?php endif; ?>
                   <div class="isub-field">
                     <label for="ps-<?= $iid ?>">Image rights</label>
                     <select id="ps-<?= $iid ?>" name="permission_status" data-classify>
@@ -134,6 +145,7 @@ $thumb = static fn(array $img): string => venue_img_src(($img['thumb_path'] ?? '
                   <?php csrf_field(); ?>
                   <input type="hidden" name="action" value="reject">
                   <input type="hidden" name="image_id" value="<?= $iid ?>">
+                  <?php if ($filterVenueId > 0): ?><input type="hidden" name="venue_id" value="<?= (int)$filterVenueId ?>"><?php endif; ?>
                   <div class="isub-field">
                     <label for="rr-<?= $iid ?>">Reject reason</label>
                     <select id="rr-<?= $iid ?>" name="reason">
