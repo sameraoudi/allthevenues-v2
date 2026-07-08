@@ -115,6 +115,7 @@ if (preg_match('#^(\d+)$#', $rest, $m)) {
                 'internal_note'    => (string)($_POST['internal_note'] ?? ''),
                 'verified_confirm' => (string)($_POST['verified_confirm'] ?? ''),
                 'notify'           => (string)($_POST['notify'] ?? 'before'),
+                'disable_prev'     => (string)($_POST['disable_prev'] ?? ''),
                 'note'             => $note,
             ];
             $res = cr_claim_decide($pdo, $req, $uid, $decision, $in);

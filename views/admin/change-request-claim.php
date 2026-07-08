@@ -89,6 +89,26 @@ $requesterLine = trim((string)($cl['requester_name'] ?? '') . ($roleLabel !== ''
       ?>
     </div>
   <?php endif; ?>
+
+  <?php /* Contacts-B B1 — current contacts on record, to weigh the claim. */
+    $venueContact = trim(implode(' · ', array_filter([
+        trim((string)($cl['venue_contact_name'] ?? '')),
+        trim((string)($cl['venue_contact_email'] ?? '')),
+    ])));
+    $provContact = trim(implode(' · ', array_filter([
+        trim((string)($cl['current_owner_name'] ?? '')),
+        trim((string)($cl['current_owner_contact_name'] ?? '')),
+        trim((string)($cl['current_owner_email'] ?? '')),
+    ])));
+  ?>
+  <h3 class="admin-panel__title mt-2">Current contacts</h3>
+  <div class="clr-grid">
+    <?php
+      $f('Venue contact',    $venueContact !== '' ? $venueContact : '<span class="text-muted">None on record</span>', false, $venueContact === '');
+      $f('Provider contact', $provContact  !== '' ? $provContact  : '<span class="text-muted">None on record</span>', false, $provContact === '');
+    ?>
+  </div>
+  <p class="lead-hint mb-0">Shown so you can weigh the claim against who&rsquo;s currently on record.</p>
 </div>
 
 <?php /* PU-C #10 — the same append-only claim history the partner sees. */ ?>
@@ -143,6 +163,24 @@ $requesterLine = trim((string)($cl['requester_name'] ?? '') . ($roleLabel !== ''
           <label><input type="radio" name="notify" value="after"> Notify after reassignment</label>
           <label><input type="radio" name="notify" value="none"> Do not notify</label>
         </div>
+
+        <?php /* Contacts-B B2 — orphan-aware displacement. Only when approving would
+                 leave the current owner with no venues. Off by default. */ ?>
+        <?php if (!empty($cl['would_orphan'])):
+          $prevName   = (string)($cl['current_owner_name'] ?? 'the current provider');
+          $prevEmails = array_filter((array)($cl['prev_account_emails'] ?? []));
+        ?>
+          <div class="clr-orphan">
+            <strong>Heads up — this reassignment orphans a provider.</strong>
+            Approving moves <strong><?= e((string)($cl['venue']['name'] ?? 'this venue')) ?></strong> to
+            <?= e((string)($cl['claimant_name'] ?? 'the claimant')) ?> and leaves
+            <strong><?= e($prevName) ?></strong> with <strong>no venues</strong>.
+            <label class="clr-orphan__opt">
+              <input type="checkbox" name="disable_prev" value="1">
+              <span>Also disable <?= e($prevName) ?>&rsquo;s partner account<?= count($prevEmails) === 1 ? '' : 's' ?><?php if ($prevEmails): ?> (<?= e(implode(', ', $prevEmails)) ?>)<?php endif; ?> — it will no longer own any venues. Off by default; existing data is preserved.</span>
+            </label>
+          </div>
+        <?php endif; ?>
       <?php endif; ?>
 
       <div class="admin-form__actions">

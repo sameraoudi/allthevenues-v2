@@ -805,7 +805,9 @@ function cr_load_claim(PDO $pdo, array $req): array
     $vs = $pdo->prepare(
         'SELECT v.id, v.name, v.slug, v.status, v.website, v.partner_id,
                 v.management_source, v.provider_assigned_at,
-                cur.org_name AS current_owner_name, cur.email AS current_owner_email
+                v.contact_name AS venue_contact_name, v.contact_email AS venue_contact_email,
+                cur.org_name AS current_owner_name, cur.email AS current_owner_email,
+                cur.contact_name AS current_owner_contact_name
          FROM venues v LEFT JOIN partners cur ON cur.id = v.partner_id
          WHERE v.id = :vid LIMIT 1'
     );
@@ -814,6 +816,20 @@ function cr_load_claim(PDO $pdo, array $req): array
 
     $currentOwnerId = $venue !== null ? (int)($venue['partner_id'] ?? 0) : 0;
     $contested      = ($currentOwnerId > 0 && $currentOwnerId !== $claimant);
+
+    // Contacts-B B2 — would approving orphan the current owner? (owns only this venue).
+    $ownerVenueCount = 0;
+    $prevAccountEmails = [];
+    if ($currentOwnerId > 0 && $currentOwnerId !== $claimant) {
+        $cvc = $pdo->prepare('SELECT COUNT(*) FROM venues WHERE partner_id = :pid');
+        $cvc->execute([':pid' => $currentOwnerId]);
+        $ownerVenueCount = (int)$cvc->fetchColumn();
+
+        $ae = $pdo->prepare("SELECT email FROM users WHERE partner_id = :pid AND role = 'partner' AND status = 'active'");
+        $ae->execute([':pid' => $currentOwnerId]);
+        $prevAccountEmails = array_map('strval', $ae->fetchAll(PDO::FETCH_COLUMN));
+    }
+    $wouldOrphan = ($currentOwnerId > 0 && $currentOwnerId !== $claimant && $ownerVenueCount === 1);
 
     // Domain check: work_email domain vs venue website host.
     $emailHost = _cr_norm_host((string)($claim['work_email'] ?? ''));
@@ -829,13 +845,21 @@ function cr_load_claim(PDO $pdo, array $req): array
         'requester_name' => (string)($req['submitter_name'] ?? ''),
         'requester_email' => (string)($req['submitter_email'] ?? ''),
         'contested'      => $contested,
+        'current_owner_id'    => $currentOwnerId,
         'current_owner_name'  => $venue['current_owner_name'] ?? null,
         'current_owner_email' => $venue['current_owner_email'] ?? null,
+        'current_owner_contact_name' => $venue['current_owner_contact_name'] ?? null,
+        'venue_contact_name'  => $venue['venue_contact_name'] ?? null,
+        'venue_contact_email' => $venue['venue_contact_email'] ?? null,
         'management_source'   => $venue['management_source'] ?? null,
         'assigned_at'         => $venue['provider_assigned_at'] ?? null,
         'domain_check'   => $domainCheck,
         'email_host'     => $emailHost,
         'site_host'      => $siteHost,
+        // B2 — orphan-aware displacement context (informational + disable gating).
+        'owner_venue_count'  => $ownerVenueCount,
+        'would_orphan'       => $wouldOrphan,
+        'prev_account_emails' => $prevAccountEmails,
     ];
 }
 
@@ -914,6 +938,8 @@ function cr_claim_decide(PDO $pdo, array $req, int $adminUserId, string $decisio
         }
 
         $notify = in_array((string)($in['notify'] ?? 'before'), ['before', 'after', 'none'], true) ? (string)$in['notify'] : 'before';
+        $wantDisable      = ((string)($in['disable_prev'] ?? '') === '1');
+        $disabledAccounts = [];   // Contacts-B B2 — accounts disabled in this decision
 
         try {
             $pdo->beginTransaction();
@@ -936,6 +962,25 @@ function cr_claim_decide(PDO $pdo, array $req, int $adminUserId, string $decisio
                 $pdo->rollBack();
                 return ['ok' => false, 'error' => 'This claim can no longer be reviewed.'];
             }
+
+            // Contacts-B B2 — orphan-aware displacement. NEVER automatic: only when
+            // the admin ticked the box AND the previous owner is genuinely orphaned
+            // (0 venues AFTER this reassign — re-checked here, so a forged checkbox
+            // is ignored whenever the owner still has venues). Same transaction.
+            if ($wantDisable && $previousOwner) {
+                $rc = $pdo->prepare('SELECT COUNT(*) FROM venues WHERE partner_id = :pid');
+                $rc->execute([':pid' => $previousOwner]);
+                if ((int)$rc->fetchColumn() === 0) {
+                    $sel = $pdo->prepare("SELECT id, email FROM users WHERE partner_id = :pid AND role = 'partner' AND status = 'active'");
+                    $sel->execute([':pid' => $previousOwner]);
+                    $disabledAccounts = $sel->fetchAll();
+                    if ($disabledAccounts) {
+                        $pdo->prepare("UPDATE users SET status = 'disabled' WHERE partner_id = :pid AND role = 'partner' AND status = 'active'")
+                            ->execute([':pid' => $previousOwner]);
+                    }
+                }
+            }
+
             $pdo->commit();
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) { $pdo->rollBack(); }
@@ -952,7 +997,16 @@ function cr_claim_decide(PDO $pdo, array $req, int $adminUserId, string $decisio
         audit_log($pdo, $adminUserId, 'approve', 'change_request', $rid,
             ['venue_id' => $venueId, 'previous_owner' => $previousOwner],
             ['new_owner' => $claimant, 'evidence_status' => $evStatus, 'decision' => 'approve',
-             'notify' => $notify, 'notified_claimant' => $mailClaimant, 'notified_incumbent' => $mailIncumbent]);
+             'notify' => $notify, 'notified_claimant' => $mailClaimant, 'notified_incumbent' => $mailIncumbent,
+             'disabled_accounts' => count($disabledAccounts)]);
+
+        // B2 — audit the account disable separately (who/when/which accounts/orphan).
+        if ($disabledAccounts) {
+            audit_log($pdo, $adminUserId, 'partner.disable', 'partner', $previousOwner,
+                ['reason' => 'orphaned_by_claim', 'venue_id' => $venueId, 'claim_request' => $rid],
+                ['disabled_accounts' => array_map(
+                    static fn($a) => ['id' => (int)$a['id'], 'email' => (string)$a['email']], $disabledAccounts)]);
+        }
 
         $out = ['ok' => true];
         if (!$mailClaimant) { $out['warning'] = 'Reassigned, but the claimant notification email failed to send.'; }

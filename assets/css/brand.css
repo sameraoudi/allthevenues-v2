@@ -1584,6 +1584,12 @@ select:focus-visible,
 .clr-notify { margin: 14px 0 2px; }
 .clr-notify__lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; color: var(--muted); margin-bottom: 7px; }
 .clr-notify label { display: flex; gap: 8px; align-items: center; font-size: 13px; margin-bottom: 6px; }
+/* Contacts-B B2 — orphan-aware displacement warning + confirm-disable. */
+.clr-orphan { background: #f6e7e5; border: 1px solid #e2b6ad; border-radius: 10px; padding: 13px 15px; color: #7a352e; font-size: 13px; margin: 14px 0 2px; line-height: 1.5; }
+.clr-orphan strong { color: #a5433b; }
+.clr-orphan__opt { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; font-weight: 400; cursor: pointer; }
+.clr-orphan__opt input { margin-top: 2px; width: 16px; height: 16px; flex: 0 0 auto; }
+.clr-orphan__opt strong { color: #7a352e; }
 
 /* #3 U-P9b — portal event-type editor (additive). */
 .et-lbl { display: block; font-size: 15px; font-weight: 600; margin-bottom: 3px; }
