@@ -106,7 +106,7 @@ $mapsLinkUrl = 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode
   <!-- Gallery -->
   <div class="vd-gallery<?= $thumbs ? '' : ' vd-gallery--single' ?>" data-gallery data-images="<?= $imagesJson ?>">
     <div class="vd-gallery__main">
-      <img id="vdMain" src="<?= e($mainImg) ?>" alt="<?= e($mainAlt) ?>" data-lightbox-open data-index="0">
+      <img id="vdMain" src="<?= e($mainImg) ?>" alt="<?= e($mainAlt) ?>" data-lightbox-open data-index="0" width="1200" height="760" fetchpriority="high">
       <?php if (!empty($venue['is_featured'])): ?><span class="atv-badge vd-gallery__badge">Featured</span><?php endif; ?>
     </div>
     <?php if ($thumbs): ?>
@@ -119,7 +119,7 @@ $mapsLinkUrl = 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode
           <button type="button" class="vd-gallery__thumb"
                   <?php if ($isMore): ?>data-lightbox-open data-index="<?= e((string)$idx) ?>" aria-label="View all <?= e((string)count($images)) ?> images"
                   <?php else: ?>data-full="<?= e($src) ?>" data-index="<?= e((string)$idx) ?>" aria-label="View image"<?php endif; ?>>
-            <img src="<?= e($src) ?>" alt="<?= e($t['alt_text'] ?? $name) ?>">
+            <img src="<?= e($src) ?>" alt="<?= e($t['alt_text'] ?? $name) ?>" loading="lazy" width="600" height="380">
             <?php if ($isMore): ?><span class="vd-gallery__more">+<?= e((string)$more) ?> more</span><?php endif; ?>
           </button>
         <?php endforeach; ?>

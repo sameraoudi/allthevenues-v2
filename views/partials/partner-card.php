@@ -31,7 +31,7 @@ $cover  = $badges[0] ?? null;   // single badge on the card cover
 ?>
 <article class="pcard">
   <a class="pcard__cover cover-grad--<?= $gradIdx ?>" href="<?= e($detail) ?>" aria-label="<?= e($name) ?>">
-    <?php if ($hasCover): ?><img class="pcard__cover-img" src="<?= e(base_url($coverRel)) ?>" alt="<?= e((string)($partner['cover_image_alt'] ?? '')) ?>" loading="lazy"><?php endif; ?>
+    <?php if ($hasCover): ?><img class="pcard__cover-img" src="<?= e(base_url($coverRel)) ?>" alt="<?= e((string)($partner['cover_image_alt'] ?? '')) ?>" loading="lazy" width="760" height="300"><?php endif; ?>
     <?php if ($cover): ?><span class="atv-badge<?= $cover['variant'] === 'verified' ? ' atv-badge--verified' : '' ?> pcard__badge"><?= e($cover['label']) ?></span><?php endif; ?>
     <span class="pcard__count"><?= e((string)$vc) ?> venue<?= $vc === 1 ? '' : 's' ?></span>
     <span class="pcard__type" title="<?= e($type) ?>"><?= icon(provider_type_icon($type)) ?></span>

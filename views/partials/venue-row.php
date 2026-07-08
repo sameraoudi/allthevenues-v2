@@ -44,7 +44,7 @@ $snip = snippet($venue['description'] ?? '', 150);
 ?>
 <article class="venue-row">
   <a class="venue-row__img" href="<?= e($detailUrl) ?>" aria-label="<?= e($venue['name'] ?? 'Venue') ?>">
-    <img src="<?= e($imgSrc) ?>" alt="<?= e($venue['name'] ?? 'Venue') ?>" loading="lazy" width="460" height="360">
+    <img src="<?= e($imgSrc) ?>" alt="<?= e($venue['name'] ?? 'Venue') ?>" <?= !empty($eager) ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"' ?> width="460" height="360">
     <?php if (!empty($venue['is_featured'])): ?><span class="atv-badge venue-row__badge">Featured</span><?php endif; ?>
   </a>
   <div class="venue-row__body">

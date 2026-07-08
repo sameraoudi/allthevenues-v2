@@ -51,6 +51,11 @@ require_once __DIR__ . '/../lib/icons.php';
     <?php /* Preload the two above-the-fold fonts (unversioned to match brand.css url()). */ ?>
     <link rel="preload" as="font" type="font/woff2" href="<?= e(base_url('assets/fonts/inter-latin.woff2')) ?>" crossorigin>
     <link rel="preload" as="font" type="font/woff2" href="<?= e(base_url('assets/fonts/cormorant-garamond-latin.woff2')) ?>" crossorigin>
+    <?php /* Perf-3: preload the homepage hero (LCP; it's a CSS background so it
+             can't carry fetchpriority — preload prioritises it). Home only. */ ?>
+    <?php if (isset($content_view) && basename((string)$content_view) === 'home_content.php'): ?>
+    <link rel="preload" as="image" href="<?= e(base_url('assets/img/hero.webp')) ?>" type="image/webp" fetchpriority="high">
+    <?php endif; ?>
     <?php /* Perf-2: Bootstrap removed from the public layout (base reset + the few
              utilities it provided now live in brand.css). Admin still loads it. */ ?>
     <link rel="stylesheet" href="<?= e(asset_url('assets/css/brand.css')) ?>">

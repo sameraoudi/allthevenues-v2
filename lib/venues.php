@@ -150,7 +150,7 @@ function emirate_cover_images(PDO $pdo): array
 {
     $rows = $pdo->query(
         "SELECT e.slug AS slug, (
-            SELECT vi.file_path FROM venues v2
+            SELECT COALESCE(vi.thumb_path, vi.file_path) FROM venues v2
               JOIN venue_images vi ON vi.venue_id = v2.id AND vi.status = 'active'
              WHERE v2.emirate_id = e.id AND v2.status = 'published'
              ORDER BY v2.is_featured DESC, vi.is_primary DESC, v2.name ASC, vi.sort_order ASC, vi.id ASC
@@ -397,7 +397,7 @@ function venue_list(PDO $pdo, array $filters, int $page, int $perPage, string $s
                 vt.name AS venue_type_name,
                 e.name  AS emirate_name, v.area,
                 p.org_name AS partner_name,
-                (SELECT vi.file_path FROM venue_images vi
+                (SELECT COALESCE(vi.thumb_path, vi.file_path) FROM venue_images vi
                    WHERE vi.venue_id = v.id AND vi.status = 'active'
                    ORDER BY vi.is_primary DESC, vi.sort_order ASC, vi.id ASC
                    LIMIT 1) AS primary_image
@@ -451,7 +451,7 @@ function venue_cards_by_ids(PDO $pdo, array $ids): array
                 vt.name AS venue_type_name,
                 e.name  AS emirate_name, v.area,
                 p.org_name AS partner_name,
-                (SELECT vi.file_path FROM venue_images vi
+                (SELECT COALESCE(vi.thumb_path, vi.file_path) FROM venue_images vi
                    WHERE vi.venue_id = v.id AND vi.status = 'active'
                    ORDER BY vi.is_primary DESC, vi.sort_order ASC, vi.id ASC
                    LIMIT 1) AS primary_image
@@ -484,7 +484,7 @@ function venue_featured(PDO $pdo, int $limit = 3): array
                 vt.name AS venue_type_name,
                 e.name  AS emirate_name, v.area,
                 p.org_name AS partner_name,
-                (SELECT vi.file_path FROM venue_images vi
+                (SELECT COALESCE(vi.thumb_path, vi.file_path) FROM venue_images vi
                    WHERE vi.venue_id = v.id AND vi.status = 'active'
                    ORDER BY vi.is_primary DESC, vi.sort_order ASC, vi.id ASC
                    LIMIT 1) AS primary_image
@@ -576,7 +576,7 @@ function venue_similar(PDO $pdo, array $venue, int $limit = 3): array
                 vt.name AS venue_type_name,
                 e.name  AS emirate_name, v.area,
                 p.org_name AS partner_name,
-                (SELECT vi.file_path FROM venue_images vi
+                (SELECT COALESCE(vi.thumb_path, vi.file_path) FROM venue_images vi
                    WHERE vi.venue_id = v.id AND vi.status = 'active'
                    ORDER BY vi.is_primary DESC, vi.sort_order ASC, vi.id ASC
                    LIMIT 1) AS primary_image

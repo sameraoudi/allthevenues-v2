@@ -3,8 +3,8 @@
   <div class="atv-wrap">
     <a class="brand-lockup" href="<?= e(base_url('/')) ?>" aria-label="All The Venues — home">
       <img class="brand-lockup__icon"
-           src="<?= e(base_url('assets/brand/web_exports/icon_light/icon_light_512x512.png')) ?>"
-           alt="" width="512" height="512" aria-hidden="true">
+           src="<?= e(base_url('assets/brand/web_exports/icon_light/icon_light_128.webp')) ?>"
+           alt="" width="128" height="128" aria-hidden="true">
       <span class="brand-lockup__word brand-lockup__word--full">All The <span class="brand-lockup__accent">Venues</span></span>
       <span class="brand-lockup__word brand-lockup__word--abbr" aria-hidden="true">AT<span class="brand-lockup__accent">V</span></span>
     </a>

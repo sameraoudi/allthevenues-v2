@@ -38,7 +38,7 @@ declare(strict_types=1);
       <a class="atv-et-tile atv-et-tile--<?= e($size) ?><?= $hasImg ? '' : ' cover-grad--' . $grad ?>"
          href="<?= e($href) ?>" aria-label="<?= e($name) ?> — browse venues">
         <?php if ($hasImg): ?>
-          <img class="atv-et-tile__img" src="<?= e(base_url($rel)) ?>" alt="" loading="lazy">
+          <img class="atv-et-tile__img" src="<?= e(base_url($rel)) ?>" alt="" loading="lazy" width="800" height="600">
         <?php else: ?>
           <span class="atv-et-tile__icon"><?= icon(event_type_icon($slug)) ?></span>
         <?php endif; ?>

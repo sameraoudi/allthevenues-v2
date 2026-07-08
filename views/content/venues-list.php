@@ -154,9 +154,9 @@ $hasFilters = (bool)$chips;
           <?php if ($hasFilters): ?><a class="atv-btn" href="<?= e($listUrl) ?>">Clear Filters</a><?php endif; ?>
         </div>
       <?php else: ?>
-        <?php foreach ($venues as $venue): ?>
+        <?php foreach ($venues as $vIdx => $venue): $eager = ($vIdx === 0); /* first row = LCP */ ?>
           <?php require __DIR__ . '/../partials/venue-row.php'; ?>
-        <?php endforeach; ?>
+        <?php endforeach; unset($eager); ?>
 
         <?php if ($totalPages > 1): ?>
           <nav class="venue-pager" aria-label="Venue pages">

@@ -50,7 +50,7 @@ $venuesUrl  = base_url('venues') . query_string(['partner' => $id]);
   <!-- Cover + type-icon header -->
   <div class="phero">
     <div class="phero__cover cover-grad--<?= $gradIdx ?>">
-      <?php if ($hasCover): ?><img class="phero__cover-img" src="<?= e(base_url($coverRel)) ?>" alt="<?= e((string)($partner['cover_image_alt'] ?? '')) ?>"><?php endif; ?>
+      <?php if ($hasCover): ?><img class="phero__cover-img" src="<?= e(base_url($coverRel)) ?>" alt="<?= e((string)($partner['cover_image_alt'] ?? '')) ?>" width="1120" height="230" fetchpriority="high"><?php endif; ?>
     </div>
     <?php if ($badges): ?>
       <div class="phero__badges">

@@ -4,8 +4,8 @@
     <div class="site-footer__top">
       <div class="site-footer__brand">
         <a class="brand-stacked" href="<?= e(base_url('/')) ?>" aria-label="All The Venues — home">
-          <img src="<?= e(base_url('assets/brand/web_exports/primary_stacked_light/primary_stacked_light_512w.png')) ?>"
-               alt="All The Venues" width="512" height="600">
+          <img src="<?= e(base_url('assets/brand/web_exports/primary_stacked_light/primary_stacked_light_176.webp')) ?>"
+               alt="All The Venues" width="176" height="207" loading="lazy">
         </a>
         <p>Discover curated UAE venues, compare key details, and send one structured enquiry.</p>
       </div>
