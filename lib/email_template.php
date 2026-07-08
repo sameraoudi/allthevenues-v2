@@ -19,11 +19,17 @@ require_once __DIR__ . '/helpers.php';   // e(), base_url()
  * PART A — reusable branded shell + inline-styled components.
  * ======================================================================== */
 
-/** Full branded HTML shell: navy header (wordmark + right tag) + card + footer. */
-function email_layout(string $title, string $contentHtml, string $preheader = ''): string
+/**
+ * Full branded HTML shell: navy header (wordmark + right tag) + card + footer.
+ * $footerNote overrides the small "why you got this" line above the copyright
+ * (defaults to the enquiry wording used by the lead + customer-confirmation mails).
+ */
+function email_layout(string $title, string $contentHtml, string $preheader = '', string $footerNote = ''): string
 {
     $t    = e($title);
     $year = date('Y');
+    $fn   = $footerNote !== '' ? e($footerNote)
+        : 'You received this because a venue you manage received an enquiry via All The Venues.';
     $pre  = $preheader !== ''
         ? '<span style="display:none;font-size:1px;color:#e9ebe6;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">' . e($preheader) . '</span>'
         : '';
@@ -49,7 +55,7 @@ function email_layout(string $title, string $contentHtml, string $preheader = ''
         . '<p style="font-size:12px;color:#6b7b88;margin:0;">'
         . '<a href="' . e(base_url('/')) . '" style="color:#6b7b88;">allthevenues.com</a> &nbsp;&middot;&nbsp; '
         . '<a href="' . e(base_url('contact')) . '" style="color:#6b7b88;">Contact</a></p>'
-        . '<p style="font-size:11px;color:#9aa6af;margin:10px 0 0;">You received this because a venue you manage received an enquiry via All The Venues. &copy; ' . $year . ' All The Venues.</p>'
+        . '<p style="font-size:11px;color:#9aa6af;margin:10px 0 0;">' . $fn . ' &copy; ' . $year . ' All The Venues.</p>'
         . '</td></tr></table></div></body></html>';
 }
 
@@ -88,6 +94,37 @@ function email_button(string $label, string $url, bool $primary = true): string
     }
     return '<td style="border-radius:8px;border:1px solid #cdd5dc;">'
         . '<a href="' . $href . '" style="display:inline-block;padding:12px 22px;font-size:14px;font-weight:bold;color:#426F94;text-decoration:none;">' . $label . '</a></td>';
+}
+
+/** A single branded button wrapped as a full content <tr> row (for CTA rows). */
+function email_button_row(string $label, string $url, bool $primary = true, string $padding = '22px 28px 8px'): string
+{
+    return '<tr><td style="padding:' . $padding . ';"><table role="presentation" cellpadding="0" cellspacing="0"><tr>'
+        . email_button($label, $url, $primary) . '</tr></table></td></tr>';
+}
+
+/** Intro content row: a Georgia H1 + one or more body paragraphs (raw HTML paras). */
+function email_intro_row(string $heading, array $paras): string
+{
+    $c = '<tr><td style="padding:26px 28px 6px;">'
+       . '<h1 style="font-family:Georgia,\'Times New Roman\',serif;font-size:24px;font-weight:normal;color:#0E1B2A;margin:0 0 10px;">' . e($heading) . '</h1>';
+    foreach ($paras as $p) {
+        if (trim((string)$p) === '') { continue; }
+        $c .= '<p style="font-size:15px;line-height:1.6;color:#40525f;margin:0 0 10px;">' . $p . '</p>';
+    }
+    return $c . '</td></tr>';
+}
+
+/** A section (sand-underlined header + body) wrapped as a content row. */
+function email_section_row(string $label, string $innerHtml, string $padding = '18px 28px 0'): string
+{
+    return '<tr><td style="padding:' . $padding . ';">' . email_section($label, $innerHtml) . '</td></tr>';
+}
+
+/** A muted small-print content row (e.g. security / fine-print copy). */
+function email_note_row(string $html, string $padding = '10px 28px 20px'): string
+{
+    return '<tr><td style="padding:' . $padding . ';"><p style="font-size:12.5px;line-height:1.6;color:#6b7b88;margin:0;">' . $html . '</p></td></tr>';
 }
 
 /** The highlighted lead-reference box. */
@@ -268,7 +305,7 @@ function email_confirmation(array $opts): array
         $c .= '<tr><td style="padding:0 28px 26px;">&nbsp;</td></tr>';
     }
 
-    $html = email_layout($title, $c, $preheader);
+    $html = email_layout($title, $c, $preheader, (string)($opts['footerNote'] ?? ''));
 
     if (isset($opts['text'])) {
         $text = (string)$opts['text'];

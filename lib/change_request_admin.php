@@ -18,6 +18,7 @@ require_once __DIR__ . '/venue_images_admin.php'; // venue_images_count() (#3 U-
 require_once __DIR__ . '/slug_redirect.php';    // slug_redirect_capture() (#10)
 require_once __DIR__ . '/audit.php';            // audit_log()
 require_once __DIR__ . '/mail.php';             // send_mail()
+require_once __DIR__ . '/email_template.php';   // branded email shell + components
 require_once __DIR__ . '/portal.php';           // portal_delist_reasons() (Delist-2 shared labels)
 
 /**
@@ -1060,16 +1061,23 @@ function _cr_notify_incumbent(string $to, string $venueName, string $newOwner): 
 {
     $to = trim($to);
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) { return false; }
-    $esc = static fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
-    $body = '<div style="font-family:Arial,sans-serif;color:#0E1B2A;line-height:1.5;">'
-          . '<h2 style="font-size:18px;">All The Venues — Partner Portal</h2>'
-          . '<p>Hello,</p>'
-          . '<p>Management of <strong>' . $esc($venueName) . '</strong> on All The Venues has been reassigned'
-          . ($newOwner !== '' ? ' to <strong>' . $esc($newOwner) . '</strong>' : '')
-          . ' following a verified ownership claim. It no longer appears in your partner portal.</p>'
-          . '<p>If you believe this is a mistake, please contact All The Venues support.</p>'
-          . '<p style="color:#6b7b88;">— The All The Venues team</p></div>';
-    return send_mail($to, 'A venue was reassigned — All The Venues', $body);
+
+    $content = email_intro_row('Venue reassigned', [
+        'Hello,',
+        'Management of <strong>' . e($venueName) . '</strong> on All The Venues has been reassigned'
+            . ($newOwner !== '' ? ' to <strong>' . e($newOwner) . '</strong>' : '')
+            . ' following a verified ownership claim. It no longer appears in your partner portal.',
+        'If you believe this is a mistake, please contact All The Venues support.',
+    ]) . '<tr><td style="padding:0 28px 26px;">&nbsp;</td></tr>';
+    $html = email_layout('Venue reassigned', $content, 'A venue you managed was reassigned',
+        'You received this because you have an All The Venues provider account.');
+
+    $text = "Hello,\n\nManagement of " . $venueName . ' on All The Venues has been reassigned'
+        . ($newOwner !== '' ? ' to ' . $newOwner : '')
+        . ". It no longer appears in your partner portal.\n\n"
+        . "If you believe this is a mistake, please contact All The Venues support.\n\n— All The Venues";
+
+    return send_mail($to, 'A venue was reassigned — All The Venues', $html, $text);
 }
 
 /**
@@ -1159,19 +1167,27 @@ function cr_notify_provider(array $req, string $decision, string $note): bool
                      . '</strong> and need a few adjustments before they can be applied. You can revise and resubmit.';
     }
 
-    $noteHtml = (!in_array($decision, $positive, true) && trim($note) !== '')
-        ? '<p style="margin:16px 0;padding:12px 14px;background:#f4f1ea;border-radius:6px;">'
-          . '<strong>Reviewer note:</strong><br>' . nl2br($esc($note)) . '</p>'
-        : '';
+    $showNote = (!in_array($decision, $positive, true) && trim($note) !== '');
 
-    $body = '<div style="font-family:Arial,sans-serif;color:#0E1B2A;line-height:1.5;">'
-          . '<h2 style="font-size:18px;">All The Venues — Partner Portal</h2>'
-          . '<p>Hello,</p>'
-          . '<p>' . $intro . '</p>'
-          . $noteHtml
-          . '<p><a href="' . $esc($link) . '">View this venue in your portal</a></p>'
-          . '<p style="color:#6b7b88;">— The All The Venues team</p>'
-          . '</div>';
+    // Header H1 = the subject minus its " — {venue}" suffix (short, on-brand).
+    $heading = trim(str_replace(' — ' . $venue, '', $subject));
 
-    return send_mail($to, $subject, $body);
+    $content = email_intro_row($heading, ['Hello,', $intro]);
+    if ($showNote) {
+        $content .= email_section_row('Reviewer note',
+            '<p style="font-size:14px;line-height:1.6;color:#1c2b38;margin:6px 0;">' . nl2br($esc($note)) . '</p>');
+    }
+    $content .= email_button_row('Open the Partner Portal', $link, true);
+    $html = email_layout('Partner Portal', $content, $heading,
+        'You received this because you have an All The Venues provider account.');
+
+    $textParts = ['Hello,', '', html_entity_decode(strip_tags($intro), ENT_QUOTES | ENT_HTML5, 'UTF-8')];
+    if ($showNote) { $textParts[] = ''; $textParts[] = 'Reviewer note:'; $textParts[] = trim($note); }
+    $textParts[] = '';
+    $textParts[] = 'Open the Partner Portal: ' . $link;
+    $textParts[] = '';
+    $textParts[] = '— All The Venues';
+    $text = implode("\n", $textParts);
+
+    return send_mail($to, $subject, $html, $text);
 }

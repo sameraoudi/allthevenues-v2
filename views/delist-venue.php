@@ -114,16 +114,26 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                         'Proof'        => $clean['proof'] ?: '—',
                         'Message'      => $clean['message'] ?: '—',
                     ];
-                    $adminBody = '<h2>Delist request ' . e($saved['reference']) . '</h2><table cellpadding="4">';
+                    $adminPairs = [];
+                    $adminText  = ['Delist request ' . $saved['reference'], ''];
                     foreach ($lines as $k => $v) {
-                        $adminBody .= '<tr><td valign="top"><strong>' . e($k) . '</strong></td><td>' . nl2br(e((string)$v)) . '</td></tr>';
+                        $adminPairs[] = [$k, nl2br(e((string)$v))];
+                        if (trim((string)$v) !== '') { $adminText[] = $k . ': ' . trim((string)$v); }
                     }
-                    $adminBody .= '</table><p>Verify authority, then delist via the venue editor.</p>';
+                    $adminContent = email_intro_row('Delist request', ['A delist request was submitted via All The Venues.'])
+                        . '<tr><td style="padding:10px 28px 4px;">' . email_ref_box($saved['reference']) . '</td></tr>'
+                        . email_section_row('Request details', email_rows($adminPairs))
+                        . email_note_row('Verify authority, then delist via the venue editor.');
+                    $adminBody = email_layout('Delist request', $adminContent,
+                        'Delist request ' . $saved['reference'], 'Internal notification — All The Venues admin.');
+                    $adminText[] = '';
+                    $adminText[] = 'Verify authority, then delist via the venue editor.';
+                    $adminTextBody = implode("\n", $adminText);
 
                     $subject = 'Delist request [' . $clean['venue_name'] . '] ' . $saved['reference'];
                     $recips  = defined('MAIL_ADMIN_RECIPIENTS') ? (string)MAIL_ADMIN_RECIPIENTS : '';
                     foreach (array_filter(array_map('trim', explode(',', $recips))) as $to) {
-                        if (!send_mail($to, $subject, $adminBody)) {
+                        if (!send_mail($to, $subject, $adminBody, $adminTextBody)) {
                             error_log('delist ' . $saved['reference'] . ': admin email to ' . $to . ' failed');
                         }
                     }

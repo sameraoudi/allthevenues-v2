@@ -9,8 +9,9 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/../config/db.php';
-require_once __DIR__ . '/mail.php';       // send_mail()
-require_once __DIR__ . '/helpers.php';    // base_url()
+require_once __DIR__ . '/mail.php';           // send_mail()
+require_once __DIR__ . '/helpers.php';        // base_url()
+require_once __DIR__ . '/email_template.php'; // branded email shell + components
 
 const PT_TTL_HOURS = 48;
 
@@ -126,22 +127,27 @@ function send_invite_email(array $user, string $raw, string $providerName): void
         error_log('send_invite_email: no valid recipient for user ' . (int)($user['id'] ?? 0));
         return;
     }
-    $esc  = static fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
     $name = trim((string)($user['name'] ?? ''));
     $link = base_url('set-password?token=' . rawurlencode($raw));
 
-    $body = '<div style="font-family:Arial,sans-serif;color:#0E1B2A;line-height:1.6;">'
-          . '<h2 style="font-size:18px;">All The Venues — Provider Portal</h2>'
-          . '<p>Hello' . ($name !== '' ? ' ' . $esc($name) : '') . ',</p>'
-          . '<p>An All The Venues provider account has been created for <strong>' . $esc($providerName) . '</strong>. '
-          . 'Use the secure link below to set your password and access the provider portal.</p>'
-          . '<p><a href="' . $esc($link) . '" style="display:inline-block;background:#426F94;color:#fff;'
-          . 'padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600;">Set your password</a></p>'
-          . '<p style="color:#6b7b88;font-size:13px;">This link can be used once and expires in 48 hours. '
-          . 'If you were not expecting this invitation, you can ignore this email.</p>'
-          . '<p style="color:#6b7b88;">— The All The Venues team</p></div>';
+    $content = email_intro_row('Set up your partner account', [
+            'Hello' . ($name !== '' ? ' ' . e($name) : '') . ',',
+            'An All The Venues provider account has been created for <strong>' . e($providerName) . '</strong>. '
+                . 'Use the button below to set your password and access the Partner Portal.',
+        ])
+        . email_button_row('Set Your Password', $link, true)
+        . email_note_row('This link can be used once and expires in 48 hours. '
+            . 'If you were not expecting this invitation, you can ignore this email.');
+    $html = email_layout('Set up your partner account', $content,
+        'Set up your All The Venues partner account',
+        'You received this because a provider account was created for you on All The Venues.');
 
-    if (!send_mail($to, 'Set up your All The Venues provider account', $body)) {
+    $text = 'Hello' . ($name !== '' ? ' ' . $name : '') . ",\n\n"
+        . 'An All The Venues provider account has been created for ' . $providerName . ".\n"
+        . "Set your password (this one-time link expires in 48 hours):\n" . $link . "\n\n"
+        . "If you were not expecting this invitation, you can ignore this email.\n\n— All The Venues";
+
+    if (!send_mail($to, 'Set up your All The Venues provider account', $html, $text)) {
         error_log('send_invite_email: send failed to ' . $to . ' (user ' . (int)($user['id'] ?? 0) . ')');
     }
 }
@@ -157,22 +163,27 @@ function send_reset_email(array $user, string $raw): void
         error_log('send_reset_email: no valid recipient for user ' . (int)($user['id'] ?? 0));
         return;
     }
-    $esc  = static fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
     $name = trim((string)($user['name'] ?? ''));
     $link = base_url('reset-password?token=' . rawurlencode($raw));
 
-    $body = '<div style="font-family:Arial,sans-serif;color:#0E1B2A;line-height:1.6;">'
-          . '<h2 style="font-size:18px;">All The Venues</h2>'
-          . '<p>Hello' . ($name !== '' ? ' ' . $esc($name) : '') . ',</p>'
-          . '<p>We received a request to reset the password for your All The Venues account. '
-          . 'Use the secure link below to set a new password.</p>'
-          . '<p><a href="' . $esc($link) . '" style="display:inline-block;background:#426F94;color:#fff;'
-          . 'padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600;">Reset your password</a></p>'
-          . '<p style="color:#6b7b88;font-size:13px;">This link can be used once and expires in 48 hours. '
-          . 'If you didn’t request this, you can safely ignore this email — your password won’t change.</p>'
-          . '<p style="color:#6b7b88;">— The All The Venues team</p></div>';
+    $content = email_intro_row('Reset your password', [
+            'Hello' . ($name !== '' ? ' ' . e($name) : '') . ',',
+            'We received a request to reset the password for your All The Venues account. '
+                . 'Use the button below to set a new password.',
+        ])
+        . email_button_row('Reset Your Password', $link, true)
+        . email_note_row('This link can be used once and expires in 48 hours. '
+            . 'If you didn&rsquo;t request this, you can safely ignore this email — your password won&rsquo;t change.');
+    $html = email_layout('Reset your password', $content,
+        'Reset your All The Venues password',
+        'You received this because a password reset was requested for your All The Venues account.');
 
-    if (!send_mail($to, 'Reset your All The Venues password', $body)) {
+    $text = 'Hello' . ($name !== '' ? ' ' . $name : '') . ",\n\n"
+        . "We received a request to reset the password for your All The Venues account.\n"
+        . "Set a new password (this one-time link expires in 48 hours):\n" . $link . "\n\n"
+        . "If you didn't request this, you can safely ignore this email — your password won't change.\n\n— All The Venues";
+
+    if (!send_mail($to, 'Reset your All The Venues password', $html, $text)) {
         error_log('send_reset_email: send failed to ' . $to . ' (user ' . (int)($user['id'] ?? 0) . ')');
     }
 }

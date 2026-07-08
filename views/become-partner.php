@@ -132,15 +132,22 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                         'Venues managed' => $clean['venues_managed'] !== null ? (string)$clean['venues_managed'] : '—',
                         'Message'      => $clean['notes'] ?: '—',
                     ];
-                    $adminBody = '<h2>New venue partner request ' . e($saved['reference']) . '</h2><table cellpadding="4">';
+                    $adminPairs = [];
+                    $adminText  = ['New venue partner request ' . $saved['reference'], ''];
                     foreach ($lines as $k => $v) {
-                        $adminBody .= '<tr><td><strong>' . e($k) . '</strong></td><td>' . e((string)$v) . '</td></tr>';
+                        $adminPairs[] = [$k, e((string)$v)];
+                        if (trim((string)$v) !== '') { $adminText[] = $k . ': ' . trim((string)$v); }
                     }
-                    $adminBody .= '</table>';
+                    $adminContent = email_intro_row('New venue partner request', ['A new venue partner request was submitted via All The Venues.'])
+                        . '<tr><td style="padding:10px 28px 4px;">' . email_ref_box($saved['reference']) . '</td></tr>'
+                        . email_section_row('Request details', email_rows($adminPairs), '18px 28px 26px');
+                    $adminBody = email_layout('New partner request', $adminContent,
+                        'New venue partner request ' . $saved['reference'], 'Internal notification — All The Venues admin.');
+                    $adminTextBody = implode("\n", $adminText);
 
                     $recips = defined('MAIL_ADMIN_RECIPIENTS') ? (string)MAIL_ADMIN_RECIPIENTS : '';
                     foreach (array_filter(array_map('trim', explode(',', $recips))) as $to) {
-                        if (!send_mail($to, 'New venue partner request ' . $saved['reference'], $adminBody)) {
+                        if (!send_mail($to, 'New venue partner request ' . $saved['reference'], $adminBody, $adminTextBody)) {
                             error_log('partner ' . $saved['reference'] . ': admin email to ' . $to . ' failed');
                         }
                     }

@@ -108,16 +108,23 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                         'Phone'   => $clean['phone'] ?: '—',
                         'Message' => $clean['message'],
                     ];
-                    $adminBody = '<h2>New contact message ' . e($saved['reference']) . '</h2><table cellpadding="4">';
+                    $adminPairs = [];
+                    $adminText  = ['New contact message ' . $saved['reference'], ''];
                     foreach ($lines as $k => $v) {
-                        $adminBody .= '<tr><td valign="top"><strong>' . e($k) . '</strong></td><td>' . nl2br(e((string)$v)) . '</td></tr>';
+                        $adminPairs[] = [$k, nl2br(e((string)$v))];
+                        if (trim((string)$v) !== '') { $adminText[] = $k . ': ' . trim((string)$v); }
                     }
-                    $adminBody .= '</table>';
+                    $adminContent = email_intro_row('New contact message', ['A new contact message was submitted via All The Venues.'])
+                        . '<tr><td style="padding:10px 28px 4px;">' . email_ref_box($saved['reference']) . '</td></tr>'
+                        . email_section_row('Message details', email_rows($adminPairs), '18px 28px 26px');
+                    $adminBody = email_layout('New contact message', $adminContent,
+                        'New contact message ' . $saved['reference'], 'Internal notification — All The Venues admin.');
+                    $adminTextBody = implode("\n", $adminText);
 
                     $subject = 'New contact message [' . $clean['reason_label'] . '] ' . $saved['reference'];
                     $recips  = defined('MAIL_ADMIN_RECIPIENTS') ? (string)MAIL_ADMIN_RECIPIENTS : '';
                     foreach (array_filter(array_map('trim', explode(',', $recips))) as $to) {
-                        if (!send_mail($to, $subject, $adminBody)) {
+                        if (!send_mail($to, $subject, $adminBody, $adminTextBody)) {
                             error_log('contact ' . $saved['reference'] . ': admin email to ' . $to . ' failed');
                         }
                     }
