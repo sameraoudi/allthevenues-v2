@@ -183,6 +183,17 @@ already partially folded into the old 001; `db/MIGRATION.md` updated with a "Sch
   now used by both admin + portal (portal governance guard preserved).
 - **STATUS (8 Jul 2026): everything on the board is DONE** — post-launch backlog fully cleared, Contacts & Ownership,
   all branded emails, DB001-sync, admin event-type editor. No open build items.
+- **PERFORMANCE pass SHIPPED (PageSpeed 73→99 desktop, 83→91 mobile):** **Perf-1** — `.htaccess` static-asset cache
+  headers (1yr immutable, ext-scoped) + `asset_url()` filemtime versioning + `defer` JS + preload the 2 above-fold
+  fonts (unversioned, matching brand.css url()). **Perf-2** (`views/layout.php`) — dropped Bootstrap CSS(228K)+JS(80K)
+  from the PUBLIC layout; brand.css gained the box-sizing/margins reset + the few utilities the public used
+  (`.d-flex/.flex-*/.min-vh-100/.text-muted/.mb-*/.h5`); 9-page before/after screenshot check (2 reset regressions
+  fixed: form-control inherit, `.flex-grow-1`). Admin layout still loads Bootstrap. **Perf-3** (`89e4192`) — public
+  logos → WebP (172K→14K), width/height on all public imgs (CLS), lazy below-fold + LCP preload/eager/fetchpriority
+  (home hero, /venues first row, venue-detail main), card queries use `COALESCE(thumb_path,file_path)`.
+  **Optional perf follow-ups (not done):** legacy venue thumbnails (only 3/260 images have a `thumb_path` — a
+  server-side one-off to regenerate thumbs from existing fulls would shrink listing images a lot); drop Bootstrap
+  from the portal layout too; CSS minify / trim unused brand.css (LiteSpeed can minify).
 **PU-D2 SHIPPED** (#17, commit `452b1a5`, no migration) — published-venue event-type edits are now a governed
 change request folded into the U-P5 edit CR: the proposed set rides in `proposed_changes_json._event_type_ids`
 (inert to the scalar field-loop); `cr_approve` applies it (validate active ids → DELETE+INSERT) in the same
