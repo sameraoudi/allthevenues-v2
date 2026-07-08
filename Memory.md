@@ -160,8 +160,13 @@ contact_email/phone on read); fill-on-save in admin venue + provider editors; `d
 (auto if provider has none / overwrite checkbox if it does; server-gated). Claim review shows **current contacts**
 (venue + provider); **orphan-aware disable** — approve reassign unchanged, then only if admin ticked the box AND the
 previous owner is genuinely orphaned (re-checked as COUNT venues=0 INSIDE the txn) → disable that provider's partner
-accounts; forged checkbox ignored; audited. Reassign regression verified. **Remaining: PU-E** (#20 admin
-new-venue-review → image-approval link) + fast-follows (admin event-type editor UI; sync `db/001` with 016–023).
+accounts; forged checkbox ignored; audited. Reassign regression verified. **PU-E SHIPPED** (#20, `1955281`, no migration) — Provider Photos queue takes an
+optional `?venue_id` filter (preserved across approve/reject); the admin new-venue review shows pending/no-photo
+status + a "Review pending photos" link to the filtered queue (`cr_load_new_venue` returns
+pending_image_count/total_image_count); readiness re-evaluates on load. **POST-LAUNCH BACKLOG FULLY CLEARED**
+(PU-B, PU-D1/D2, delisting, portal-polish, PU-A1/A2, copy passes, PU-C, Contacts & Ownership, PU-E). **Remaining =
+optional only:** **DB001-sync** (consolidate `db/001_schema.sql` to current schema — repo-only, zero-risk, spec
+written + issued, awaiting run) + the **admin event-type editor UI** fast-follow.
 **PU-D2 SHIPPED** (#17, commit `452b1a5`, no migration) — published-venue event-type edits are now a governed
 change request folded into the U-P5 edit CR: the proposed set rides in `proposed_changes_json._event_type_ids`
 (inert to the scalar field-loop); `cr_approve` applies it (validate active ids → DELETE+INSERT) in the same
