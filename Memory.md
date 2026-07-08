@@ -148,9 +148,15 @@ in-portal change-password reusing `password_policy_error`] + their nav items). *
 Portal, Event Types, Delist a Venue, Enquire Now, Apply Filters; Show/Hide toggle; header+title "Event Types";
 `eafe0ee`/`92330f1`); portal **dashboard now lists venues** (shared `_venues-table.php` partial) + **dual view
 buttons** (View portal / View Live public, published-only) on the table + venue detail + **revised Guide copy**
-(`197245f`). `/event-types` H1 hero kept by choice. **Remaining backlog:** PU-C (claims polish: #10 preserve claim
-history, #11 show rejected claims to partner, #9 proof UI) + PU-E (#20 admin new-venue-review → image-approval link)
-+ tracked fast-follows (admin event-type editor UI; sync `db/001` with 016–023).
+(`197245f`). `/event-types` H1 hero kept by choice. **PU-C SHIPPED** (`b32d11a`, no migration) — claims now carry an append-only `events[]` timeline in the claim JSON
+(`portal_claim_append_event`/`portal_claim_timeline` w/ backward-compat synthesis; `cr_claim_decide` appends
+approve/proof_requested/reject in the same txn as the ownership write — regression verified); partner sees all 5
+claim statuses incl. **rejected + reason** with a new claim detail `/portal/claim/{id}/view` + shared
+`_claim-timeline.php`; roomy `/portal/claim/{id}/proof` screen (#9). **Next: "Contacts & Ownership" unit** (design
+locked, space memory `atv-contacts-ownership`: per-provider ownership; provider/venue contact gap-fill;
+new-user-becomes-contact; View-contacts on user assignment; contacts on claim review; **orphan-based** displacement
+warn+confirm-disable on claim approve — never auto). Then **PU-E** (#20 admin new-venue-review → image link) +
+fast-follows (admin event-type editor UI; sync `db/001` with 016–023).
 **PU-D2 SHIPPED** (#17, commit `452b1a5`, no migration) — published-venue event-type edits are now a governed
 change request folded into the U-P5 edit CR: the proposed set rides in `proposed_changes_json._event_type_ids`
 (inert to the scalar field-loop); `cr_approve` applies it (validate active ids → DELETE+INSERT) in the same

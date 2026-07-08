@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATV — Claims polish (PU-C preview)</title>
+<style>
+  :root{
+    --navy:#0E1B2A; --blue:#6C93B7; --action:#426F94; --action-hover:#315B7C;
+    --sand:#D9C7A8; --ink:#1c2b38; --muted:#6b7b88; --line:#e4e8ec; --bg:#f3f1ec;
+    --ok:#2f7d5b; --okbg:#e7f3ec; --warn:#8a6d1f; --warnbg:#f6efdb; --danger:#a5433b; --dangerbg:#f6e7e5;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Segoe UI,Inter,sans-serif;font-size:14px;}
+  h1,h2,h3{font-family:Georgia,'Cormorant Garamond',serif;font-weight:600;margin:0;}
+  a{color:var(--action);text-decoration:none;}
+  .lbl-screen{max-width:820px;margin:0 auto;padding:24px;}
+  .screen-tag{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:24px 0 10px;}
+  .topbar{background:var(--navy);color:#fff;display:flex;justify-content:space-between;align-items:center;padding:12px 22px;border-radius:12px 12px 0 0;}
+  .brand{font-family:Georgia,serif;font-size:17px;} .brand span{color:var(--blue);} .brand em{color:var(--sand);font-style:normal;font-size:12px;margin-left:4px;}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 22px rgba(14,27,42,.06);padding:18px 20px;margin-bottom:16px;}
+  .panel.attached{border-radius:0 0 12px 12px;border-top:0;}
+  .sec-h{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;margin:0 0 10px;}
+  /* claim list */
+  .claim{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #f4f2ee;}
+  .claim:last-child{border-bottom:0;} .claim .nm{font-weight:600;} .claim .meta{font-size:12.5px;color:var(--muted);}
+  .st{font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;white-space:nowrap;}
+  .st-pending{background:var(--warnbg);color:var(--warn);} .st-need{background:#eef4f8;color:var(--action);}
+  .st-ok{background:var(--okbg);color:var(--ok);} .st-rej{background:var(--dangerbg);color:var(--danger);} .st-wd{background:#eef1f4;color:var(--muted);}
+  .btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid transparent;background:var(--action);color:#fff;}
+  .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--action);}
+  .reason{font-size:12.5px;color:var(--danger);}
+  /* timeline */
+  .tl{list-style:none;margin:0;padding:0;position:relative;}
+  .tl:before{content:'';position:absolute;left:8px;top:4px;bottom:4px;width:2px;background:var(--line);}
+  .tl li{position:relative;padding:0 0 15px 28px;}
+  .tl li:last-child{padding-bottom:0;}
+  .tl .dot{position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid var(--action);}
+  .tl .dot.ok{border-color:var(--ok);background:var(--ok);} .tl .dot.warn{border-color:var(--warn);} .tl .dot.rej{border-color:var(--danger);background:var(--danger);}
+  .tl .t{font-size:13.5px;font-weight:600;} .tl .when{font-size:12px;color:var(--muted);} .tl .body{font-size:13px;color:#40525f;margin-top:3px;line-height:1.5;}
+  .tl .body.quote{background:#f7f9fb;border:1px solid var(--line);border-radius:8px;padding:8px 11px;}
+  /* proof form (#9) — compact venue summary, roomy fields */
+  .vsum{display:flex;gap:11px;align-items:center;background:#f7f9fb;border:1px solid var(--line);border-radius:9px;padding:9px 12px;margin-bottom:14px;font-size:13px;}
+  .vsum .vth{width:44px;height:34px;border-radius:6px;background:linear-gradient(135deg,#c9d6e2,#9fb4c6);flex:0 0 auto;}
+  .req-note{background:#eef4f8;border:1px solid #d6e2ea;border-radius:9px;padding:10px 13px;color:#2f5064;font-size:12.5px;margin-bottom:14px;}
+  label.l{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;}
+  textarea,input{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit;font-size:13.5px;}
+  textarea{min-height:110px;resize:vertical;}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px;}
+</style>
+</head>
+<body>
+<div class="lbl-screen">
+
+  <!-- 1 · partner "Your Claims" — all statuses incl. rejected (#11) -->
+  <div class="screen-tag">Partner · Your Claims (all statuses visible, incl. rejected)</div>
+  <div class="topbar"><span class="brand">All The <span>Venues</span> <em>· Partner</em></span><span style="font-size:12.5px;color:#c7d0d8;">Claims</span></div>
+  <div class="panel attached">
+    <div class="claim"><div><div class="nm">Marina Pavilion</div><div class="meta">Submitted 1 day ago · role: Owner</div></div>
+      <div style="display:flex;gap:8px;align-items:center;"><span class="st st-pending">Pending review</span><button class="btn-ghost btn">View</button></div></div>
+    <div class="claim"><div><div class="nm">Sunset Rooftop</div><div class="meta">Proof requested — our team asked for evidence</div></div>
+      <div style="display:flex;gap:8px;align-items:center;"><span class="st st-need">Proof requested</span><button class="btn">Add Proof</button></div></div>
+    <div class="claim"><div><div class="nm">Beach House JBR</div><div class="meta">Approved today · now in My Venues</div></div>
+      <span class="st st-ok">Approved</span></div>
+    <div class="claim"><div><div class="nm">The Old Warehouse</div><div class="meta reason">Rejected 3 days ago · Reason: could not verify authorisation to manage this venue.</div></div>
+      <div style="display:flex;gap:8px;align-items:center;"><span class="st st-rej">Rejected</span><button class="btn-ghost btn">View</button></div></div>
+    <div class="claim"><div><div class="nm">Garden Villa</div><div class="meta">Withdrawn 5 days ago</div></div><span class="st st-wd">Withdrawn</span></div>
+  </div>
+
+  <!-- 2 · claim detail with full history timeline (#10) -->
+  <div class="screen-tag">Partner · Claim detail — full history preserved (#10)</div>
+  <div class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><h3 style="font-size:18px;">Claim: Sunset Rooftop</h3><span class="st st-need">Proof requested</span></div>
+    <ul class="tl">
+      <li><span class="dot"></span><div class="t">Claim submitted</div><div class="when">6 Jul 2026, 14:02 · by Omar Haddad · role: General manager · omar@nikkibeach.com</div>
+        <div class="body quote">"We took over management of this venue in June."</div></li>
+      <li><span class="dot warn"></span><div class="t">Proof requested by All The Venues</div><div class="when">7 Jul 2026, 09:20</div>
+        <div class="body quote">"Please share the signed management agreement or an email from the venue's domain."</div></li>
+      <li><span class="dot ok"></span><div class="t">Proof added</div><div class="when">7 Jul 2026, 11:45 · by Omar Haddad</div>
+        <div class="body quote">"Attached our management agreement — link below."<br><a href="#">https://nikkibeach.com/docs/agreement ↗</a></div></li>
+      <li><span class="dot"></span><div class="t" style="color:var(--muted);">Awaiting review…</div></li>
+    </ul>
+    <p class="hint">Nothing is overwritten — each step (original claim, our request, your proof, the final decision) is kept with its date.</p>
+  </div>
+
+  <!-- 3 · roomier "Add proof" form (#9) -->
+  <div class="screen-tag">Partner · Add proof (#9 — compact venue summary, prominent request, roomy fields)</div>
+  <div class="panel">
+    <div class="vsum"><div class="vth"></div><div><b>Sunset Rooftop</b> · Downtown, Dubai</div></div>
+    <div class="req-note"><b>All The Venues asked:</b> Please share the signed management agreement or an email from the venue's domain.</div>
+    <label class="l">Your response / evidence</label>
+    <textarea placeholder="Explain your authority and reference the proof you're providing…"></textarea>
+    <label class="l" style="margin-top:12px;">Proof link</label>
+    <input type="text" placeholder="https://… — management agreement, company page, or venue-domain email">
+    <p class="hint">Submitting sends your proof back to All The Venues and your claim returns to review. Your original claim + our request stay on record.</p>
+    <div style="margin-top:14px;"><button class="btn">Submit Proof</button> <button class="btn-ghost btn">Cancel</button></div>
+  </div>
+
+  <!-- 4 · admin sees the same timeline -->
+  <div class="screen-tag">Admin · Claim review shows the same history</div>
+  <div class="panel">
+    <div class="sec-h">Claim history</div>
+    <ul class="tl">
+      <li><span class="dot"></span><div class="t">Claim submitted</div><div class="when">6 Jul · Omar Haddad (GM)</div><div class="body">Original message + role + work email.</div></li>
+      <li><span class="dot warn"></span><div class="t">Proof requested</div><div class="when">7 Jul · by admin</div><div class="body">Your note asking for evidence.</div></li>
+      <li><span class="dot ok"></span><div class="t">Proof added</div><div class="when">7 Jul · Omar Haddad</div><div class="body">New message + proof link (original NOT overwritten).</div></li>
+    </ul>
+    <p class="hint">The decision (Approve / Reject) appends to this timeline too, so the full thread is auditable.</p>
+  </div>
+
+  <p class="hint">PU-C: (#10) claims carry an append-only <code>events</code> timeline (submitted → proof requested →
+    proof added → decision) instead of overwriting the original; (#11) partners see rejected claims + the reason in
+    Your Claims; (#9) the Add-proof screen is redesigned — compact venue summary, prominent admin request, roomy
+    response + proof-link fields.</p>
+</div>
+</body>
+</html>
