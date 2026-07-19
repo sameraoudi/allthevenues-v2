@@ -194,6 +194,14 @@ already partially folded into the old 001; `db/MIGRATION.md` updated with a "Sch
   **Optional perf follow-ups (not done):** legacy venue thumbnails (only 3/260 images have a `thumb_path` — a
   server-side one-off to regenerate thumbs from existing fulls would shrink listing images a lot); drop Bootstrap
   from the portal layout too; CSS minify / trim unused brand.css (LiteSpeed can minify).
+- **Footer fixes SHIPPED (8 Jul):** footer "Partner Portal" now a direct `/portal/login` link (was gated on
+  `portal_enabled()` which isn't loaded on legal pages → dead `#`); real socials Instagram(`/allthevenues/`) /
+  **X**(`x.com/AllTheVenues`, new icon) / Facebook(`/AllTheVenues/`), LinkedIn dropped.
+- **Featured Partners homepage band SHIPPED** — static 2-card section (sister companies, NOT venue providers)
+  between Featured Venues and How-it-works: **Bianca Event Styling** (→ instagram/bianca_events) + **Lilac Studio**
+  (→ lilacstudio.ae), short text, sand "Featured Partner" badge, external CTAs (noopener nofollow), lazy WebP.
+  Images committed at `assets/img/featured-partners/{bianca-hero,lilac-collage}.webp`. Design lock
+  `docs/atv-featured-partners-preview.html`. Static/hardcoded (no DB/admin).
 **PU-D2 SHIPPED** (#17, commit `452b1a5`, no migration) — published-venue event-type edits are now a governed
 change request folded into the U-P5 edit CR: the proposed set rides in `proposed_changes_json._event_type_ids`
 (inert to the scalar field-loop); `cr_approve` applies it (validate active ids → DELETE+INSERT) in the same
