@@ -66,6 +66,7 @@ function _icon_paths(string $name): ?string
             'instagram'    => '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17 7h.01"/>',
             'facebook'     => '<path d="M14.5 8.5H16V5.5h-1.5A3.5 3.5 0 0 0 11 9v2H9v3h2v6h3v-6h2l.5-3H14V9c0-.3.2-.5.5-.5z"/>',
             'linkedin'     => '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 10.5V17"/><path d="M8 7.5h.01"/><path d="M12 17v-3.5a2 2 0 0 1 4 0V17"/>',
+            'x'            => '<path d="M5 5l14 14"/><path d="M19 5L5 19"/>',
         ];
     }
     return $set[$name] ?? null;

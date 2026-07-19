@@ -25,11 +25,7 @@
         <h4>For partners</h4>
         <ul>
           <li><a href="<?= e(base_url('become-a-venue-partner')) ?>">Become a Venue Partner</a></li>
-          <?php if (function_exists('portal_enabled') && portal_enabled()): ?>
-            <li><a href="<?= e(base_url('portal/login')) ?>">Partner Portal</a></li>
-          <?php else: ?>
-            <li><a href="#" title="Coming soon">Partner Portal</a></li>
-          <?php endif; ?>
+          <li><a href="<?= e(base_url('portal/login')) ?>">Partner Portal</a></li>
         </ul>
       </div>
 
@@ -56,9 +52,9 @@
     <div class="site-footer__bottom">
       <p class="copy">&copy; 2016&ndash;2026 All The Venues. All rights reserved.</p>
       <div class="soc">
-        <a href="https://www.instagram.com/" aria-label="Instagram" rel="noopener" target="_blank"><?= icon('instagram') ?></a>
-        <a href="https://www.facebook.com/" aria-label="Facebook" rel="noopener" target="_blank"><?= icon('facebook') ?></a>
-        <a href="https://www.linkedin.com/" aria-label="LinkedIn" rel="noopener" target="_blank"><?= icon('linkedin') ?></a>
+        <a href="https://www.instagram.com/allthevenues/" aria-label="Instagram" rel="noopener noreferrer" target="_blank"><?= icon('instagram') ?></a>
+        <a href="https://x.com/AllTheVenues" aria-label="X" rel="noopener noreferrer" target="_blank"><?= icon('x') ?></a>
+        <a href="https://www.facebook.com/AllTheVenues/" aria-label="Facebook" rel="noopener noreferrer" target="_blank"><?= icon('facebook') ?></a>
       </div>
     </div>
   </div>
