@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATV — Featured Partners (homepage) preview</title>
+<style>
+  :root{
+    --navy:#0E1B2A; --blue:#6C93B7; --action:#426F94; --action-hover:#315B7C;
+    --sand:#D9C7A8; --ink:#1c2b38; --muted:#6b7b88; --line:#e4e8ec; --bg:#f3f1ec;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,-apple-system,Segoe UI,sans-serif;}
+  .note{max-width:1040px;margin:0 auto;padding:16px 24px;font-size:12.5px;color:var(--muted);}
+  /* placeholder for surrounding homepage bands */
+  .band-ph{max-width:1040px;margin:0 auto;padding:14px 24px;color:#aeb6bd;font-size:12px;text-transform:uppercase;letter-spacing:.5px;border-top:1px dashed #cfd5da;}
+  /* the section */
+  .fp-sec{background:#fff;}
+  .fp-wrap{max-width:1040px;margin:0 auto;padding:52px 24px;}
+  .fp-head{text-align:center;margin-bottom:30px;}
+  .fp-head h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:34px;color:var(--navy);margin:0 0 8px;}
+  .fp-head p{font-size:15px;color:var(--muted);margin:0;max-width:560px;margin:0 auto;line-height:1.6;}
+  .fp-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  @media(max-width:720px){.fp-grid{grid-template-columns:1fr;}}
+  .fp-card{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff;display:flex;flex-direction:column;box-shadow:0 10px 26px rgba(14,27,42,.07);transition:transform .28s,box-shadow .28s;}
+  .fp-card:hover{transform:translateY(-4px);box-shadow:0 18px 38px rgba(14,27,42,.14);}
+  .fp-card__img{aspect-ratio:16/10;background-size:cover;background-position:center;position:relative;}
+  .fp-card__img.bianca{background:linear-gradient(135deg,#c8b6c9,#8a6d84);}
+  .fp-card__img.lilac{background:linear-gradient(135deg,#d9cbe6,#b9a0cf);}
+  .fp-badge{position:absolute;top:12px;left:12px;background:var(--sand);color:var(--navy);font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;border-radius:20px;padding:4px 11px;}
+  .fp-card__body{padding:20px 22px 22px;display:flex;flex-direction:column;flex:1;}
+  .fp-card__body h3{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:23px;color:var(--navy);margin:0 0 8px;}
+  .fp-card__body p{font-size:14px;line-height:1.6;color:#40525f;margin:0 0 18px;flex:1;}
+  .fp-cta{display:inline-flex;align-items:center;gap:7px;align-self:flex-start;background:var(--action);color:#fff;font-size:14px;font-weight:600;text-decoration:none;border-radius:9px;padding:11px 20px;}
+  .fp-cta:hover{background:var(--action-hover);}
+  .fp-foot{text-align:center;font-size:12px;color:var(--muted);margin-top:24px;}
+</style>
+</head>
+<body>
+  <p class="note">Preview of a new <b>“Featured Partners”</b> homepage band — sister companies (services/products), distinct from Venue Providers. Shown here with the <b>short</b> card text (recommended for a homepage card). Images are placeholders; real ones drop into <code>assets/img/featured-partners/</code>.</p>
+
+  <div class="band-ph">↑ … Featured venues band …</div>
+
+  <!-- FEATURED PARTNERS SECTION -->
+  <section class="fp-sec">
+    <div class="fp-wrap">
+      <div class="fp-head">
+        <h2>Featured Partners</h2>
+        <p>Trusted partners to make your event effortless — from styling to thoughtful gifting.</p>
+      </div>
+      <div class="fp-grid">
+
+        <!-- Bianca -->
+        <div class="fp-card">
+          <div class="fp-card__img bianca" title="Bianca-hero.webp"><span class="fp-badge">Featured Partner</span></div>
+          <div class="fp-card__body">
+            <h3>Bianca Event Styling</h3>
+            <p>Bianca Event Styling designs elegant event experiences across the UAE, with a focus on weddings, celebrations, and beautifully styled venue transformations.</p>
+            <a class="fp-cta" href="https://www.instagram.com/bianca_events" target="_blank" rel="noopener nofollow">Design your celebration &nearr;</a>
+          </div>
+        </div>
+
+        <!-- Lilac -->
+        <div class="fp-card">
+          <div class="fp-card__img lilac" title="Lilac-collage.webp"><span class="fp-badge">Featured Partner</span></div>
+          <div class="fp-card__body">
+            <h3>Lilac Studio</h3>
+            <p>Lilac Studio curates elegant gifts and stylish pieces with a soft, polished aesthetic, making thoughtful gifting feel more beautiful and memorable.</p>
+            <a class="fp-cta" href="https://lilacstudio.ae/" target="_blank" rel="noopener nofollow">Find the perfect gift &nearr;</a>
+          </div>
+        </div>
+
+      </div>
+      <p class="fp-foot">Featured Partners are curated collaborators, not venue listings. Interested in partnering? <a href="#" style="color:var(--action);">Get in touch</a>.</p>
+    </div>
+  </section>
+
+  <div class="band-ph">↓ … How it works band …</div>
+
+  <p class="note" style="margin-top:20px;">Recommended placement: <b>between “Featured venues” and “How it works.”</b> Two image-top cards (2-up desktop, stacked mobile), sand “Featured Partner” badge, serif title, short body, CTA button opening the external site in a new tab (rel=noopener nofollow). Image aspect is 16:10 — if <code>Bianca-hero.webp</code> / <code>Lilac-collage.webp</code> are a different ratio, the card crops to fill (or I can switch to a fixed height / contain). Content is static (two hardcoded cards) — no DB/admin needed.</p>
+</body>
+</html>

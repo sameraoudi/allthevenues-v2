@@ -107,6 +107,62 @@ $venuesUrl = base_url('venues');
   </div>
 </section>
 
+<!-- Featured Partners — static sister companies (services/products), NOT venue
+     providers. Two hardcoded cards; no DB/admin layer. Built to
+     docs/atv-featured-partners-preview.html. -->
+<?php
+$featuredPartners = [
+    [
+        'name'  => 'Bianca Event Styling',
+        'body'  => 'Bianca Event Styling designs elegant event experiences across the UAE, with a focus on weddings, celebrations, and beautifully styled venue transformations.',
+        'cta'   => 'Design your celebration',
+        'url'   => 'https://www.instagram.com/bianca_events',
+        'img'   => 'assets/img/featured-partners/bianca-hero.webp',
+        'w'     => 1080,
+        'h'     => 593,
+        'grad'  => 'fp-card__img--bianca',
+    ],
+    [
+        'name'  => 'Lilac Studio',
+        'body'  => 'Lilac Studio curates elegant gifts and stylish pieces with a soft, polished aesthetic, making thoughtful gifting feel more beautiful and memorable.',
+        'cta'   => 'Find the perfect gift',
+        'url'   => 'https://lilacstudio.ae/',
+        'img'   => 'assets/img/featured-partners/lilac-collage.webp',
+        'w'     => 1080,
+        'h'     => 645,
+        'grad'  => 'fp-card__img--lilac',
+    ],
+];
+?>
+<section class="atv-sec fp-sec">
+  <div class="atv-wrap">
+    <div class="fp-head">
+      <h2>Featured Partners</h2>
+      <p>Trusted partners to make your event effortless &mdash; from styling to thoughtful gifting.</p>
+    </div>
+    <div class="fp-grid">
+      <?php foreach ($featuredPartners as $fp): ?>
+        <article class="fp-card">
+          <div class="fp-card__img <?= e($fp['grad']) ?>">
+            <?php /* Gradient shows through when the file isn't there yet — no broken icon. */ ?>
+            <?php if (is_file(app_path($fp['img']))): ?>
+              <img src="<?= e(base_url($fp['img'])) ?>" alt="<?= e($fp['name'] . ' — Featured Partner') ?>"
+                   loading="lazy" width="<?= (int)$fp['w'] ?>" height="<?= (int)$fp['h'] ?>">
+            <?php endif; ?>
+            <span class="atv-badge fp-badge">Featured Partner</span>
+          </div>
+          <div class="fp-card__body">
+            <h3><?= e($fp['name']) ?></h3>
+            <p><?= e($fp['body']) ?></p>
+            <a class="atv-btn fp-cta" href="<?= e($fp['url']) ?>" target="_blank" rel="noopener nofollow"><?= e($fp['cta']) ?> &nearr;</a>
+          </div>
+        </article>
+      <?php endforeach; ?>
+    </div>
+    <p class="fp-foot">Featured Partners are curated collaborators, not venue listings. Interested in partnering? <a href="<?= e(base_url('contact')) ?>">Get in touch</a>.</p>
+  </div>
+</section>
+
 <!-- How it works -->
 <section class="atv-how">
   <div class="atv-wrap">
