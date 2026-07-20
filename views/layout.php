@@ -45,9 +45,11 @@ require_once __DIR__ . '/../lib/icons.php';
     <meta name="twitter:title" content="<?= e($og_title) ?>">
     <meta name="twitter:description" content="<?= e($og_description) ?>">
     <meta name="twitter:image" content="<?= e($og_image) ?>">
-    <link rel="icon" href="<?= e(base_url('assets/brand/favicon_app_icon/favicon.ico')) ?>" sizes="any">
-    <link rel="icon" type="image/png" href="<?= e(base_url('assets/brand/favicon_app_icon/atv_app_icon_deep_navy_32x32.png')) ?>" sizes="32x32">
-    <link rel="apple-touch-icon" href="<?= e(base_url('assets/brand/favicon_app_icon/atv_app_icon_deep_navy_180x180.png')) ?>">
+    <?php /* Versioned via asset_url() (?v=mtime): the year-long immutable cache
+             from Perf-1 would otherwise pin a stale favicon (esp. Firefox). */ ?>
+    <link rel="icon" href="<?= e(asset_url('assets/brand/favicon_app_icon/favicon.ico')) ?>" sizes="any">
+    <link rel="icon" type="image/png" href="<?= e(asset_url('assets/brand/favicon_app_icon/favicon_32x32.png')) ?>" sizes="32x32">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?= e(asset_url('assets/brand/favicon_app_icon/favicon_180x180.png')) ?>">
     <?php /* Preload the two above-the-fold fonts (unversioned to match brand.css url()). */ ?>
     <link rel="preload" as="font" type="font/woff2" href="<?= e(base_url('assets/fonts/inter-latin.woff2')) ?>" crossorigin>
     <link rel="preload" as="font" type="font/woff2" href="<?= e(base_url('assets/fonts/cormorant-garamond-latin.woff2')) ?>" crossorigin>

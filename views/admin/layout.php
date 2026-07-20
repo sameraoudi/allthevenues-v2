@@ -69,7 +69,9 @@ $nav = array_filter($nav, static fn($item) => empty($item['cap']) || auth_can($i
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title><?= e($page_title) ?></title>
-    <link rel="icon" href="<?= e(base_url('assets/brand/favicon_app_icon/favicon.ico')) ?>" sizes="any">
+    <link rel="icon" href="<?= e(asset_url('assets/brand/favicon_app_icon/favicon.ico')) ?>" sizes="any">
+    <link rel="icon" type="image/png" href="<?= e(asset_url('assets/brand/favicon_app_icon/favicon_32x32.png')) ?>" sizes="32x32">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?= e(asset_url('assets/brand/favicon_app_icon/favicon_180x180.png')) ?>">
     <link rel="preload" as="font" type="font/woff2" href="<?= e(base_url('assets/fonts/inter-latin.woff2')) ?>" crossorigin>
     <link rel="preload" as="font" type="font/woff2" href="<?= e(base_url('assets/fonts/cormorant-garamond-latin.woff2')) ?>" crossorigin>
     <link rel="stylesheet" href="<?= e(asset_url('assets/css/bootstrap.min.css')) ?>">
