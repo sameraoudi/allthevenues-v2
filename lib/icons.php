@@ -65,6 +65,7 @@ function _icon_paths(string $name): ?string
             // Communication / relationship (partner-email indicators)
             'mail'         => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 8l8 5 8-5"/>',
             'handshake'    => '<path d="M12 8L9 5.2a2 2 0 0 0-2.8 0L3 8.3v3.3l4.2 4.2a1.5 1.5 0 0 0 2.1 0"/><path d="M21 8.3L17.8 5.2a2 2 0 0 0-2.8 0L12 8"/><path d="M21 8.3v3.3l-4.5 4.5a1.5 1.5 0 0 1-2.1 0L12 14"/>',
+            'user-plus'    => '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M18 8v6"/><path d="M15 11h6"/>',
             // Socials
             'instagram'    => '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17 7h.01"/>',
             'facebook'     => '<path d="M14.5 8.5H16V5.5h-1.5A3.5 3.5 0 0 0 11 9v2H9v3h2v6h3v-6h2l.5-3H14V9c0-.3.2-.5.5-.5z"/>',

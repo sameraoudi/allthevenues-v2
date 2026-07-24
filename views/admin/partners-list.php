@@ -64,7 +64,7 @@ $listUrl = base_url('admin/partners');
             <td data-label="Emails" class="pe-inds">
               <?php
                 $sentRow = $emailSentMap[(int)$r['id']] ?? [];
-                foreach ([['intro', 'Intro', 'mail'], ['photo_permission', 'Photo permission', 'image'], ['partnership', 'Partnership', 'handshake']] as [$peKey, $peLabel, $peIcon]):
+                foreach ([['intro', 'Intro', 'mail'], ['photo_permission', 'Photo permission', 'image'], ['partnership', 'Partnership', 'handshake'], ['new_partner_invite', 'Invitation', 'user-plus']] as [$peKey, $peLabel, $peIcon]):
                     $peWhen  = $sentRow[$peKey] ?? null;
                     $peTitle = $peWhen ? $peLabel . ' — sent ' . date('j M Y', strtotime((string)$peWhen)) : $peLabel . ' — not sent';
               ?>

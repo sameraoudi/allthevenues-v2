@@ -244,8 +244,8 @@ function partner_email_brandify(string $escapedHtml, bool $inline = true): strin
 /** Plain-text form of the {{directory_button}} token (for the AltBody). */
 function partner_email_directory_button_text(string $body, array $vars): string
 {
-    $site = rtrim((string)($vars['site_url'] ?? base_url('/')), '/');
-    return str_replace('{{directory_button}}', 'Visit our directory: ' . $site . '/venues', $body);
+    $site = (string)($vars['site_url'] ?? base_url('/'));
+    return str_replace('{{directory_button}}', 'Visit our directory: ' . $site, $body);
 }
 
 /**
@@ -287,7 +287,7 @@ function partner_email_render(string $plainBody): string
         if (trim($t) === '{{directory_button}}') {
             $flushPara(); $flushList();
             $html .= '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 20px;"><tr>'
-                   . email_button('Visit Our Directory', base_url('venues'), true) . '</tr></table>';
+                   . email_button('Visit Our Directory', base_url('/'), true) . '</tr></table>';
         } elseif (preg_match('/^\s*[-*]\s+(.*)$/', $t, $m)) {
             $flushPara();
             $list[] = trim($m[1]);
@@ -339,7 +339,7 @@ function partner_email_preview_html(string $plainBody): string
         if (trim($t) === '') { $flushPara(); $flushList(); continue; }
         if (trim($t) === '{{directory_button}}') {
             $flushPara(); $flushList();
-            $html .= '<p><a class="atv-btn atv-btn--sm pe-cta" href="' . e(base_url('venues')) . '">Visit Our Directory</a></p>';
+            $html .= '<p><a class="atv-btn atv-btn--sm pe-cta" href="' . e(base_url('/')) . '">Visit Our Directory</a></p>';
         } elseif (preg_match('/^\s*[-*]\s+(.*)$/', $t, $m)) { $flushPara(); $list[] = trim($m[1]); }
         else { $flushList(); $para[] = trim($t); }
     }
@@ -425,7 +425,7 @@ function partner_email_sent_map(PDO $pdo, ?array $partnerIds = null): array
     $sql = "SELECT partner_id, template_key, MAX(sent_at) AS last_sent
               FROM partner_emails
              WHERE status = 'sent'
-               AND template_key IN ('intro','photo_permission','partnership')";
+               AND template_key IN ('intro','photo_permission','partnership','new_partner_invite')";
     $params = [];
     if ($partnerIds !== null) {
         $ids = array_values(array_unique(array_filter(array_map('intval', $partnerIds), static fn($i) => $i > 0)));
