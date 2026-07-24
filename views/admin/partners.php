@@ -48,6 +48,9 @@ if ($rest === '') {
     $total   = $result['total'];
     $totalPages = max(1, (int)ceil($total / $perPage));
 
+    // Sent-email indicators (intro / photo_permission / partnership) — one query.
+    $emailSentMap = partner_email_sent_map($pdo, array_map(static fn($r) => (int)$r['id'], $rows));
+
     $emirates = venue_emirates($pdo);
 
     $admin_active       = 'partners';
@@ -290,16 +293,9 @@ if ($rest === 'edit') {
                     if ($changedNew) {
                         audit_log($pdo, (int)($me['id'] ?? 0) ?: null, 'update', 'partner', $id, $changedOld, $changedNew);
                     }
-                    // Contacts-A A2 — fill the provider gap from its venues if unambiguous,
-                    // then fill any contactless venues from the provider (fill-if-empty).
-                    require_once __DIR__ . '/../../lib/contact_sync.php';
-                    $cActor = (int)($me['id'] ?? 0) ?: null;
-                    contact_sync_for_provider($pdo, $id, $cActor);
-                    $vq = $pdo->prepare('SELECT id FROM venues WHERE partner_id = :pid');
-                    $vq->execute([':pid' => $id]);
-                    foreach ($vq->fetchAll(PDO::FETCH_COLUMN) as $vidToFill) {
-                        contact_sync_for_venue($pdo, (int)$vidToFill, $cActor);
-                    }
+                    // Contact gap-fill runs on CREATE only — an EDIT is fully authoritative,
+                    // so a deliberately-cleared contact email must not be re-filled from a
+                    // venue (nor propagated back over the provider's venues).
                     $_SESSION['admin_flash'] = ['type' => 'success', 'msg' => 'Provider saved.'];
                     redirect('admin/partners/edit?id=' . $id);
                 } catch (Throwable $e) {

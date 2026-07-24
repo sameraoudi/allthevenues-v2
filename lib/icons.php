@@ -62,6 +62,9 @@ function _icon_paths(string $name): ?string
             'logout'       => '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/>',
             'shield'       => '<path d="M12 3l7 3v5.5c0 4.3-3 7.5-7 8.5-4-1-7-4.2-7-8.5V6z"/><path d="M9 12l2 2 4-4"/>',
             'settings'     => '<circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l1.8-1.4-1.8-3.1-2.1.8a7.5 7.5 0 0 0-2.6-1.5L14.3 2h-3.6l-.4 2.3a7.5 7.5 0 0 0-2.6 1.5l-2.1-.8-1.8 3.1L5.6 10.5a7.6 7.6 0 0 0 0 3l-1.8 1.4 1.8 3.1 2.1-.8a7.5 7.5 0 0 0 2.6 1.5l.4 2.3h3.6l.4-2.3a7.5 7.5 0 0 0 2.6-1.5l2.1.8 1.8-3.1z"/>',
+            // Communication / relationship (partner-email indicators)
+            'mail'         => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 8l8 5 8-5"/>',
+            'handshake'    => '<path d="M12 8L9 5.2a2 2 0 0 0-2.8 0L3 8.3v3.3l4.2 4.2a1.5 1.5 0 0 0 2.1 0"/><path d="M21 8.3L17.8 5.2a2 2 0 0 0-2.8 0L12 8"/><path d="M21 8.3v3.3l-4.5 4.5a1.5 1.5 0 0 1-2.1 0L12 14"/>',
             // Socials
             'instagram'    => '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17 7h.01"/>',
             'facebook'     => '<path d="M14.5 8.5H16V5.5h-1.5A3.5 3.5 0 0 0 11 9v2H9v3h2v6h3v-6h2l.5-3H14V9c0-.3.2-.5.5-.5z"/>',

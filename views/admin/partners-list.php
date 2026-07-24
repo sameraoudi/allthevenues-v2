@@ -49,7 +49,7 @@ $listUrl = base_url('admin/partners');
   <div class="lead-table-wrap">
     <table class="lead-table">
       <thead>
-        <tr><th>Name</th><th>Type</th><th>Emirate</th><th>Venues</th><th>Verified</th><th>Featured</th><th>Email</th><th>Status</th><th></th></tr>
+        <tr><th>Name</th><th>Type</th><th>Emirate</th><th>Venues</th><th>Verified</th><th>Featured</th><th>Email</th><th>Emails</th><th>Status</th><th></th></tr>
       </thead>
       <tbody>
         <?php foreach ($rows as $r): $edit = base_url('admin/partners/edit') . query_string(['id' => (int)$r['id']]); ?>
@@ -61,6 +61,16 @@ $listUrl = base_url('admin/partners');
             <td data-label="Verified"><?= !empty($r['is_verified']) ? '✓' : '' ?></td>
             <td data-label="Featured"><?= !empty($r['is_featured']) ? '★' : '' ?></td>
             <td data-label="Email"><?php $em = trim((string)($r['email'] ?? '')); ?><?php if ($em !== ''): ?><?= e($em) ?><?php else: ?><span class="text-muted">— missing</span><?php endif; ?></td>
+            <td data-label="Emails" class="pe-inds">
+              <?php
+                $sentRow = $emailSentMap[(int)$r['id']] ?? [];
+                foreach ([['intro', 'Intro', 'mail'], ['photo_permission', 'Photo permission', 'image'], ['partnership', 'Partnership', 'handshake']] as [$peKey, $peLabel, $peIcon]):
+                    $peWhen  = $sentRow[$peKey] ?? null;
+                    $peTitle = $peWhen ? $peLabel . ' — sent ' . date('j M Y', strtotime((string)$peWhen)) : $peLabel . ' — not sent';
+              ?>
+                <span class="pe-ind <?= $peWhen ? 'pe-ind--sent' : 'pe-ind--none' ?>" title="<?= e($peTitle) ?>"><?= icon($peIcon, 'pe-ind__ico', $peTitle) ?></span>
+              <?php endforeach; ?>
+            </td>
             <td data-label="Status"><span class="lead-status lead-status--<?= e($r['status']) ?>"><?= e(partner_admin_status_label((string)$r['status'])) ?></span></td>
             <td data-label="" class="admin-row-actions">
               <a class="atv-btn atv-btn--sm atv-btn--ghost" href="<?= e($edit) ?>">Edit</a>

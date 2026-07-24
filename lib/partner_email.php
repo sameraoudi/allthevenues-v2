@@ -360,6 +360,35 @@ function partner_email_history(PDO $pdo, int $partnerId): array
     return $stmt->fetchAll();
 }
 
+/**
+ * For a list of partners, which of the key templates have been SENT and when:
+ * partner_id => [template_key => last_sent_at]. One query (no N+1). Pass a list
+ * of ids to scope it (empty result for []), or null for all partners.
+ */
+function partner_email_sent_map(PDO $pdo, ?array $partnerIds = null): array
+{
+    $sql = "SELECT partner_id, template_key, MAX(sent_at) AS last_sent
+              FROM partner_emails
+             WHERE status = 'sent'
+               AND template_key IN ('intro','photo_permission','partnership')";
+    $params = [];
+    if ($partnerIds !== null) {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $partnerIds), static fn($i) => $i > 0)));
+        if (!$ids) { return []; }
+        $sql   .= ' AND partner_id IN (' . implode(',', array_fill(0, count($ids), '?')) . ')';
+        $params = $ids;
+    }
+    $sql .= ' GROUP BY partner_id, template_key';
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $map = [];
+    foreach ($stmt->fetchAll() as $r) {
+        $map[(int)$r['partner_id']][(string)$r['template_key']] = (string)$r['last_sent'];
+    }
+    return $map;
+}
+
 /** One stored email, scoped to its partner (null if not found / wrong partner). */
 function partner_email_get(PDO $pdo, int $id, int $partnerId): ?array
 {

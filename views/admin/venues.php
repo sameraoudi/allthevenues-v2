@@ -388,12 +388,8 @@ if ($rest === 'edit') {
                     if ($changedNew) {
                         audit_log($pdo, (int)($me['id'] ?? 0) ?: null, 'update', 'venue', $id, $changedOld, $changedNew);
                     }
-                    // Contacts-A A2 — fill any contact gap this edit created/left (fill-if-empty).
-                    require_once __DIR__ . '/../../lib/contact_sync.php';
-                    $cActor = (int)($me['id'] ?? 0) ?: null;
-                    contact_sync_for_venue($pdo, $id, $cActor);
-                    $cPid = isset($clean['partner_id']) ? (int)$clean['partner_id'] : (int)($venue['partner_id'] ?? 0);
-                    if ($cPid > 0) { contact_sync_for_provider($pdo, $cPid, $cActor); }
+                    // Contact gap-fill runs on CREATE only — an EDIT is authoritative, so a
+                    // deliberately-cleared venue contact (or its provider's) is not re-filled.
                     $_SESSION['admin_flash'] = ['type' => 'success', 'msg' => 'Venue saved.'];
                     redirect('admin/venues/edit?id=' . $id);
                 } catch (Throwable $e) {
