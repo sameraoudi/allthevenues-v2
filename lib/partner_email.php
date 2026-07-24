@@ -138,6 +138,30 @@ Kind regards,
 All The Venues",
         ],
 
+        'new_partner_invite' => [
+            'label'   => 'New partner invitation',
+            'subject' => 'An invitation to feature your venue on All The Venues',
+            'body'    =>
+"Hello {{partner_name}},
+
+We'd love to introduce you to All The Venues, our UAE platform created to help people find beautiful venues for events and celebrations.
+
+From weddings, birthdays, and private gatherings to corporate events, conferences, and product launches, All The Venues helps users discover suitable venues across the UAE and send clear, structured enquiries.
+
+We are currently welcoming selected venue partners to be featured on the platform, and we think your venue could be a strong fit.
+
+Being listed on All The Venues is completely free. As a venue partner, you can benefit from visibility on a high-traffic UAE venue discovery platform, receive structured enquiries, keep your listing up to date through our Partner Portal, share approved venue photos, and appear across relevant event and location pages.
+
+Our aim is simple: to help people find the right venue and help our partners receive enquiries that are easier to understand and respond to.
+
+If you'd like your venue to be listed on All The Venues, please reply to this email and we'll guide you through the next steps.
+
+{{directory_button}}
+
+Kind regards,
+All The Venues",
+        ],
+
         'general' => [
             'label'   => 'General email',
             'subject' => 'Message from All The Venues',
@@ -194,10 +218,34 @@ function partner_email_substitute(string $text, array $vars): string
         '/\{\{\s*([a-z_]+)\s*\}\}/i',
         static function (array $m) use ($vars): string {
             $key = strtolower($m[1]);
+            // {{directory_button}} is a RENDER-time token, not a var — keep it so
+            // it survives editing and is resolved by the renderer / text builder.
+            if ($key === 'directory_button') { return '{{directory_button}}'; }
             return array_key_exists($key, $vars) ? (string)$vars[$key] : '';
         },
         $text
     );
+}
+
+/**
+ * Style every "All The Venues" in already-escaped body HTML as bold brand-blue.
+ * Applied AFTER escaping to an exact known-safe literal — no HTML injection. Not
+ * used on the footer. $inline true → inline style (sent email); false → a class
+ * (CSP-safe admin preview).
+ */
+function partner_email_brandify(string $escapedHtml, bool $inline = true): string
+{
+    $rep = $inline
+        ? '<strong style="color:#426F94;">All The Venues</strong>'
+        : '<strong class="pe-brand">All The Venues</strong>';
+    return str_replace('All The Venues', $rep, $escapedHtml);
+}
+
+/** Plain-text form of the {{directory_button}} token (for the AltBody). */
+function partner_email_directory_button_text(string $body, array $vars): string
+{
+    $site = rtrim((string)($vars['site_url'] ?? base_url('/')), '/');
+    return str_replace('{{directory_button}}', 'Visit our directory: ' . $site . '/venues', $body);
 }
 
 /**
@@ -217,7 +265,7 @@ function partner_email_render(string $plainBody): string
     $flushPara = static function () use (&$para, &$html): void {
         if ($para) {
             $html .= '<p style="font-size:15px;line-height:1.6;color:#40525f;margin:0 0 14px;">'
-                   . implode('<br>', array_map('e', $para)) . '</p>';
+                   . partner_email_brandify(implode('<br>', array_map('e', $para)), true) . '</p>';
             $para = [];
         }
     };
@@ -225,7 +273,7 @@ function partner_email_render(string $plainBody): string
         if ($list) {
             $items = '';
             foreach ($list as $it) {
-                $items .= '<li style="margin:0 0 6px;">' . e($it) . '</li>';
+                $items .= '<li style="margin:0 0 6px;">' . partner_email_brandify(e($it), true) . '</li>';
             }
             $html .= '<ul style="margin:0 0 16px;padding-left:20px;font-size:14px;line-height:1.7;color:#1c2b38;">'
                    . $items . '</ul>';
@@ -236,7 +284,11 @@ function partner_email_render(string $plainBody): string
     foreach ($lines as $ln) {
         $t = rtrim($ln);
         if (trim($t) === '') { $flushPara(); $flushList(); continue; }
-        if (preg_match('/^\s*[-*]\s+(.*)$/', $t, $m)) {
+        if (trim($t) === '{{directory_button}}') {
+            $flushPara(); $flushList();
+            $html .= '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 20px;"><tr>'
+                   . email_button('Visit Our Directory', base_url('venues'), true) . '</tr></table>';
+        } elseif (preg_match('/^\s*[-*]\s+(.*)$/', $t, $m)) {
             $flushPara();
             $list[] = trim($m[1]);
         } else {
@@ -272,12 +324,12 @@ function partner_email_preview_html(string $plainBody): string
     $para  = [];
     $list  = [];
     $flushPara = static function () use (&$para, &$html): void {
-        if ($para) { $html .= '<p>' . implode('<br>', array_map('e', $para)) . '</p>'; $para = []; }
+        if ($para) { $html .= '<p>' . partner_email_brandify(implode('<br>', array_map('e', $para)), false) . '</p>'; $para = []; }
     };
     $flushList = static function () use (&$list, &$html): void {
         if ($list) {
             $items = '';
-            foreach ($list as $it) { $items .= '<li>' . e($it) . '</li>'; }
+            foreach ($list as $it) { $items .= '<li>' . partner_email_brandify(e($it), false) . '</li>'; }
             $html .= '<ul>' . $items . '</ul>';
             $list = [];
         }
@@ -285,7 +337,10 @@ function partner_email_preview_html(string $plainBody): string
     foreach ($lines as $ln) {
         $t = rtrim($ln);
         if (trim($t) === '') { $flushPara(); $flushList(); continue; }
-        if (preg_match('/^\s*[-*]\s+(.*)$/', $t, $m)) { $flushPara(); $list[] = trim($m[1]); }
+        if (trim($t) === '{{directory_button}}') {
+            $flushPara(); $flushList();
+            $html .= '<p><a class="atv-btn atv-btn--sm pe-cta" href="' . e(base_url('venues')) . '">Visit Our Directory</a></p>';
+        } elseif (preg_match('/^\s*[-*]\s+(.*)$/', $t, $m)) { $flushPara(); $list[] = trim($m[1]); }
         else { $flushList(); $para[] = trim($t); }
     }
     $flushPara();

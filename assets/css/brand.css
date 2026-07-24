@@ -765,6 +765,8 @@ select:focus-visible,
 .pe-mail__body ul { margin: 0 0 14px; padding-left: 20px; color: var(--ink); }
 .pe-mail__body li { margin: 0 0 6px; }
 .pe-mail__foot { border-top: 1px solid var(--line); padding: 14px 20px; font-size: 11px; color: var(--muted); text-align: center; line-height: 1.55; }
+.pe-mail__body strong.pe-brand { color: #426F94; }   /* bold brand-blue in the preview (sent email uses inline style) */
+.pe-mail__body .pe-cta { display: inline-block; margin: 2px 0 8px; text-decoration: none; }
 
 /* Badges */
 .lead-status, .lead-mode { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }

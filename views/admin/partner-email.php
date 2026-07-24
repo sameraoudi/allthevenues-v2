@@ -122,9 +122,11 @@ if (!$noEmail && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         if ($form['bcc'] !== '' && $badAddr($form['bcc']))                    { $errors['bcc'] = 'One or more BCC addresses are invalid.'; }
 
         if (!$errors) {
-            // Resolve any {{var}} still in the edited body, then render + send.
-            $bodyText = partner_email_substitute($form['body'], $vars);
-            $bodyHtml = partner_email_render($bodyText);
+            // Resolve {{var}}s (keeps {{directory_button}}), then split into the
+            // branded HTML (token → button) and the plain-text AltBody (token → line).
+            $bodyResolved = partner_email_substitute($form['body'], $vars);
+            $bodyText = partner_email_directory_button_text($bodyResolved, $vars);
+            $bodyHtml = partner_email_render($bodyResolved);
             $meta = null;
             $ok = send_mail($form['to'], $form['subject'], $bodyHtml, $bodyText, $form['cc'], $form['bcc'], $meta, $form['reply_to']);
 
