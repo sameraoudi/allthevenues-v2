@@ -22,11 +22,24 @@ use PHPMailer\PHPMailer\Exception as PHPMailerException;
  * @param string $htmlBody  HTML body
  * @param string $textBody  Plain-text alternative (optional)
  */
-function send_mail(string $to, string $subject, string $htmlBody, string $textBody = ''): bool
+/**
+ * @param string       $to        Recipient email
+ * @param string       $subject   Subject
+ * @param string       $htmlBody  HTML body
+ * @param string       $textBody  Plain-text alternative (optional)
+ * @param string|array $cc        CC — array of emails or comma/;-separated string
+ * @param string|array $bcc       BCC — array of emails or comma/;-separated string
+ * @param array|null  &$meta      Filled with ['message_id'=>…, 'error'=>…] for logging
+ */
+function send_mail(string $to, string $subject, string $htmlBody, string $textBody = '', $cc = [], $bcc = [], ?array &$meta = null): bool
 {
     $transport = defined('MAIL_TRANSPORT') ? (string)MAIL_TRANSPORT : 'mail';
     $fromAddr  = defined('MAIL_FROM')      ? (string)MAIL_FROM      : ('no-reply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost'));
     $fromName  = defined('MAIL_FROM_NAME') ? (string)MAIL_FROM_NAME : 'All The Venues';
+
+    $ccList  = _mail_addresses($cc);
+    $bccList = _mail_addresses($bcc);
+    $meta    = ['message_id' => '', 'error' => ''];
 
     if ($textBody === '') {
         $textBody = trim(preg_replace('/\s+/', ' ', strip_tags($htmlBody)) ?? '');
@@ -34,7 +47,7 @@ function send_mail(string $to, string $subject, string $htmlBody, string $textBo
 
     try {
         if ($transport === 'log') {
-            return _mail_log($to, $fromAddr, $fromName, $subject, $htmlBody);
+            return _mail_log($to, $fromAddr, $fromName, $subject, $htmlBody, $ccList, $bccList);
         }
 
         require_once __DIR__ . '/PHPMailer/src/Exception.php';
@@ -61,20 +74,40 @@ function send_mail(string $to, string $subject, string $htmlBody, string $textBo
 
         $mail->setFrom($fromAddr, $fromName);
         $mail->addAddress($to);
+        foreach ($ccList as $addr)  { $mail->addCC($addr); }
+        foreach ($bccList as $addr) { $mail->addBCC($addr); }
         $mail->isHTML(true);
         $mail->Subject = $subject;
         $mail->Body    = $htmlBody;
         $mail->AltBody = $textBody;
         $mail->send();
+        $meta['message_id'] = (string)$mail->getLastMessageID();
         return true;
     } catch (Throwable $e) {
+        $meta['error'] = $e->getMessage();
         error_log('send_mail failed to ' . $to . ': ' . $e->getMessage());
         return false;
     }
 }
 
+/** Normalize a cc/bcc value (array or comma/;-separated string) → distinct valid emails. */
+function _mail_addresses($value): array
+{
+    if (is_string($value)) {
+        $value = preg_split('/[,;]+/', $value) ?: [];
+    }
+    $out = [];
+    foreach ((array)$value as $addr) {
+        $addr = trim((string)$addr);
+        if ($addr !== '' && filter_var($addr, FILTER_VALIDATE_EMAIL) && !in_array($addr, $out, true)) {
+            $out[] = $addr;
+        }
+    }
+    return $out;
+}
+
 /** Dev transport: write the message to storage/mail/ instead of sending. */
-function _mail_log(string $to, string $from, string $fromName, string $subject, string $htmlBody): bool
+function _mail_log(string $to, string $from, string $fromName, string $subject, string $htmlBody, array $cc = [], array $bcc = []): bool
 {
     $dir = dirname(__DIR__) . '/storage/mail';
     if (!is_dir($dir)) {
@@ -84,6 +117,8 @@ function _mail_log(string $to, string $from, string $fromName, string $subject, 
     $file = $dir . '/' . date('Ymd-His') . '-' . substr((string)$safe, 0, 60) . '-' . substr(sha1($to . $subject . microtime()), 0, 6) . '.eml';
     $eml  = "From: $fromName <$from>\n"
           . "To: $to\n"
+          . ($cc  ? 'Cc: '  . implode(', ', $cc)  . "\n" : '')
+          . ($bcc ? 'Bcc: ' . implode(', ', $bcc) . "\n" : '')
           . "Subject: $subject\n"
           . "Content-Type: text/html; charset=UTF-8\n\n"
           . $htmlBody . "\n";

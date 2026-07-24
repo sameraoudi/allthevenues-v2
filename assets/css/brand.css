@@ -107,6 +107,8 @@ select:focus-visible,
 .atv-btn--sand:hover { background: #b9a688; color: var(--navy); }
 .atv-btn--ghost { background: transparent; border: 1px solid var(--line); color: var(--action); }
 .atv-btn--ghost:hover { background: #eef1f4; color: var(--action); }
+/* Disabled-looking button (a non-link span, e.g. "Send email" with no address). */
+.atv-btn--disabled { background: #eef1f4; color: var(--muted); cursor: not-allowed; pointer-events: none; }
 /* Glassy ghost for use over a dark cover image (e.g. the provider hero). Only
    the RESTING state is overridden — a readable white label on a dark, blurred,
    subtly-bordered backdrop. Lower specificity than .atv-btn--ghost:hover, so
@@ -743,6 +745,20 @@ select:focus-visible,
 .lead-ref { font-family: var(--font-body); font-weight: 600; color: var(--action); }
 .lead-contact { font-size: 13px; }
 .lead-contact--sub { color: var(--muted); font-size: 12px; }
+
+/* ---- Admin partner-email (compose + preview) ----------------------------- */
+.admin-row-actions { white-space: nowrap; display: flex; gap: 8px; justify-content: flex-end; }
+.pe-body { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; line-height: 1.55; min-height: 300px; }
+/* CSP-safe branded preview (class-based; the sent email uses inline styles). */
+.pe-preview { background: #e9ebe6; border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.pe-mail { max-width: 560px; margin: 0 auto; background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-family: var(--font-body); }
+.pe-mail__head { background: var(--navy); color: #fff; padding: 16px 20px; font-family: var(--font-heading); font-size: 20px; }
+.pe-mail__head span { color: var(--blue); }
+.pe-mail__body { padding: 18px 20px; font-size: 14px; color: #40525f; line-height: 1.6; }
+.pe-mail__body p { margin: 0 0 12px; }
+.pe-mail__body ul { margin: 0 0 14px; padding-left: 20px; color: var(--ink); }
+.pe-mail__body li { margin: 0 0 6px; }
+.pe-mail__foot { border-top: 1px solid var(--line); padding: 14px 20px; font-size: 11px; color: var(--muted); text-align: center; line-height: 1.55; }
 
 /* Badges */
 .lead-status, .lead-mode { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }

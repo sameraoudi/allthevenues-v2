@@ -101,6 +101,35 @@
     if (sel && sel.form) { sel.form.submit(); }
   });
 
+  // Admin partner-email compose: choosing a template fills Subject + Body from
+  // the same-origin JSON endpoint (CSP connect-src 'self'; no inline data).
+  document.addEventListener('change', function (ev) {
+    var sel = ev.target.closest('[data-partner-email-template]');
+    if (!sel) { return; }
+    var base = sel.getAttribute('data-template-url');
+    var key = sel.value;
+    if (!base || !key) { return; }
+    fetch(base + '?key=' + encodeURIComponent(key), { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) { return; }
+        var subj = document.getElementById('pe-subject');
+        var body = document.getElementById('pe-body');
+        if (subj && typeof d.subject === 'string') { subj.value = d.subject; }
+        if (body && typeof d.body === 'string') { body.value = d.body; }
+      })
+      .catch(function () {});
+  });
+
+  // Admin partner-email compose: reveal the CC / BCC row.
+  document.addEventListener('click', function (ev) {
+    var t = ev.target.closest('[data-cc-toggle]');
+    if (!t) { return; }
+    ev.preventDefault();
+    var row = document.querySelector('[data-cc-row]');
+    if (row) { row.hidden = !row.hidden; }
+  });
+
   // Detail: image lightbox (self-hosted; no CDN). Opens from the hero image
   // and the "+N more" thumbnail; shows every venue image with prev/next,
   // Escape to close, and click-outside-the-image to close.

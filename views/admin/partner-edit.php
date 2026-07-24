@@ -10,6 +10,7 @@ declare(strict_types=1);
 /** @var array $partner @var array $old @var array $errors @var array $emirates @var int $id */
 require_once __DIR__ . '/../../lib/partners.php';
 require_once __DIR__ . '/../../lib/partner_admin.php';
+require_once __DIR__ . '/../../lib/partner_email.php';   // partner_email_template_label() for the history section
 
 $flash = $flash ?? null;
 $v   = static fn(string $k, string $d = ''): string => e((string)($old[$k] ?? $d));
@@ -172,4 +173,49 @@ $coverPermClass  = ($coverPermStatus === 'remove_replace') ? 'img-perm--remove'
     <input type="file" name="cover" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" required aria-label="Choose cover image">
     <button type="submit" class="atv-btn atv-btn--sm"><?= $hasCoverImg ? 'Replace cover' : 'Upload cover' ?></button>
   </form>
+</div>
+
+<?php
+/* ---- Email history (partner_emails, migration 024). $partnerEmails is set by
+   the controller; a read-only log of admin → partner emails, newest first. ---- */
+$partnerEmails = $partnerEmails ?? [];
+$peStatus = [
+    'sent'   => ['Sent',   'lead-status--approved'],
+    'failed' => ['Failed', 'lead-status--rejected'],
+    'draft'  => ['Draft',  'lead-status--new'],
+];
+?>
+<div class="admin-panel">
+  <div class="lead-detail__head">
+    <h2 class="admin-panel__title">Email history</h2>
+    <?php $pEmail = trim((string)($partner['email'] ?? '')); ?>
+    <?php if ($pEmail !== ''): ?>
+      <a class="atv-btn atv-btn--sm" href="<?= e(base_url('admin/partners/' . $id . '/email')) ?>">Send email</a>
+    <?php endif; ?>
+  </div>
+  <?php if (!$partnerEmails): ?>
+    <p class="text-muted mb-0">No emails have been sent to this provider yet.</p>
+  <?php else: ?>
+    <div class="lead-table-wrap">
+      <table class="lead-table">
+        <thead><tr><th>Date</th><th>Template</th><th>Subject</th><th>Sent to</th><th>By</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <?php foreach ($partnerEmails as $pe):
+              [$stLabel, $stClass] = $peStatus[$pe['status']] ?? ['—', 'lead-status--new'];
+              $when = $pe['sent_at'] ?? $pe['created_at'] ?? null;
+          ?>
+            <tr>
+              <td data-label="Date"><?= $when ? e(date('j M Y, H:i', strtotime((string)$when))) : '—' ?></td>
+              <td data-label="Template"><?= e(partner_email_template_label($pe['template_key'] ?? null)) ?></td>
+              <td data-label="Subject"><?= e(mb_strimwidth((string)$pe['subject'], 0, 60, '…')) ?></td>
+              <td data-label="Sent to"><?= e((string)$pe['recipient_email']) ?></td>
+              <td data-label="By"><?= e(trim((string)($pe['sent_by_name'] ?? '')) !== '' ? (string)$pe['sent_by_name'] : '—') ?></td>
+              <td data-label="Status"><span class="lead-status <?= e($stClass) ?>"><?= e($stLabel) ?></span></td>
+              <td data-label=""><a href="<?= e(base_url('admin/partners/' . $id . '/email/' . (int)$pe['id'] . '/view')) ?>">View</a></td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+  <?php endif; ?>
 </div>

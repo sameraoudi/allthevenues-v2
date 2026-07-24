@@ -62,7 +62,14 @@ $listUrl = base_url('admin/partners');
             <td data-label="Featured"><?= !empty($r['is_featured']) ? '★' : '' ?></td>
             <td data-label="Email"><?php $em = trim((string)($r['email'] ?? '')); ?><?php if ($em !== ''): ?><?= e($em) ?><?php else: ?><span class="text-muted">— missing</span><?php endif; ?></td>
             <td data-label="Status"><span class="lead-status lead-status--<?= e($r['status']) ?>"><?= e(partner_admin_status_label((string)$r['status'])) ?></span></td>
-            <td data-label=""><a class="atv-btn atv-btn--sm atv-btn--ghost" href="<?= e($edit) ?>">Edit</a></td>
+            <td data-label="" class="admin-row-actions">
+              <a class="atv-btn atv-btn--sm atv-btn--ghost" href="<?= e($edit) ?>">Edit</a>
+              <?php $em = trim((string)($r['email'] ?? '')); if ($em !== ''): ?>
+                <a class="atv-btn atv-btn--sm" href="<?= e(base_url('admin/partners/' . (int)$r['id'] . '/email')) ?>">Send email</a>
+              <?php else: ?>
+                <span class="atv-btn atv-btn--sm atv-btn--disabled" title="Add an email first" aria-disabled="true">Send email</span>
+              <?php endif; ?>
+            </td>
           </tr>
         <?php endforeach; ?>
       </tbody>

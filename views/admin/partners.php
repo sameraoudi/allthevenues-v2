@@ -17,6 +17,7 @@ require_once __DIR__ . '/../../lib/audit.php';
 require_once __DIR__ . '/../../lib/sanitize.php';
 require_once __DIR__ . '/../../lib/partners.php';
 require_once __DIR__ . '/../../lib/partner_admin.php';
+require_once __DIR__ . '/../../lib/partner_email.php';
 require_once __DIR__ . '/../../lib/slug_redirect.php';
 
 $me   = auth_current_user();
@@ -27,6 +28,13 @@ $rest = trim(substr((string)$sub, strlen('partners')), '/');   // '' | 'edit' | 
 // audits, and redirects back to the provider edit page.
 if (strncmp($rest, 'cover/', 6) === 0) {
     require __DIR__ . '/partner-cover.php';
+    return;
+}
+
+/* ===================== PARTNER EMAIL (compose / send / template / view) ===
+   /admin/partners/{id}/email  ·  …/email/template?key=…  ·  …/email/{eid}/view */
+if (preg_match('#^\d+/email(/|$)#', $rest)) {
+    require __DIR__ . '/partner-email.php';
     return;
 }
 
@@ -303,6 +311,7 @@ if ($rest === 'edit') {
     }
 
     $emirates = venue_emirates($pdo);
+    $partnerEmails = partner_email_history($pdo, $id);   // Email history section
 
     $admin_active       = 'partners';
     $page_title         = 'Edit provider — Admin';

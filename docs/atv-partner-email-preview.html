@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATV — Admin partner email (preview)</title>
+<style>
+  :root{
+    --navy:#0E1B2A; --blue:#6C93B7; --action:#426F94; --action-hover:#315B7C;
+    --sand:#D9C7A8; --ink:#1c2b38; --muted:#6b7b88; --line:#e4e8ec; --bg:#f3f1ec;
+    --ok:#2f7d5b; --okbg:#e7f3ec; --warn:#8a6d1f; --warnbg:#f6efdb; --danger:#a5433b; --dangerbg:#f6e7e5;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Segoe UI,Inter,sans-serif;font-size:14px;}
+  h1,h2,h3{font-family:Georgia,'Cormorant Garamond',serif;font-weight:600;margin:0;}
+  a{color:var(--action);text-decoration:none;}
+  .lbl-screen{max-width:1000px;margin:0 auto;padding:24px;}
+  .screen-tag{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:26px 0 10px;}
+  .wrap{display:grid;grid-template-columns:200px 1fr;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 8px 22px rgba(14,27,42,.06);}
+  .side{background:var(--navy);color:#c7d0d8;padding:18px 0;}
+  .side .brand{color:#fff;font-family:Georgia,serif;font-size:17px;padding:0 18px 14px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .side nav{display:flex;flex-direction:column;padding:10px;gap:2px;}
+  .side nav a{color:#c7d0d8;padding:8px 11px;border-radius:8px;font-size:13px;} .side nav a.on{background:var(--action);color:#fff;}
+  .amain{padding:22px 24px;}
+  .crumb{font-size:12px;color:var(--muted);margin-bottom:10px;}
+  h2.page{font-size:20px;margin-bottom:14px;}
+  table{width:100%;border-collapse:collapse;} th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);}
+  td{padding:10px;border-bottom:1px solid #f4f2ee;font-size:13.5px;}
+  .btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid transparent;background:var(--action);color:#fff;}
+  .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--action);} .btn-sm{padding:4px 10px;font-size:12px;}
+  .field{margin-bottom:13px;} .field label.l{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;}
+  input,select,textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 11px;font:inherit;font-size:13.5px;}
+  textarea{min-height:220px;resize:vertical;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.55;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+  .optional-toggle{font-size:12.5px;color:var(--action);cursor:pointer;}
+  .st{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;}
+  .st-sent{background:var(--okbg);color:var(--ok);} .st-fail{background:var(--dangerbg);color:var(--danger);}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5;}
+  /* rendered email preview pane */
+  .mailprev{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#e9ebe6;padding:16px;}
+  .mailcard{max-width:520px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-family:Arial,sans-serif;}
+  .mailcard .mh{background:var(--navy);color:#fff;padding:14px 18px;font-family:Georgia,serif;font-size:16px;} .mailcard .mh span{color:var(--blue);}
+  .mailcard .mb{padding:16px 18px;font-size:13px;color:#40525f;line-height:1.6;}
+  .mailcard .mf{border-top:1px solid var(--line);padding:12px 18px;font-size:11px;color:var(--muted);text-align:center;line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="lbl-screen">
+
+  <!-- 1 · partners list with Send email action -->
+  <div class="screen-tag">Admin · Providers/Partners list — new "Send email" row action</div>
+  <div class="wrap">
+    <aside class="side"><div class="brand">All The Venues</div>
+      <nav><a href="#">Dashboard</a><a href="#">Venues</a><a href="#" class="on">Providers</a><a href="#">Change Requests</a><a href="#">Users</a></nav></aside>
+    <div class="amain">
+      <div class="crumb">Admin › Providers</div>
+      <h2 class="page">Providers</h2>
+      <table>
+        <thead><tr><th>Provider</th><th>Email</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+        <tbody>
+          <tr><td><b>Nikki Beach</b></td><td>omar@nikkibeach.com</td><td>Approved</td>
+            <td style="text-align:right;white-space:nowrap;"><a class="btn-ghost btn btn-sm" href="#">Edit</a> <a class="btn btn-sm" href="#">Send email</a></td></tr>
+          <tr><td><b>Rixos Hotels</b></td><td>bianca@rixos.example</td><td>Approved</td>
+            <td style="text-align:right;white-space:nowrap;"><a class="btn-ghost btn btn-sm" href="#">Edit</a> <a class="btn btn-sm" href="#">Send email</a></td></tr>
+          <tr><td><b>Marina Hospitality</b></td><td style="color:var(--muted);font-style:italic;">no email on record</td><td>Approved</td>
+            <td style="text-align:right;white-space:nowrap;"><a class="btn-ghost btn btn-sm" href="#">Edit</a> <span class="btn btn-sm" style="opacity:.5;cursor:not-allowed;" title="Add an email first">Send email</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 2 · compose form -->
+  <div class="screen-tag">Admin · /admin/partners/{id}/email — compose</div>
+  <div class="wrap">
+    <aside class="side"><div class="brand">All The Venues</div>
+      <nav><a href="#">Dashboard</a><a href="#">Venues</a><a href="#" class="on">Providers</a><a href="#">Change Requests</a><a href="#">Users</a></nav></aside>
+    <div class="amain">
+      <div class="crumb">Admin › Providers › Nikki Beach › Email</div>
+      <h2 class="page">Email Nikki Beach</h2>
+      <div class="grid2">
+        <div class="field"><label class="l">Template</label>
+          <select><option>Intro email</option><option>Photo permission email</option><option>Partnership email</option><option>General email</option><option disabled>— more templates coming —</option></select>
+          <p class="hint">Choosing a template fills the subject + body (with the partner name / portal link inserted). You can edit before sending.</p></div>
+        <div class="field"><label class="l">To</label><input value="omar@nikkibeach.com"><p class="hint"><span class="optional-toggle">+ Add CC / BCC</span></p></div>
+      </div>
+      <div class="field"><label class="l">Subject</label><input value="Welcome to the new All The Venues partner portal"></div>
+      <div class="field"><label class="l">Body</label>
+        <textarea>Hello Nikki Beach,
+
+We're pleased to introduce the updated All The Venues platform.
+...
+As a venue partner, you can now request access to manage your venue listings through the Partner Portal:
+- View the venues linked to your account
+- Keep venue details up to date
+- Upload approved venue photos
+...
+If you'd like portal access for your team, please reply to this email.
+
+Kind regards,
+All The Venues</textarea>
+        <p class="hint">Plain text with blank-line paragraphs and "- " bullets — sent wrapped in the standard ATV branded email. Variables like {{partner_name}} / {{portal_link}} are filled when the template loads.</p></div>
+      <div style="display:flex;gap:9px;margin-top:6px;"><button class="btn">Send email</button><button class="btn-ghost btn">Preview</button><button class="btn-ghost btn">Cancel</button></div>
+    </div>
+  </div>
+
+  <!-- 3 · rendered preview -->
+  <div class="screen-tag">Preview — the composed email in the standard ATV branded shell</div>
+  <div class="mailprev">
+    <div class="mailcard">
+      <div class="mh">All The <span>Venues</span></div>
+      <div class="mb"><p>Hello Nikki Beach,</p><p>We're pleased to introduce the updated All The Venues platform…</p>
+        <p>Through the Partner Portal you can:</p>
+        <ul style="margin:0 0 10px;padding-left:18px;"><li>View the venues linked to your account</li><li>Keep venue details up to date</li><li>Upload approved venue photos</li></ul>
+        <p>Kind regards,<br>All The Venues</p></div>
+      <div class="mf">All The Venues · UAE venue discovery &amp; event enquiry platform · Operated by Bianca Event Styling<br>allthevenues.com</div>
+    </div>
+  </div>
+
+  <!-- 4 · email history on partner detail -->
+  <div class="screen-tag">Admin · Provider detail — Email history section</div>
+  <div class="wrap">
+    <aside class="side"><div class="brand">All The Venues</div>
+      <nav><a href="#">Dashboard</a><a href="#">Venues</a><a href="#" class="on">Providers</a><a href="#">Change Requests</a><a href="#">Users</a></nav></aside>
+    <div class="amain">
+      <div class="crumb">Admin › Providers › Nikki Beach</div>
+      <h2 class="page" style="font-size:16px;">Email history</h2>
+      <table>
+        <thead><tr><th>Date</th><th>Template</th><th>Subject</th><th>Sent to</th><th>By</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>8 Jul, 14:20</td><td>Intro email</td><td>Welcome to the new…</td><td>omar@nikkibeach.com</td><td>Samer</td><td><span class="st st-sent">Sent</span></td><td><a href="#">View</a></td></tr>
+          <tr><td>6 Jul, 09:02</td><td>Photo permission</td><td>Image permission for…</td><td>omar@nikkibeach.com</td><td>Bianca</td><td><span class="st st-fail">Failed</span></td><td><a href="#">View</a></td></tr>
+        </tbody>
+      </table>
+      <p class="hint">Each row logs date/time · template · subject · recipient · admin who sent · delivery status (sent/failed) · a "View" of the exact email that went out. Stored in a new <code>partner_emails</code> table.</p>
+    </div>
+  </div>
+
+  <p class="hint">MVP (per your scope): Send-email button beside Edit, template selector (4 core: Intro / Photo permission / Partnership / General), editable subject + body, standard branded styling (reuses <code>email_template.php</code>), send + log, and the Email-history section. Table designed to hold everything (cc/bcc, template_key, related_venue/enquiry, message_id, status) so the other 5 templates + venue/lead context slot in later.</p>
+</div>
+</body>
+</html>
