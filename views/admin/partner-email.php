@@ -73,11 +73,15 @@ $noEmail = ($partnerEmail === '' || !filter_var($partnerEmail, FILTER_VALIDATE_E
 
 $errors      = [];
 $previewHtml = null;
+$replyToOptions = partner_email_reply_to_options($pdo);
+$replyToAllowed = partner_email_reply_to_allowed($pdo);   // lowercased allowlist
+
 $form = [
     'template_key' => 'intro',
     'to'           => $partnerEmail,
     'cc'           => '',
     'bcc'          => '',
+    'reply_to'     => PARTNER_EMAIL_REPLY_TO_DEFAULT,
     'subject'      => partner_email_substitute($tpls['intro']['subject'], $vars),
     'body'         => partner_email_substitute($tpls['intro']['body'], $vars),
 ];
@@ -87,10 +91,15 @@ if (!$noEmail && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $tk     = (string)($_POST['template_key'] ?? '');
     $form['template_key'] = isset($tpls[$tk]) ? $tk : '';
     $form['to']      = trim((string)($_POST['to'] ?? ''));
-    $form['cc']      = trim((string)($_POST['cc'] ?? ''));
-    $form['bcc']     = trim((string)($_POST['bcc'] ?? ''));
-    $form['subject'] = trim((string)($_POST['subject'] ?? ''));
-    $form['body']    = (string)($_POST['body'] ?? '');
+    $form['cc']       = trim((string)($_POST['cc'] ?? ''));
+    $form['bcc']      = trim((string)($_POST['bcc'] ?? ''));
+    // Reply-to: allowlisted only (default + active staff) — any other value
+    // silently falls back to the default (no arbitrary reply-to injection).
+    $postReplyTo      = trim((string)($_POST['reply_to'] ?? ''));
+    $form['reply_to'] = in_array(strtolower($postReplyTo), $replyToAllowed, true)
+        ? $postReplyTo : PARTNER_EMAIL_REPLY_TO_DEFAULT;
+    $form['subject']  = trim((string)($_POST['subject'] ?? ''));
+    $form['body']     = (string)($_POST['body'] ?? '');
 
     // Each cc/bcc token must be a valid email (blank list is fine).
     $badAddr = static function (string $raw): bool {
@@ -117,7 +126,7 @@ if (!$noEmail && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $bodyText = partner_email_substitute($form['body'], $vars);
             $bodyHtml = partner_email_render($bodyText);
             $meta = null;
-            $ok = send_mail($form['to'], $form['subject'], $bodyHtml, $bodyText, $form['cc'], $form['bcc'], $meta);
+            $ok = send_mail($form['to'], $form['subject'], $bodyHtml, $bodyText, $form['cc'], $form['bcc'], $meta, $form['reply_to']);
 
             $emailId = partner_email_log_insert($pdo, [
                 'partner_id'      => $pid,

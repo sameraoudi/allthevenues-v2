@@ -51,6 +51,18 @@ $tplUrl = base_url('admin/partners/' . $pid . '/email/template');
       </div>
     </div>
 
+    <div class="admin-form__grid">
+      <div class="atv-field">
+        <label for="pe-replyto">Reply-to</label>
+        <select id="pe-replyto" name="reply_to">
+          <?php foreach ($replyToOptions as $opt): ?>
+            <option value="<?= e($opt['email']) ?>"<?= strcasecmp($opt['email'], $form['reply_to']) === 0 ? ' selected' : '' ?>><?= e($opt['label']) ?></option>
+          <?php endforeach; ?>
+        </select>
+        <p class="lead-hint">Replies from the partner go to this address (the From stays no-reply).</p>
+      </div>
+    </div>
+
     <div class="admin-form__grid" data-cc-row<?= ($form['cc'] === '' && $form['bcc'] === '' && !isset($errors['cc']) && !isset($errors['bcc'])) ? ' hidden' : '' ?>>
       <div class="atv-field">
         <label for="pe-cc">CC</label>

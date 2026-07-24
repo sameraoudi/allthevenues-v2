@@ -84,6 +84,17 @@ function user_count_active_admins(PDO $pdo, int $exceptId = 0): int
     return (int)$stmt->fetchColumn();
 }
 
+/** Active admin+editor staff with an email → [['name','email','role'], …]. */
+function user_active_staff(PDO $pdo): array
+{
+    return $pdo->query(
+        "SELECT name, email, role FROM users
+          WHERE role IN ('admin','editor') AND status = 'active'
+            AND email IS NOT NULL AND email <> ''
+          ORDER BY name ASC"
+    )->fetchAll();
+}
+
 /**
  * Generate a readable temporary password (>= 10 chars). Avoids ambiguous
  * characters. Uses random_int (CSPRNG).

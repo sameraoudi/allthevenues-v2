@@ -11,6 +11,52 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/helpers.php';         // base_url(), e()
 require_once __DIR__ . '/email_template.php';   // email_layout()
+require_once __DIR__ . '/users_admin.php';      // user_active_staff() for reply-to options
+
+/** Default reply-to for admin → partner emails (a real, monitored inbox). */
+const PARTNER_EMAIL_REPLY_TO_DEFAULT = 'samer@allthevenues.com';
+
+/**
+ * Reply-to options for the compose form: the default address FIRST (preselected),
+ * then every active admin/editor staff member with an email. Each: ['email','label'].
+ * Deduplicated by email (if the default is itself a staff account it appears once).
+ */
+function partner_email_reply_to_options(PDO $pdo): array
+{
+    $default = PARTNER_EMAIL_REPLY_TO_DEFAULT;
+    $staff   = function_exists('user_active_staff') ? user_active_staff($pdo) : [];
+
+    $defaultOpt = null;
+    $rest = [];
+    foreach ($staff as $u) {
+        $email = trim((string)($u['email'] ?? ''));
+        if ($email === '') { continue; }
+        $label = (trim((string)($u['name'] ?? '')) !== '' ? trim((string)$u['name']) : $email) . ' — ' . (string)($u['role'] ?? '');
+        $opt = ['email' => $email, 'label' => $label];
+        if (strcasecmp($email, $default) === 0) { $defaultOpt = $opt; }
+        else { $rest[] = $opt; }
+    }
+    if ($defaultOpt === null) {
+        $defaultOpt = ['email' => $default, 'label' => $default . ' (default)'];
+    }
+
+    $out  = array_merge([$defaultOpt], $rest);
+    $seen = [];
+    $final = [];
+    foreach ($out as $o) {
+        $k = strtolower($o['email']);
+        if (isset($seen[$k])) { continue; }
+        $seen[$k] = true;
+        $final[] = $o;
+    }
+    return $final;
+}
+
+/** Allowed reply-to emails (lowercased) — the server-side allowlist for send. */
+function partner_email_reply_to_allowed(PDO $pdo): array
+{
+    return array_map(static fn($o) => strtolower($o['email']), partner_email_reply_to_options($pdo));
+}
 
 /**
  * The 4 core templates, keyed by template_key. Each: ['label','subject','body'].
@@ -22,26 +68,28 @@ function partner_email_templates(): array
     return [
         'intro' => [
             'label'   => 'Intro email',
-            'subject' => 'Welcome to the new All The Venues partner portal',
+            'subject' => 'Welcome to our new All The Venues partner portal',
             'body'    =>
 "Hello {{partner_name}},
 
-We're pleased to introduce the updated All The Venues platform.
+We're excited to share that our new All The Venues platform is now live.
 
-All The Venues is now live as a UAE venue discovery and lead-generation platform, helping event planners find suitable venues and submit structured enquiries through the website.
+We've updated All The Venues to make venue discovery easier for event planners across the UAE and to help our venue partners receive clearer, more structured enquiries.
 
-As a venue partner, you can now request access to manage your venue listings directly through the All The Venues Partner Portal. Through the portal, you can:
+As part of this update, you can now manage your venues through our Partner Portal. Through the portal, you can:
 - View the venues linked to your account.
-- Keep venue details up to date.
+- Keep your venue details up to date.
 - Upload approved venue photos.
 - Submit new venues for review.
 - Request changes to published listings.
 - Claim venues you operate.
 - Request delisting if a venue should no longer appear publicly.
 
-To protect the quality of the directory, changes are reviewed by All The Venues before they appear on the public website.
+Our goal is to give you more control over how your venues appear on All The Venues, while keeping the quality and consistency of the platform high. Any changes that affect the public listing are reviewed by our team before they go live.
 
-If you would like portal access for your team, please reply to this email and we'll help set it up.
+If you would like access to the Partner Portal, simply reply to this email and we'll help set it up for you.
+
+We're looking forward to working more closely with you through the new platform.
 
 Kind regards,
 All The Venues",
@@ -49,23 +97,19 @@ All The Venues",
 
         'photo_permission' => [
             'label'   => 'Photo permission email',
-            'subject' => 'Image permission for your All The Venues listing',
+            'subject' => 'Confirming image use for your All The Venues listing',
             'body'    =>
 "Hello {{partner_name}},
 
-We are reviewing the photos used on your venue listing on All The Venues.
+We're updating venue listings on our All The Venues platform and want to make sure your venue images are approved and up to date.
 
-To make sure all images are approved for use, please confirm whether All The Venues has permission to display the selected venue images on allthevenues.com. The images may be used on:
-- Your venue listing.
-- Venue cards.
-- Search and discovery pages.
-- Event type pages.
-- Location pages.
-- Related landing pages on All The Venues.
+Could you please confirm that we may use the selected images for your venue on allthevenues.com?
 
-Please confirm that you own the images or have the necessary rights and permissions to allow All The Venues to display, crop, resize, optimise, and use them for the purposes above.
+The images may appear on your venue listing, venue cards, search pages, event type pages, location pages, and related All The Venues landing pages.
 
-If you prefer, you may also send us updated official venue images that you would like us to use.
+Please confirm that you own the images or have the necessary permission for us to display, crop, resize, optimise, and use them on our website to promote your venue.
+
+If you prefer, you're welcome to send us newer official images that you would like us to use instead.
 
 Kind regards,
 All The Venues",
